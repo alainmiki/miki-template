@@ -1,0 +1,28 @@
+{
+  "name": "miki-template",
+  "version": "1.0.0",
+  "description": "Django-Style template engine for Node.js and Express",
+  "main": "src/index.js",
+  "exports": {
+    ".": {
+      "require": "./src/index.js",
+      "default": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js", "bench": "node benchmarks/run.js"
+  },
+  "keywords": [
+    "django",
+    "template",
+    "engine",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "he": "^1.2.0",
+    "date-fns": "^3.6.0"
+  }
+}
