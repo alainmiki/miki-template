@@ -1,0 +1,7 @@
+// large.dtpl
+{% for i in range(0, 1000) %}
+<div class="item">
+  <h2>Item {{ i }}</h2>
+  <p>{{ "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " | repeat:5 }}</p>
+</div>
+{% endfor %}

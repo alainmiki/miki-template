@@ -1,0 +1,3 @@
+// medium.dtpl
+{% for i in range(0, 100) %}Item {{ i }}
+{% endfor %}

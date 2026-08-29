@@ -1,5 +1,5 @@
 # miki-template
-
+![npm version](https://img.shields.io/npm/v/miki-template.svg) ![CI](https://github.com/your-repo/miki-template/workflows/ci.yml/badge.svg)
 A robust, production-ready template engine that brings **Django's template language** features and syntax to Node.js and Express, fully compliant with modern JavaScript (ES6+) and CommonJS.
 
 ---
@@ -60,9 +60,10 @@ const { __express: renderDtpl } = require('miki-template');
 
 const app = express();
 
-// Register the template engine
+// Register both .html and .miki extensions
 app.engine('html', renderDtpl);
-app.set('view engine', 'html');
+app.engine('miki', renderDtpl);
+app.set('view engine', 'miki'); // you can also set to 'html'
 app.set('views', './views');
 
 app.get('/', (req, res) => {

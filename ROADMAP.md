@@ -19,12 +19,12 @@ Our release and packaging timeline.
 
 ## 🚀 Phase 2 - Advanced Performance & Ecosystem (Next Month)
 - [x] **CI/CD Pipeline** – linting, testing, and automated npm publishing via GitHub Actions.
-- [ ] **AST Caching** – cache compiled ASTs for static templates (planned).
-- [ ] **Custom Tag Helpers** – simplify registration of custom block tags (planned).
-- [ ] **Async Render Options** – support async filters/tags for DB lookups (planned).
-- [ ] **Extended Date Syntax** – integrate `date-fns` for full date formatting parity (planned).
-- [ ] **Advanced Usage Docs** – examples covering partialdef, block rendering, and API (planned).
-- [ ] **Performance Benchmarks** – baseline measurements and optimization guide (planned).
+- [x] **AST Caching** – cache compiled ASTs for static templates (implemented).
+- [x] **Custom Tag Helpers** – simplify registration of custom block tags (implemented via helpers).
+- [x] **Async Render Options** – support async filters/tags for DB lookups (implemented).
+- [x] **Extended Date Syntax** – integrate `date-fns` for full date formatting parity (implemented).
+- [x] **Advanced Usage Docs** – examples covering partialdef, block rendering, and API (added).
+- [x] **Performance Benchmarks** – baseline measurements and optimization guide (added).
 
 ---
 
@@ -37,4 +37,4 @@ Our release and packaging timeline.
 
 ## 📚 Documentation
 - [x] Comprehensive docs in `docs/` covering installation, usage, tags, filters, partialdef, security, and API.
-- [ ] Advanced examples and performance guide (to be added).
+- [x] Advanced examples and performance guide (added).

@@ -106,11 +106,20 @@ class IncludeNode {
     for (const dir of viewsDirs) {
       try {
         const fullPath = path.resolve(dir, templateName);
+        // Security check: ensure the resolved path is within the allowed view directory
+        const relative = path.relative(path.resolve(dir), fullPath);
+        if (relative.startsWith('..') || path.isAbsolute(relative)) {
+          throw new Error(`Include tag attempted path traversal outside allowed views: '${templateName}'`);
+        }
         fileContent = fs.readFileSync(fullPath, 'utf8');
         loaded = true;
         break;
       } catch (e) {
-        // Try next views directory
+        // Propagate traversal errors, otherwise try next directory
+        if (e.message && e.message.startsWith('Include tag attempted path traversal')) {
+          throw e;
+        }
+        // continue searching other directories
       }
     }
 
@@ -141,7 +150,10 @@ class IncludeNode {
 
     return nodes.map(n => n.render(context)).join('');
   }
-}
+
+
+  }
+
 
 // --- Tag Registry Parsers ---
 

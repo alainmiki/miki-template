@@ -11,7 +11,7 @@ const { Context } = require('./context');
 const { registerContextProcessor, applyContextProcessors } = require('./context_processors');
 const { registerFilter, getFilter } = require('./filters');
 const { SafeString, markSafe, isSafe, escapeHtml } = require('./security');
-const { getCompiled } = require('./cache');
+const { getCompiled, clearCache } = require('./cache');
 const { registerHelper } = require('./tags/helpers');
 const { registerTag, getTagRegistry } = require('./tags/registry');
 const { asyncRenderAST } = require('./asyncRender');
@@ -213,7 +213,7 @@ module.exports = {
   compile,
   render,
   asyncRender,
-  __express,
+  clearCache,
   registerTag,
   registerFilter,
   registerHelper,

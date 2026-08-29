@@ -156,7 +156,7 @@ registerFilter('dictsortreversed', (val, arg) => {
 });
 
 // --- Date/Time Filters ---
-// Import date‑fns utilities (single import)
+// Import date-fns utilities (single import)
 const { format: formatDate, parseISO } = require('date-fns');
 
 // Custom filter: date_format (supports optional pattern)
@@ -169,6 +169,23 @@ registerFilter('date_format', (val, pattern) => {
   }
   if (isNaN(date.getTime())) return '';
   const fmt = pattern || "yyyy-MM-dd'T'HH:mm:ssxxx";
+  try {
+    return formatDate(date, fmt);
+  } catch (_) {
+    return '';
+  }
+});
+
+// Alias filter: strftime (full date-fns format patterns)
+registerFilter('strftime', (val, pattern) => {
+  let date = val;
+  if (typeof val === 'string') {
+    date = parseISO(val);
+  } else if (!(date instanceof Date)) {
+    date = new Date(val);
+  }
+  if (isNaN(date.getTime())) return '';
+  const fmt = pattern || 'PPpp'; // default human readable format
   try {
     return formatDate(date, fmt);
   } catch (_) {
@@ -205,6 +222,7 @@ registerFilter('date', (val, arg) => {
   return output;
 });
 
+// Django‑style time filter (uses date filter for formatting)
 registerFilter('time', (val, arg) => {
   let date = val;
   if (!(date instanceof Date)) {
@@ -214,6 +232,7 @@ registerFilter('time', (val, arg) => {
   const formatStr = arg || 'H:i';
   return getFilter('date')(date, formatStr);
 });
+
 
 registerFilter('timesince', (val, arg) => {
   const d1 = new Date(val);

@@ -53,6 +53,15 @@ asyncRender(template, {} ).then(console.log);
 {{ now|date_format:"yyyy-MM-dd HH:mm:ss" }}
 ```
 *Result:* `2026-08-29 13:48:07`
+### Additional Date Filter Examples
+
+```django
+{{ now|strftime:"PPpp" }}          {# Full date-fns pattern #}
+{{ now|date:"Y-m-d H:i:s" }}        {# Django style with seconds #}
+{{ now|time:"H:i:s" }}              {# Time only #}
+```
+
+*Result:* Example outputs will appear when rendered.
 
 ---
 ## 5. Performance Benchmark (see `benchmarks/run.js`)

@@ -42,6 +42,7 @@
 |--------|----------|-------------|
 | `date:"Y-m-d"` | `{{ now|date:"Y-m-d" }}` | Format Date object |
 | `time:"H:i"` | `{{ now|time:"H:i" }}` | Format time |
+| `strftime:"PPpp"` | `{{ now|strftime:"PPpp" }}` | Full date‑fns pattern |
 | `timesince` | `{{ past_date|timesince }}` | Human‑readable "time ago" |
 | `timeuntil` | `{{ future_date|timeuntil }}` | Human‑readable "time until" |
 
