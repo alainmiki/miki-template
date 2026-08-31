@@ -16,6 +16,48 @@ A robust, production-ready template engine that brings **Django's template langu
 - **Async Rendering**: Support for async filters/tags with `asyncRender()`.
 - **Extensible API**: Easy registration for custom tags and filters.
 - **No Unsafe Code Execution**: Evaluates expressions securely without using `eval()`.
+- **Editor Support**: First-class syntax highlighting and snippets for VS Code, Sublime Text, Atom, and TextMate-compatible editors.
+
+### VS Code
+
+#### Option A: Install the official extension (recommended)
+
+Search for **miki-template** in the VS Code Marketplace, or install from the command line:
+
+```bash
+code --install-extension miki-template
+```
+
+#### Option B: Manual install from this repo
+
+1. Copy the `syntaxes/` and `snippets/` folders from this repo.
+2. In VS Code, run **Preferences: Configure File Associations** and associate `*.miki` with `miki-template`.
+3. Or add a workspace-level `.vscode/settings.json`:
+
+```json
+{
+  "files.associations": {
+    "*.miki": "miki-template"
+  }
+}
+```
+
+### Sublime Text / Atom / TextMate
+
+Drop the `syntaxes/miki-template.tmLanguage.json` file into your editor’s `Packages/User/` folder and associate it with the `.miki` extension.
+
+---
+
+## 📚 Documentation
+
+- [Installation](docs/installation.md)
+- [Usage Guide](docs/usage.md)
+- [Tags Reference](docs/tags.md)
+- [Filters Reference](docs/filters.md)
+- [Security](docs/security.md)
+- [API Reference](docs/api.md)
+- [Partial Definitions](docs/partialdef.md)
+- [Contributing](docs/advanced_usage.md)
 
 ---
 

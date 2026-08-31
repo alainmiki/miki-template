@@ -1,0 +1,146 @@
+{
+  "scopeName": "text.html.miki",
+  "name": "miki-template",
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#tag"
+    },
+    {
+      "include": "#variable"
+    },
+    {
+      "include": "#string"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "name": "comment.block.miki",
+      "begin": "\\{#",
+      "end": "#\\}",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.comment.begin.miki" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.comment.end.miki" }
+      }
+    },
+    "tag": {
+      "name": "meta.tag.miki",
+      "begin": "\\{%",
+      "end": "%\\}",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.tag.begin.miki" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.tag.end.miki" }
+      },
+      "patterns": [
+        {
+          "name": "entity.name.tag.miki",
+          "match": "(?i)\\b(if|elif|else|endif|for|empty|endfor|with|endwith|cycle|comment|endcomment|verbatim|endverbatim|include|extends|block|endblock|partialdef|endpartialdef|partial|load|templatetag|trans|blocktrans|language|endlanguage|plural|widthratio|debug|endif|endfor|endwith|endblock|endcomment|endverbatim|endpartialdef|endblocktrans|endlanguage|endcache|endmarkdown)\\b"
+        },
+        {
+          "name": "string.quoted.double.miki",
+          "match": "\"[^\"]*\""
+        },
+        {
+          "name": "string.quoted.single.miki",
+          "match": "'[^']*'"
+        },
+        {
+          "name": "constant.numeric.miki",
+          "match": "\\b\\d+\\b"
+        },
+        {
+          "name": "keyword.operator.miki",
+          "match": "(?i)\\b(and|or|not|in|not in)\\b"
+        },
+        {
+          "name": "punctuation.separator.miki",
+          "match": "="
+        }
+      ]
+    },
+    "variable": {
+      "name": "variable.other.miki",
+      "begin": "\\{\\{",
+      "end": "\\}\\}",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.variable.begin.miki" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.variable.end.miki" }
+      },
+      "patterns": [
+        {
+          "name": "variable.other.miki",
+          "match": "[a-zA-Z_][a-zA-Z0-9_.]*"
+        },
+        {
+          "include": "#filter"
+        },
+        {
+          "name": "string.quoted.double.miki",
+          "match": "\"[^\"]*\""
+        },
+        {
+          "name": "string.quoted.single.miki",
+          "match": "'[^']*'"
+        }
+      ]
+    },
+    "filter": {
+      "name": "meta.filter.miki",
+      "begin": "\\|",
+      "end": "(?=\\}|$)",
+      "beginCaptures": {
+        "0": { "name": "punctuation.separator.filter.miki" }
+      },
+      "patterns": [
+        {
+          "name": "support.function.miki",
+          "match": "[a-zA-Z_][a-zA-Z0-9_]*"
+        },
+        {
+          "begin": ":",
+          "beginCaptures": {
+            "0": { "name": "punctuation.separator.filter.argument.miki" }
+          },
+          "end": "(?=\\||\\}\\})",
+          "patterns": [
+            {
+              "name": "string.quoted.double.miki",
+              "match": "\"[^\"]*\""
+            },
+            {
+              "name": "string.quoted.single.miki",
+              "match": "'[^']*'"
+            },
+            {
+              "name": "constant.numeric.miki",
+              "match": "\\b\\d+\\b"
+            },
+            {
+              "name": "variable.other.miki",
+              "match": "[a-zA-Z_][a-zA-Z0-9_.]*"
+            }
+          ]
+        }
+      ]
+    },
+    "string": {
+      "name": "string.quoted.double.miki",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.miki" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.miki" }
+      }
+    }
+  }
+}

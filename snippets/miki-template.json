@@ -1,0 +1,177 @@
+{
+  "miki-template": {
+    "if": {
+      "prefix": "if",
+      "body": [
+        "{% if ${1:condition} %}",
+        "  ${2:content}",
+        "{% endif %}"
+      ],
+      "description": "If block"
+    },
+    "ifelse": {
+      "prefix": "ifelse",
+      "body": [
+        "{% if ${1:condition} %}",
+        "  ${2:content}",
+        "{% else %}",
+        "  ${3:fallback}",
+        "{% endif %}"
+      ],
+      "description": "If/else block"
+    },
+    "for": {
+      "prefix": "for",
+      "body": [
+        "{% for ${1:item} in ${2:items} %}",
+        "  ${3:{{ ${1} }}}",
+        "{% empty %}",
+        "  ${4:No items}",
+        "{% endfor %}"
+      ],
+      "description": "For loop"
+    },
+    "block": {
+      "prefix": "block",
+      "body": [
+        "{% block ${1:name} %}",
+        "  ${2:content}",
+        "{% endblock %}"
+      ],
+      "description": "Block definition"
+    },
+    "extends": {
+      "prefix": "extends",
+      "body": "{% extends \"${1:base.html}\" %}",
+      "description": "Extends parent template"
+    },
+    "include": {
+      "prefix": "include",
+      "body": "{% include \"${1:header.html}\" %}",
+      "description": "Include template"
+    },
+    "with": {
+      "prefix": "with",
+      "body": [
+        "{% with ${1:var} as ${2:alias} %}",
+        "  ${3:{{ ${2} }}}",
+        "{% endwith %}"
+      ],
+      "description": "With block"
+    },
+    "cycle": {
+      "prefix": "cycle",
+      "body": "{% cycle '${1:odd}' '${2:even}' %}",
+      "description": "Cycle tag"
+    },
+    "trans": {
+      "prefix": "trans",
+      "body": "{% trans \"${1:Hello, World!}\" %}",
+      "description": "Translate string"
+    },
+    "blocktrans": {
+      "prefix": "blocktrans",
+      "body": [
+        "{% blocktrans with ${1:name}=${2:user.name} %}",
+        "  ${3:Hello {{ ${1} }}}",
+        "{% endblocktrans %}"
+      ],
+      "description": "Translate block"
+    },
+    "language": {
+      "prefix": "language",
+      "body": [
+        "{% language \"${1:fr}\" %}",
+        "  ${2}",
+        "{% endlanguage %}"
+      ],
+      "description": "Switch language"
+    },
+    "partialdef": {
+      "prefix": "partialdef",
+      "body": [
+        "{% partialdef ${1:name} %}",
+        "  ${2}",
+        "{% endpartialdef %}"
+      ],
+      "description": "Define partial"
+    },
+    "partial": {
+      "prefix": "partial",
+      "body": "{% partial ${1:name} %}",
+      "description": "Render partial"
+    },
+    "csrf": {
+      "prefix": "csrf",
+      "body": "{% csrf_token %}",
+      "description": "CSRF token input"
+    },
+    "csp": {
+      "prefix": "csp",
+      "body": "<script {% csp_nonce_attr %}></script>",
+      "description": "CSP nonce attribute"
+    },
+    "static": {
+      "prefix": "static",
+      "body": "{% static \"${1:css/app.css}\" %}",
+      "description": "Static file URL"
+    },
+    "url": {
+      "prefix": "url",
+      "body": "{% url \"${1:route_name}\" ${2:args} %}",
+      "description": "URL for named route"
+    },
+    "widthratio": {
+      "prefix": "widthratio",
+      "body": "{% widthratio ${1:value} ${2:max} ${3:max_width} %}",
+      "description": "Proportional width"
+    },
+    "debug": {
+      "prefix": "debug",
+      "body": "{% debug %}",
+      "description": "Dump template context"
+    },
+    "load": {
+      "prefix": "load",
+      "body": "{% load ${1:i18n} %}",
+      "description": "Load tag library"
+    },
+    "comment": {
+      "prefix": "comment",
+      "body": [
+        "{#",
+        "  ${1:comment}",
+        "#}"
+      ],
+      "description": "Comment block"
+    },
+    "verbatim": {
+      "prefix": "verbatim",
+      "body": [
+        "{% verbatim %}",
+        "  ${1}",
+        "{% endverbatim %}"
+      ],
+      "description": "Verbatim block"
+    },
+    "regroup": {
+      "prefix": "regroup",
+      "body": "{% for ${1:group} in ${2:items}|regroup:\"${3:category}\" %}{{ ${1}.grouper }}{% endfor %}",
+      "description": "Regroup by attribute"
+    },
+    "firstof": {
+      "prefix": "firstof",
+      "body": "{% firstof ${1:var1} ${2:var2} \"${3:fallback}\" %}",
+      "description": "First truthy value"
+    },
+    "filter_block": {
+      "prefix": "filter",
+      "body": [
+        "{% filter ${1:lower} %}",
+        "  ${2}",
+        "{% endfilter %}"
+      ],
+      "description": "Filter block"
+    }
+  }
+}

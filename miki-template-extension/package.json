@@ -1,0 +1,45 @@
+{
+  "name": "miki-template",
+  "displayName": "miki-template",
+  "description": "Django-style template language syntax highlighting and snippets for miki-template",
+  "version": "1.2.0",
+  "engines": {
+    "vscode": "^1.0.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "miki-template",
+        "aliases": ["miki-template", "miki", "django-template"],
+        "extensions": [".miki", ".miki-template"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "miki-template",
+        "scopeName": "text.html.miki",
+        "path": "./syntaxes/miki-template.tmLanguage.json",
+        "tokenTypes": {
+          "text": "text.html.miki"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "miki-template",
+        "path": "./snippets/miki-template.json"
+      }
+    ]
+  },
+  "publisher": "alainmiki",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alainmiki/miki-template.git"
+  },
+  "license": "MIT"
+}
