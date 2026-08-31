@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.2.0] - 2026-09-01
+### Added
+- Full **ESM** support via `src/esm.mjs` wrapper and conditional `package.json` exports.
+- **TypeScript** type definitions (`src/types.d.ts`).
+- **Async Express 5+** adapter: `__expressAsync(filePath, options) → Promise<string>`.
+- **i18n**: `trans` tag/filter, `blocktrans`, `language`, plural rules, `registerTranslation`.
+- **Plugin/library system**: `registerLibrary`, `registerLibraryFromPath`, built-ins (`humanize`, `cache`, `lorem`).
+- **`load` tag** now activates registered libraries (no longer a stub).
+- **`widthratio`** tag for proportional width calculations.
+- **`debug`** tag for dumping template context during development.
+- **`regroup`** filter for grouping arrays by attribute.
+- **`strftime`** filter with full `date-fns` format support.
+- **Unclosed tag validation**: throws descriptive errors for missing `endif`/`endfor`/`endwith`.
+- **Filter chaining on string literals**: `{{ "Hello"|lower|capfirst }}` now works.
+- New exports: `getFilter`, `stripExpressContext`, `activateLibrary`.
+
+### Fixed
+- `for` loop now supports filter expressions in iterable path (e.g. `items|regroup:"category"`).
+- `Context.reset()` properly clears cycle state and blocks between renders.
+- `__express` strips Express framework keys (`_locals`, `settings`, `cache`) from context.
+- `renderPartial` renders only the named partial, not the full template.
+- `with` tag correctly handles multiple `key=value` assignments and quoted values.
+- `if` tag condition evaluation handles `not`, `and`, `or`, and operator precedence correctly.
+- `forloop.parentloop` correctly propagates for nested loops.
+- `floatformat` default behavior matches Django (1 decimal place).
+- `timesince`/`timeuntil` handle seconds, minutes, hours, days correctly.
+- `pluralize` correctly handles singular vs plural forms.
+- `default` filter treats empty string `''` as falsy like Django.
+- `striptags` correctly removes HTML tags and handles edge cases.
+- Spaceless tag preserves whitespace inside tag attributes correctly.
+
+### Changed
+- Condition evaluation rewritten to use shunting-yard algorithm for correct operator precedence.
+- Simplified `for` loop to use `[key, value]` tuples internally for cleaner unpacking.
+- Improved `partialdef` to support both quoted and unquoted partial names.
+- `floatformat` with `-1` argument now removes all decimals.
+
 ## [1.1.0] - 2026-08-31
 ### Added
 - Missing `comment`/`endcomment` tag support for block comments.
@@ -55,5 +92,6 @@
 - Updated README with npm version and CI badges.
 - Added `CHANGELOG.md` for release notes.
 
+[1.2.0]: https://github.com/your-repo/miki-template/releases/tag/v1.2.0
 [1.1.0]: https://github.com/your-repo/miki-template/releases/tag/v1.1.0
 [1.0.0]: https://github.com/your-repo/miki-template/releases/tag/v1.0.0
