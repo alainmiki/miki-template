@@ -36,7 +36,30 @@ const result = miki.render('Hello {{ name }}', { name: 'World' });
 
 > **Note:** When using ESM in Node.js, either name your files `.mjs` or set `"type": "module"` in your `package.json`.
 
-## Steps
+## Publishing to npm
+
+This project is configured for automatic npm publishing via GitHub Actions. When you push to `main`, the CI workflow runs tests and, if they pass, publishes the package to npm.
+
+### Prerequisites for publishing
+
+1. You must have an npm account and be a maintainer of the `miki-template` package on npm.
+2. In your GitHub repository, go to **Settings → Secrets and variables → Actions**.
+3. Add a new repository secret named `NPM_TOKEN` with your npm automation token.
+   - Generate it at https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+   - Select **Automation** as the token type.
+
+The CI workflow will then automatically publish on every push to `main`.
+
+### Manual publishing
+
+```bash
+npm version patch   # or minor/major
+npm publish --access public
+```
+
+---
+
+## Quick Start
 
 ### 1. Add the engine to your project
 
@@ -80,3 +103,4 @@ npm test
 ```
 
 ---
+

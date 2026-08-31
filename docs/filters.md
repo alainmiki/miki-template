@@ -433,3 +433,108 @@ Filters accept the following argument types:
 {{ items|slice:"1:3" }}                  <!-- Slice notation -->
 {{ price|floatformat:2 }}                 <!-- Decimal places -->
 ```
+
+---
+
+## i18n Filters
+
+### `trans:"fallback"`
+Translate a string using the i18n registry. Falls back to the original value if no translation is found.
+
+```html
+{{ "Hello, World!"|trans }}
+{{ greeting|trans:"Hello, %s!" }}
+```
+
+---
+
+## Regroup Filter
+
+### `regroup:"key"`
+Group an array of objects by a common attribute. Returns an array of `{ grouper, list }` objects.
+
+```html
+{% for group in items|regroup:"category" %}
+  <h3>{{ group.grouper }}</h3>
+  {% for item in group.list %}
+    <p>{{ item.name }}</p>
+  {% endfor %}
+{% endfor %}
+```
+
+---
+
+## String Formatting Filters
+
+### `stringformat:"fmt"`
+Format a value using Python-style format strings (`%s`, `%d`, `%.2f`, `%x`, etc.).
+
+```html
+{{ 42|stringformat:"d" }}       → "42"
+{{ 3.14159|stringformat:".2f" }} → "3.14"
+{{ "hello"|stringformat:"s" }}  → "hello"
+```
+
+---
+
+## URL / Encoding Filters
+
+### `urlencode`
+URL-encode a string. Supports `query`, `path`, and `utf-8` modes.
+
+```html
+{{ "Hello World"|urlencode }}          → "Hello+World"
+{{ "a/b c"|urlencode }}               → "a%2Fb+c"
+```
+
+### `escapeuri`
+Percent-encode a URI.
+
+```html
+{{ "http://example.com/path"|escapeuri }}
+```
+
+---
+
+## Text Filters
+
+### `cut:value`
+Remove all occurrences of a substring.
+
+```html
+{{ "hello hello"|cut:" " }} → "hellohello"
+```
+
+### `addslashes`
+Add backslashes before quotes and backslashes.
+
+```html
+{{ 'He said "Hi"|addslashes }} → He said \"Hi\"
+```
+
+### `removetags:tag1,tag2,...`
+Remove named HTML tags and their contents.
+
+```html
+{{ "<p>Hello</p><b>World</b>"|removetags:"p,b" }} → "HelloWorld"
+```
+
+### `length_is:N`
+Return `true` if the value's length equals N.
+
+```html
+{{ "hello"|length_is:5 }} → true
+```
+
+---
+
+## Date / Time Filters
+
+### `strftime:"format"`
+Format a Date using `date-fns` format strings. More powerful than the built-in `date` filter.
+
+```html
+{{ now|strftime:"PPpp" }}        → "Aug 31, 2026 at 10:24 PM"
+{{ now|strftime:"yyyy-MM-dd" }}  → "2026-08-31"
+{{ now|strftime:"HH:mm:ss" }}    → "22:24:56"
+```

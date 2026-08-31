@@ -451,17 +451,160 @@ Regroups a list by a common attribute.
 
 ---
 
-### `{% templatetag %}`
+### `{% trans "key" %}`
 
-Outputs a syntax element (for displaying template syntax examples in docs).
+Outputs a translated string from the i18n registry.
 
 ```html
-{% templatetag openblock %}  → {%
-{% templatetag closeblock %}   → %}
-{% templatetag openvariable %} → {{
-{% templatetag closevariable %} → }}
-{% templatetag openbrace %}    → {
-{% templatetag closebrace %}   → }
+{% trans "Hello, World!" %}
 ```
 
-This is useful for writing documentation that itself uses template syntax.
+With arguments:
+
+```html
+{% trans "Hello, %s!" name=user.name %}
+```
+
+With context:
+
+```html
+{% trans context "verb" "He runs" %}
+```
+
+---
+
+### `{% blocktrans %}...{% endblocktrans %}`
+
+Translates a block of text. Supports `{% with name=value %}` and `{% plural count name=value %}`.
+
+```html
+{% blocktrans with name=user.name count items|length %}
+  {{ name }} has {{ items|length }} item.
+{% plural %}
+  {{ name }} has {{ items|length }} items.
+{% endblocktrans %}
+```
+
+---
+
+### `{% language "xx" %}...{% endlanguage %}`
+
+Switches the active language for the enclosed block.
+
+```html
+{% language "fr" %}
+  {% trans "Welcome" %}
+{% endlanguage %}
+```
+
+---
+
+### `{% widthratio value max max_width %}`
+
+Calculates a proportional width, commonly used for bar charts or progress indicators.
+
+```html
+{% widthratio 25 100 150 %}  <!-- → 37 (floor of 25/100*150) -->
+```
+
+---
+
+### `{% debug %}`
+
+Dumps the current template context as a formatted HTML `<pre>` block. Useful during development.
+
+```html
+<pre>
+{% debug %}
+</pre>
+```
+
+---
+
+### `{% load library1 library2 %}`
+
+Loads one or more plugin libraries, making their tags, filters, and helpers available.
+
+```html
+{% load i18n humanize cache %}
+```
+
+Built-in libraries:
+- `i18n` — `trans`, `blocktrans`, `language`
+- `humanize` — `intcomma`, `intword`, `apnumber`, `ordinal`, `naturalday`
+- `cache` — `{% cache timeout key %}...{% endcache %}`
+- `lorem` — `lorem` filter for placeholder text
+
+---
+
+## Custom Filters
+
+Register custom filters with `registerFilter`:
+
+```javascript
+const { registerFilter } = require('miki-template');
+
+// Simple filter
+registerFilter('reverse', (val) => String(val).split('').reverse().join(''));
+
+// Filter with argument
+registerFilter('truncate', (val, length) => {
+  const str = String(val);
+  if (str.length <= length) return str;
+  return str.slice(0, length) + '...';
+});
+
+// Chaining works automatically:
+// {{ name|reverse|truncate:5 }}
+```
+
+---
+
+## Custom Tags
+
+Register custom block tags with `registerTag`:
+
+```javascript
+const { registerTag } = require('miki-template');
+
+registerTag('markdown', (tagContent, parser) => {
+  const body = parser.parse(['endmarkdown']);
+  const next = parser.peek();
+  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endmarkdown') {
+    parser.advance();
+  }
+  const md = require('markdown-it')();
+  return {
+    render(context) {
+      const html = body.map(n => n.render(context)).join('');
+      return md.render(html);
+    }
+  };
+});
+```
+
+Usage in templates:
+```html
+{% markdown %}
+# Hello World
+{% endmarkdown %}
+```
+
+---
+
+## Filter Argument Types
+
+Filters accept the following argument types:
+
+| Syntax | Type | Example |
+|--------|------|---------|
+| Unquoted | Variable lookup | `{{ value|filter:count }}` |
+| Double-quoted | String literal | `{{ value|filter:"hello" }}` |
+| Single-quoted | String literal | `{{ value|filter:'world' }}` |
+| Number | Integer literal | `{{ value|truncatewords:10 }}` |
+
+```html
+{{ user.name|default:"Guest" }}           <!-- String default -->
+{{ items|slice:"1:3" }}                  <!-- Slice notation -->
+{{ price|floatformat:2 }}                 <!-- Decimal places -->
+```
