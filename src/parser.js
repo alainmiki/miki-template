@@ -15,13 +15,15 @@ class TextNode {
 }
 
 class VariableNode {
-  constructor(varPath, filters) {
+  constructor(varPath, filters, isLiteral = false, literalValue = null) {
     this.varPath = varPath;
     this.filters = filters;
+    this.isLiteral = isLiteral;
+    this.literalValue = literalValue;
   }
 
   render(context) {
-    let val = context.get(this.varPath);
+    let val = this.isLiteral ? this.literalValue : context.get(this.varPath);
 
     for (const filterInfo of this.filters) {
       const filterFn = filtersModule.getFilter(filterInfo.name);
@@ -65,12 +67,35 @@ function parseVariableExpression(expr) {
   }
 
   let varPath = '';
-  // Parse main variable path
-  while (idx < len && expr[idx] !== '|') {
-    varPath += expr[idx];
+  let isLiteral = false;
+  let literalValue = null;
+
+  // Check for string literal as base value
+  if (idx < len && (expr[idx] === '"' || expr[idx] === "'")) {
+    const quote = expr[idx];
     idx++;
+    let strVal = '';
+    while (idx < len && expr[idx] !== quote) {
+      if (expr[idx] === '\\' && idx + 1 < len) {
+        idx++;
+      }
+      strVal += expr[idx];
+      idx++;
+    }
+    idx++; // Skip closing quote
+    isLiteral = true;
+    literalValue = strVal;
+    skipWhitespace();
   }
-  varPath = varPath.trim();
+
+  // Parse main variable path
+  if (!isLiteral) {
+    while (idx < len && expr[idx] !== '|') {
+      varPath += expr[idx];
+      idx++;
+    }
+    varPath = varPath.trim();
+  }
 
   const filters = [];
   while (idx < len) {
@@ -140,7 +165,7 @@ function parseVariableExpression(expr) {
     }
   }
 
-  return { varPath, filters };
+  return { varPath, filters, isLiteral, literalValue };
 }
 
 class Parser {
@@ -179,7 +204,7 @@ class Parser {
         this.index++;
       } else if (token.type === 'var') {
         const parsed = parseVariableExpression(token.content);
-        nodes.push(new VariableNode(parsed.varPath, parsed.filters));
+        nodes.push(new VariableNode(parsed.varPath, parsed.filters, parsed.isLiteral, parsed.literalValue));
         this.index++;
       } else if (token.type === 'block') {
         const parts = token.content.split(/\s+/);
@@ -200,6 +225,10 @@ class Parser {
         const node = tagParser(token.content, this);
         nodes.push(node);
       }
+    }
+    // If we were looking for specific end tags but didn't find them, throw
+    if (untilTags.length > 0 && this.index >= this.tokens.length) {
+      throw new Error(`Unexpected end of template - expected one of: ${untilTags.map(t => '{% ' + t + ' %}').join(', ')}`);
     }
     return nodes;
   }

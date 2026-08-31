@@ -10,7 +10,6 @@ function getFilter(name) {
   return registry[name];
 }
 
-// Helper to escape HTML dynamically (loads lazily to prevent circular imports)
 function escapeValue(val) {
   const { escapeHtml, markSafe } = require('./security');
   return markSafe(escapeHtml(val));
@@ -53,7 +52,7 @@ registerFilter('truncatewords', (val, arg) => {
 registerFilter('truncatechars', (val, arg) => {
   const str = String(val === null || val === undefined ? '' : val);
   const count = parseInt(arg, 10);
-  if (isNaN(count) || count <= 3) return str; // Need space for '...'
+  if (isNaN(count) || count <= 0) return str;
   if (str.length <= count) return str;
   return str.slice(0, count - 3) + '...';
 });
@@ -81,19 +80,26 @@ registerFilter('linebreaksbr', (val) => {
 
 registerFilter('striptags', (val) => {
   const str = String(val === null || val === undefined ? '' : val);
-  return str.replace(/<\/?[^>]+(>|$)/g, '');
+  return str.replace(/<\/?[^>]+>/g, '');
 });
 
 registerFilter('slugify', (val) => {
   const str = String(val === null || val === undefined ? '' : val);
   return str
-    .normalize('NFD') // decompose to components
-    .replace(/[\u0300-\u036f]/g, '') // remove accent marks
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // keep alphanumeric, spaces, hyphens
+    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-') // replace space with single hyphen
-    .replace(/-+/g, '-'); // collapse duplicate hyphens
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+});
+
+registerFilter('length_is', (val, arg) => {
+  const length = (val && typeof val.length === 'number') ? val.length : 0;
+  const expected = parseInt(arg, 10);
+  if (isNaN(expected)) return false;
+  return length === expected;
 });
 
 // --- HTML Filters ---
@@ -121,8 +127,7 @@ registerFilter('join', (val, arg) => {
 });
 
 registerFilter('slice', (val, arg) => {
-  if (!val || (typeof val.slice !== 'function')) return val;
-  if (typeof arg !== 'string') return val.slice(arg);
+  if (!val || typeof val.slice !== 'function') return val;
   const parts = arg.split(':');
   if (parts.length === 1) {
     const idx = parseInt(parts[0], 10);
@@ -138,6 +143,9 @@ registerFilter('dictsort', (val, arg) => {
   return [...val].sort((a, b) => {
     const valA = a && typeof a === 'object' ? a[arg] : undefined;
     const valB = b && typeof b === 'object' ? b[arg] : undefined;
+    if (valA === undefined && valB === undefined) return 0;
+    if (valA === undefined) return 1;
+    if (valB === undefined) return -1;
     if (valA < valB) return -1;
     if (valA > valB) return 1;
     return 0;
@@ -149,6 +157,9 @@ registerFilter('dictsortreversed', (val, arg) => {
   return [...val].sort((a, b) => {
     const valA = a && typeof a === 'object' ? a[arg] : undefined;
     const valB = b && typeof b === 'object' ? b[arg] : undefined;
+    if (valA === undefined && valB === undefined) return 0;
+    if (valA === undefined) return -1;
+    if (valB === undefined) return 1;
     if (valA < valB) return 1;
     if (valA > valB) return -1;
     return 0;
@@ -156,10 +167,8 @@ registerFilter('dictsortreversed', (val, arg) => {
 });
 
 // --- Date/Time Filters ---
-// Import date-fns utilities (single import)
 const { format: formatDate, parseISO } = require('date-fns');
 
-// Custom filter: date_format (supports optional pattern)
 registerFilter('date_format', (val, pattern) => {
   let date = val;
   if (typeof val === 'string') {
@@ -176,7 +185,6 @@ registerFilter('date_format', (val, pattern) => {
   }
 });
 
-// Alias filter: strftime (full date-fns format patterns)
 registerFilter('strftime', (val, pattern) => {
   let date = val;
   if (typeof val === 'string') {
@@ -185,7 +193,7 @@ registerFilter('strftime', (val, pattern) => {
     date = new Date(val);
   }
   if (isNaN(date.getTime())) return '';
-  const fmt = pattern || 'PPpp'; // default human readable format
+  const fmt = pattern || 'PPpp';
   try {
     return formatDate(date, fmt);
   } catch (_) {
@@ -193,14 +201,13 @@ registerFilter('strftime', (val, pattern) => {
   }
 });
 
-// Django‑style date filter (supports common format letters)
 registerFilter('date', (val, arg) => {
   let date = val;
   if (!(date instanceof Date)) {
     date = new Date(val);
   }
   if (isNaN(date.getTime())) return '';
-  const formatStr = arg || 'Y-m-d'; // default format
+  const formatStr = arg || 'Y-m-d';
   const mapper = {
     d: () => String(date.getDate()).padStart(2, '0'),
     j: () => String(date.getDate()),
@@ -222,7 +229,6 @@ registerFilter('date', (val, arg) => {
   return output;
 });
 
-// Django‑style time filter (uses date filter for formatting)
 registerFilter('time', (val, arg) => {
   let date = val;
   if (!(date instanceof Date)) {
@@ -233,25 +239,32 @@ registerFilter('time', (val, arg) => {
   return getFilter('date')(date, formatStr);
 });
 
-
 registerFilter('timesince', (val, arg) => {
   const d1 = new Date(val);
   const d2 = arg ? new Date(arg) : new Date();
   if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
   const diffMs = Math.max(0, d2 - d1);
-  const diffMins = Math.floor(diffMs / 60000);
+  const seconds = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(seconds / 60);
   if (diffMins < 1) return '0 minutes';
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
   const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+  return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
 });
 
 registerFilter('timeuntil', (val, arg) => {
   const d1 = new Date(val);
   const d2 = arg ? new Date(arg) : new Date();
-  return getFilter('timesince')(d2, d1);
+  const diffMs = Math.max(0, d1.getTime() - d2.getTime());
+  if (diffMs <= 0) return '0 minutes';
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
 });
 
 // --- Numeric Filters ---
@@ -277,21 +290,33 @@ registerFilter('divisibleby', (val, arg) => {
 registerFilter('floatformat', (val, arg) => {
   const num = Number(val);
   if (isNaN(num)) return '';
-  let decimals = 1;
-  if (arg !== undefined && arg !== null) {
-    decimals = parseInt(arg, 10);
+  if (arg === undefined || arg === null) {
+    return num.toFixed(1);
   }
-  if (isNaN(decimals)) decimals = 1;
+  const decimals = parseInt(arg, 10);
+  if (isNaN(decimals)) return '';
+  if (decimals === -1) {
+    return num.toFixed(0);
+  }
   return num.toFixed(Math.max(0, decimals));
 });
 
 // --- Default Filters ---
 registerFilter('default', (val, arg) => {
-  return val ? val : arg;
+  return val === null || val === undefined || val === '' ? arg : val;
 });
 
 registerFilter('default_if_none', (val, arg) => {
   return (val === null || val === undefined) ? arg : val;
+});
+
+registerFilter('firstof', (...args) => {
+  for (const arg of args) {
+    if (arg !== null && arg !== undefined && arg !== '') {
+      return arg;
+    }
+  }
+  return '';
 });
 
 // --- Misc Filters ---
@@ -325,10 +350,110 @@ registerFilter('filesizeformat', (val) => {
   if (isNaN(bytes) || bytes < 0) return '0 bytes';
   if (bytes === 0) return '0 bytes';
   const k = 1024;
-  const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
   const num = bytes / Math.pow(k, i);
   return `${num.toFixed(num % 1 === 0 ? 0 : 1)} ${sizes[i]}`;
+});
+
+registerFilter('urlencode', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  if (arg === undefined || arg === null || arg === '') {
+    return encodeURIComponent(str).replace(/%20/g, '+');
+  }
+  if (arg === 'utf-8' || arg === 'utf8') {
+    return encodeURIComponent(str);
+  }
+  if (arg === 'query' || arg === 'raw') {
+    return encodeURIComponent(str).replace(/%20/g, '+');
+  }
+  if (arg === 'path') {
+    return str.split('/').map(seg => encodeURIComponent(seg)).join('/');
+  }
+  return encodeURIComponent(str);
+});
+
+registerFilter('escapeuri', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return encodeURI(str);
+});
+
+registerFilter('stringformat', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const fmt = String(arg === null || arg === undefined ? '%s' : arg);
+  let result = '';
+  let i = 0;
+  while (i < fmt.length) {
+    if (fmt[i] === '%') {
+      // Try to match a full format specifier with optional width/precision
+      const numMatch = fmt.slice(i).match(/^%(?:\d+)?(?:\.\d+)?([sdifFeExXo%])/);
+      if (numMatch) {
+        const spec = numMatch[1];
+        if (spec === 's') {
+          result += str;
+        } else if (spec === 'd' || spec === 'i') {
+          result += String(parseInt(str, 10));
+        } else if (spec === 'f' || spec === 'F') {
+          const precMatch = numMatch[0].match(/\.(\d+)/);
+          const precision = precMatch ? parseInt(precMatch[1], 10) : 6;
+          const widthMatch = numMatch[0].match(/%(\d+)/);
+          const width = widthMatch ? parseInt(widthMatch[1], 10) : null;
+          const num = parseFloat(str);
+          let formatted = num.toFixed(precision);
+          if (width && formatted.length < width) {
+            formatted = ' '.repeat(width - formatted.length) + formatted;
+          }
+          if (spec === 'F') formatted = formatted.toUpperCase();
+          result += formatted;
+        } else if (spec === 'e') {
+          result += parseFloat(str).toExponential();
+        } else if (spec === 'E') {
+          result += parseFloat(str).toExponential().toUpperCase();
+        } else if (spec === 'x') {
+          result += parseInt(str, 10).toString(16);
+        } else if (spec === 'X') {
+          result += parseInt(str, 10).toString(16).toUpperCase();
+        } else if (spec === 'o') {
+          result += parseInt(str, 10).toString(8);
+        } else if (spec === '%') {
+          result += '%';
+        }
+        i += numMatch[0].length;
+      } else {
+        result += fmt[i];
+        i++;
+      }
+    } else {
+      result += fmt[i];
+      i++;
+    }
+  }
+  return result;
+});
+
+registerFilter('cut', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  if (arg === undefined || arg === null) return str;
+  return str.split(String(arg)).join('');
+});
+
+registerFilter('addslashes', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return str.replace(/['"\\]/g, c => '\\' + c);
+});
+
+registerFilter('removetags', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  if (!arg) return str;
+  const tags = arg.split(',').map(t => t.trim()).filter(Boolean);
+  let result = str;
+  for (const tag of tags) {
+    const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(`<\\/${escaped}>`, 'gi'), '');
+    result = result.replace(new RegExp(`<${escaped}[^>]*>`, 'gi'), '');
+    result = result.replace(new RegExp(`<${escaped}>`, 'gi'), '');
+  }
+  return result;
 });
 
 module.exports = { registerFilter, getFilter };

@@ -13,6 +13,16 @@ class Context {
   }
 
   /**
+   * Reset cycle state and blocks for a fresh render.
+   * Called at the start of each render pass.
+   */
+  reset() {
+    this.cycleStates.clear();
+    this.blocks = {};
+    this.parentTemplate = null;
+  }
+
+  /**
    * Push a new scope onto the stack.
    */
   push(scope = {}) {

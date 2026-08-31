@@ -1,6 +1,6 @@
 # miki-template
 ![npm version](https://img.shields.io/npm/v/miki-template.svg) ![CI](https://github.com/your-repo/miki-template/workflows/ci.yml/badge.svg)
-A robust, production-ready template engine that brings **Django's template language** features and syntax to Node.js and Express, fully compliant with modern JavaScript (ES6+) and CommonJS.
+A robust, production-ready template engine that brings **Django's template language** features and syntax to Node.js and Express, fully compliant with modern JavaScript (ES6+), CommonJS, and **ESM** (`import`) support.
 
 ---
 
@@ -9,9 +9,11 @@ A robust, production-ready template engine that brings **Django's template langu
 - **Full Syntax Parity**: Supports variables, dotted lookups, filters (`|`), and block tags (`{% %}`).
 - **Template Inheritance**: Multi-level inheritance with `extends`, block overrides, and `{{ block.super }}` support.
 - **Express Integration**: Simple, zero-config integration via `app.engine()`.
+- **ESM & CommonJS**: Works seamlessly with both `import` and `require` syntax.
 - **Security by Default**: Auto-escaping enabled by default with a `SafeString` wrapper.
 - **CSRF & CSP Support**: Native tags for `{% csrf_token %}` and `{% csp_nonce_attr %}` to keep apps secure out-of-the-box.
-- **HTMX Block Partials**: Support for rendering a single block from a compiled template via `compiled.renderBlock('block_name')`.
+- **Block Partials**: Render a single block from a compiled template via `compiled.renderBlock('block_name')`.
+- **Async Rendering**: Support for async filters/tags with `asyncRender()`.
 - **Extensible API**: Easy registration for custom tags and filters.
 - **No Unsafe Code Execution**: Evaluates expressions securely without using `eval()`.
 
@@ -20,19 +22,19 @@ A robust, production-ready template engine that brings **Django's template langu
 ## 📦 Installation
 
 ```bash
-npm install he miki-template
+npm install miki-template
 ```
 
 ---
 
 ## 🛠️ Quick Start
 
-### Standalone Usage
+### CommonJS (require)
 
 ```javascript
-const { render } = require('miki-template');
+const { render, compile, __express, SafeString, markSafe } = require('miki-template');
 
-const template = 'Hello {{ user.name|title }}! Roles: {% join user.roles ", " %}';
+const template = 'Hello {{ user.name|title }}! Roles: {{ user.roles|join:", " }}';
 const context = {
   user: {
     name: 'miki coder',
@@ -44,16 +46,26 @@ const result = render(template, context);
 console.log(result); // Output: "Hello Miki Coder! Roles: admin, developer"
 ```
 
-### ES6+ Imports
-
-`miki-template` resolves natively under ES6+ modules:
+### ES Modules (import)
 
 ```javascript
-import { render, compile } from 'miki-template';
+// Named imports
+import { render, compile, __express, SafeString, markSafe } from 'miki-template';
+
+// Or default import (gets all exports)
+import miki from 'miki-template';
+const { render: mikiRender } = miki;
+
+const template = 'Hello {{ user.name|title }}!';
+const result = render(template, { user: { name: 'world' } });
+console.log(result); // Output: "Hello World!"
 ```
+
+> **Note:** For ESM in Node.js, either name your files `.mjs` or add `"type": "module"` to your `package.json`.
 
 ### Express Integration
 
+**CommonJS:**
 ```javascript
 const express = require('express');
 const { __express: renderDtpl } = require('miki-template');
@@ -63,12 +75,32 @@ const app = express();
 // Register both .html and .miki extensions
 app.engine('html', renderDtpl);
 app.engine('miki', renderDtpl);
-app.set('view engine', 'miki'); // you can also set to 'html'
+app.set('view engine', 'miki');
 app.set('views', './views');
 
 app.get('/', (req, res) => {
   res.render('home', {
     title: 'Django Templates in Node!',
+    items: ['Apple', 'Banana', 'Orange']
+  });
+});
+
+app.listen(3000, () => console.log('App listening on port 3000'));
+```
+
+**ESM:**
+```javascript
+import express from 'express';
+import { __express as renderDtpl } from 'miki-template';
+
+const app = express();
+app.engine('html', renderDtpl);
+app.set('view engine', 'html');
+app.set('views', './views');
+
+app.get('/', (req, res) => {
+  res.render('home', {
+    title: 'Django Templates with ESM!',
     items: ['Apple', 'Banana', 'Orange']
   });
 });
@@ -178,6 +210,8 @@ console.log(partialHtml); // Output: "<h1>Child Content</h1> Default Content"
 ## 🔧 Extensibility API
 
 ### Register a Custom Filter
+
+**CommonJS:**
 ```javascript
 const { registerFilter } = require('miki-template');
 
@@ -186,11 +220,33 @@ registerFilter('reverse', (val) => {
 });
 ```
 
+**ESM:**
+```javascript
+import { registerFilter } from 'miki-template';
+
+registerFilter('reverse', (val) => {
+  return String(val).split('').reverse().join('');
+});
+```
+
 ### Register a Custom Tag
+
+**CommonJS:**
 ```javascript
 const { registerTag } = require('miki-template');
 
 // Custom tag parser returning an AST Node
+registerTag('hello', (tagContent, parser) => {
+  return {
+    render: (context) => 'Hello World!'
+  };
+});
+```
+
+**ESM:**
+```javascript
+import { registerTag } from 'miki-template';
+
 registerTag('hello', (tagContent, parser) => {
   return {
     render: (context) => 'Hello World!'

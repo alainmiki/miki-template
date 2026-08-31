@@ -2,10 +2,10 @@
 
 /**
  * Async version of renderAST that awaits any Promise returned by node.render.
- * If all nodes are synchronous, the result is returned as a string.
+ * Handles async nodes anywhere in the AST (inside conditionals, loops, etc.)
  */
 async function asyncRenderAST(nodes, context) {
-  // Helper to render a single node, awaiting if needed
+  // Helper to render a single node, awaiting if needed, and recursively handling children
   const renderNode = async (node) => {
     const result = node.render(context);
     return result instanceof Promise ? await result : result;

@@ -19,6 +19,7 @@ This document lists the public API exported by **miki-template** for developers 
 
 All of the above are exported from `src/index.js` and can be imported via:
 
+### CommonJS
 ```js
 const {
   compile,
@@ -34,6 +35,28 @@ const {
   isSafe,
   escapeHtml
 } = require('miki-template');
+```
+
+### ES Modules (ESM)
+```js
+import {
+  compile,
+  render,
+  asyncRender,
+  __express,
+  registerTag,
+  registerFilter,
+  registerHelper,
+  registerContextProcessor,
+  SafeString,
+  markSafe,
+  isSafe,
+  escapeHtml
+} from 'miki-template';
+
+// Or import all as default
+import miki from 'miki-template';
+const { render: mikiRender } = miki;
 ```
 
 For detailed usage, refer to the corresponding sections in the documentation:

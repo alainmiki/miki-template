@@ -5,19 +5,22 @@
   "main": "src/index.js",
   "exports": {
     ".": {
+      "import": "./src/esm.mjs",
       "require": "./src/index.js",
       "default": "./src/index.js"
     }
   },
   "scripts": {
-    "test": "node --test tests/*.test.js", "bench": "node benchmarks/run.js"
+    "test": "node --test tests/*.test.js tests/*.test.mjs",
+    "bench": "node benchmarks/run.js"
   },
   "keywords": [
     "django",
     "template",
     "engine",
     "express",
-    "nodejs"
+    "nodejs",
+    "esm"
   ],
   "author": "",
   "license": "MIT",

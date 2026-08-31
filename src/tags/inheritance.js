@@ -150,10 +150,9 @@ class IncludeNode {
 
     return nodes.map(n => n.render(context)).join('');
   }
+}
 
-
-  }
-
+// --- Tag Registry Parsers ---
 
 // --- Tag Registry Parsers ---
 

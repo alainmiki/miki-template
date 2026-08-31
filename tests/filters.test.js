@@ -49,3 +49,51 @@ test('Filters - Misc filters', () => {
   assert.strictEqual(pluralize(1, 'y,ies'), 'y');
   assert.strictEqual(pluralize(2, 'y,ies'), 'ies');
 });
+
+test('Filters - urlencode and escapeuri', () => {
+  const urlencode = getFilter('urlencode');
+  assert.strictEqual(urlencode('hello world'), 'hello+world');
+  assert.strictEqual(urlencode('a b c'), 'a+b+c');
+
+  const escapeuri = getFilter('escapeuri');
+  assert.ok(escapeuri('http://example.com/path with spaces').includes('path%20with%20spaces'));
+});
+
+test('Filters - stringformat', () => {
+  const stringformat = getFilter('stringformat');
+  assert.strictEqual(stringformat('hello', '%s'), 'hello');
+  assert.strictEqual(stringformat(42, '%d'), '42');
+  assert.strictEqual(stringformat(3.14159, '%.2f'), '3.14');
+});
+
+test('Filters - cut and addslashes', () => {
+  const cut = getFilter('cut');
+  assert.strictEqual(cut('hello hello', ' '), 'hellohello');
+
+  const addslashes = getFilter('addslashes');
+  assert.strictEqual(addslashes('He said "Hi"'), 'He said \\"Hi\\"');
+});
+
+test('Filters - length_is', () => {
+  const length_is = getFilter('length_is');
+  assert.strictEqual(length_is([1, 2, 3], 3), true);
+  assert.strictEqual(length_is([1, 2], 3), false);
+});
+
+test('Filter chaining via template', () => {
+  const { render } = require('../src/index');
+  const result = render('{{ value|lower|capfirst }}', { value: 'Hello World' });
+  assert.strictEqual(result, 'Hello world');
+
+  const result2 = render('{{ items|length|add:5 }}', { items: [1, 2, 3] });
+  assert.strictEqual(result2, '8');
+});
+
+test('Filter chaining on string literal', () => {
+  const { render } = require('../src/index');
+  const result = render('{{ "Hello World"|lower|capfirst }}', {});
+  assert.strictEqual(result, 'Hello world');
+
+  const result2 = render('{{ "  trim me  "|cut:" " }}', {});
+  assert.strictEqual(result2, 'trimme');
+});

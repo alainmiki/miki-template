@@ -104,3 +104,36 @@ test('Tags - Partial Block Rendering via compile.renderBlock', () => {
   assert.match(headerOnly, /Child Header/);
   assert.match(headerOnly, /Default Header/);
 });
+
+test('Tags - templatetag', () => {
+  const output = render('{% templatetag openvariable %}hello{% templatetag closevariable %}', {});
+  assert.strictEqual(output, '{{hello}}');
+});
+
+test('Tags - templatetag openblock/closeblock', () => {
+  const output = render('{% templatetag openblock %}body{% templatetag closeblock %}', {});
+  assert.strictEqual(output, '{%body%}');
+});
+
+test('Tags - load', () => {
+  const output = render('{% load i18n %}', {});
+  assert.strictEqual(output, '');
+});
+
+test('Tags - unclosed if throws', () => {
+  assert.throws(() => {
+    render('{% if x %}hello', {});
+  }, /Unclosed.*if|endif/i);
+});
+
+test('Tags - unclosed for throws', () => {
+  assert.throws(() => {
+    render('{% for x in items %}{{ x }}', { items: [1, 2] });
+  }, /Unexpected end|endfor/i);
+});
+
+test('Tags - unclosed with throws', () => {
+  assert.throws(() => {
+    render('{% with a=b %}{{ a }}', { b: 1 });
+  }, /Unexpected end|endwith/i);
+});

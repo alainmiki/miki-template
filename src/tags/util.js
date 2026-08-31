@@ -187,6 +187,54 @@ function parseCspNonceAttr(tagContent, parser) {
   return new CspNonceAttrNode();
 }
 
+class LoadNode {
+  constructor(library) {
+    this.library = library;
+  }
+
+  render(context) {
+    // For now, just return empty string - load tag is for extensibility
+    // which we don't implement yet but needed for Django compatibility
+    return '';
+  }
+}
+
+class TemplatetagNode {
+  constructor(token) {
+    this.token = token;
+  }
+
+  render(context) {
+    const map = {
+      'openblock': '{%',
+      'closeblock': '%}',
+      'openvariable': '{{',
+      'closevariable': '}}',
+      'openbrace': '{',
+      'closebrace': '}',
+      'opencomment': '{#',
+      'closecomment': '#}'
+    };
+    return map[this.token] || this.token;
+  }
+}
+
+function parseLoad(tagContent, parser) {
+  const parts = tagContent.trim().split(/\s+/);
+  if (parts.length === 0) {
+    throw new Error("'load' tag requires at least one argument");
+  }
+  // The library name - we ignore it for now but could load custom tags/filters
+  return new LoadNode(parts[0]);
+}
+
+function parseTemplatetag(tagContent, parser) {
+  const parts = tagContent.trim().split(/\s+/);
+  // First part is the tag name, rest is the argument
+  const token = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
+  return new TemplatetagNode(token);
+}
+
 module.exports = {
   StaticNode,
   UrlNode,
@@ -194,12 +242,16 @@ module.exports = {
   SpacelessNode,
   CsrfTokenNode,
   CspNonceAttrNode,
+  LoadNode,
+  TemplatetagNode,
   parsers: {
     static: parseStatic,
     url: parseUrl,
     regroup: parseRegroup,
     spaceless: parseSpaceless,
     csrf_token: parseCsrfToken,
-    csp_nonce_attr: parseCspNonceAttr
+    csp_nonce_attr: parseCspNonceAttr,
+    load: parseLoad,
+    templatetag: parseTemplatetag
   }
 };
