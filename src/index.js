@@ -34,6 +34,54 @@ for (const [name, parserFn] of Object.entries(utilTags.parsers)) {
   registerTag(name, parserFn);
 }
 
+// Load i18n tags
+const i18nTags = require('./tags/i18n');
+for (const [name, parserFn] of Object.entries(i18nTags.parsers)) {
+  registerTag(name, parserFn);
+}
+
+// i18n module
+const i18n = require('./i18n');
+
+// Plugin/filter library system
+const libraries = require('./libraries');
+
+// Re-export the library module APIs
+module.exports = {
+  compile,
+  render,
+  asyncRender,
+  __express,
+  __expressAsync,
+  stripExpressContext,
+  clearCache,
+  registerTag,
+  registerFilter,
+  getFilter,
+  registerHelper,
+  registerContextProcessor,
+  SafeString,
+  markSafe,
+  isSafe,
+  escapeHtml,
+  // i18n
+  registerTranslation: i18n.registerTranslation,
+  unregisterTranslation: i18n.unregisterTranslation,
+  setLanguage: i18n.setLanguage,
+  getLanguage: i18n.getLanguage,
+  setFallbackLanguage: i18n.setFallbackLanguage,
+  getFallbackLanguage: i18n.getFallbackLanguage,
+  getAvailableLanguages: i18n.getAvailableLanguages,
+  // Plugin/filter libraries
+  registerLibrary: libraries.registerLibrary,
+  unregisterLibrary: libraries.unregisterLibrary,
+  getLibrary: libraries.getLibrary,
+  getLibraryNames: libraries.getLibraryNames,
+  hasLibrary: libraries.hasLibrary,
+  registerLibraryFromPath: libraries.registerLibraryFromPath,
+  activateLibrary: libraries.activateLibrary
+};
+
 /**
  * Render an AST recursively to resolve inheritance chain.
  * Async-aware: awaits Promises from any node.
@@ -303,24 +351,27 @@ function asyncRender(templateStr, contextObj = {}, options = {}) {
 }
 
 /**
- * Express adapter engine.
+ * Express adapter engine (synchronous callback form).
  * Strips Express framework keys from the context so they don't leak
  * into the template scope.
  */
 function __express(filePath, options, callback) {
+  // Detect Express 5+ async view engine signature:
+  // Express 5 calls engine(path, options) and awaits the return value when
+  // the engine returns a Promise. We support BOTH signatures.
+  if (typeof callback !== 'function') {
+    // Express 5 async signature: return a Promise
+    return __expressAsync(filePath, options);
+  }
+
   try {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const renderOptions = {
-      views: options.settings ? options.settings.views : path.dirname(filePath),
-      ...options
+      views: options && options.settings ? options.settings.views : path.dirname(filePath),
+      ...(options || {})
     };
     // Strip Express framework keys from the context
-    const ctx = {};
-    for (const [k, v] of Object.entries(options)) {
-      if (!k.startsWith('_') && k !== 'settings' && k !== 'cache') {
-        ctx[k] = v;
-      }
-    }
+    const ctx = stripExpressContext(options);
     const result = render(fileContent, ctx, renderOptions);
     return callback(null, result);
   } catch (err) {
@@ -328,18 +379,77 @@ function __express(filePath, options, callback) {
   }
 }
 
+/**
+ * Strip Express-specific framework keys from a context object.
+ * Internal keys (those starting with `_`), `settings`, and `cache` are removed.
+ */
+function stripExpressContext(options) {
+  if (!options) return {};
+  const ctx = {};
+  for (const [k, v] of Object.entries(options)) {
+    if (!k.startsWith('_') && k !== 'settings' && k !== 'cache') {
+      ctx[k] = v;
+    }
+  }
+  return ctx;
+}
+
+/**
+ * Async view engine for Express 5+. Returns a Promise that resolves
+ * to the rendered HTML. Use this when your templates have async helpers.
+ *
+ *   app.engine('html', miki.__expressAsync);
+ */
+function __expressAsync(filePath, options) {
+  return new Promise((resolve, reject) => {
+    try {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      const renderOptions = {
+        views: options && options.settings ? options.settings.views : path.dirname(filePath),
+        ...(options || {})
+      };
+      const ctx = stripExpressContext(options);
+      // Use asyncRender so async helpers are awaited
+      asyncRender(fileContent, ctx, renderOptions)
+        .then(resolve)
+        .catch(reject);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 module.exports = {
   compile,
   render,
   asyncRender,
   __express,
+  __expressAsync,
+  stripExpressContext,
   clearCache,
   registerTag,
   registerFilter,
+  getFilter,
   registerHelper,
   registerContextProcessor,
   SafeString,
   markSafe,
   isSafe,
-  escapeHtml
+  escapeHtml,
+  // i18n
+  registerTranslation: i18n.registerTranslation,
+  unregisterTranslation: i18n.unregisterTranslation,
+  setLanguage: i18n.setLanguage,
+  getLanguage: i18n.getLanguage,
+  setFallbackLanguage: i18n.setFallbackLanguage,
+  getFallbackLanguage: i18n.getFallbackLanguage,
+  getAvailableLanguages: i18n.getAvailableLanguages,
+  // Plugin/filter libraries
+  registerLibrary: libraries.registerLibrary,
+  unregisterLibrary: libraries.unregisterLibrary,
+  getLibrary: libraries.getLibrary,
+  getLibraryNames: libraries.getLibraryNames,
+  hasLibrary: libraries.hasLibrary,
+  registerLibraryFromPath: libraries.registerLibraryFromPath,
+  activateLibrary: libraries.activateLibrary
 };

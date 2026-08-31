@@ -456,4 +456,71 @@ registerFilter('removetags', (val, arg) => {
   return result;
 });
 
+/**
+ * `trans` filter — translates a string using the i18n registry.
+ * Requires the optional i18n module to have translations registered.
+ * Falls back to the original value if no translation is found.
+ *
+ *   {{ "Hello, world!"|trans }}
+ *   {{ greeting|trans:"Hello, %s!" }}
+ */
+registerFilter('trans', (val, arg) => {
+  const i18n = require('./i18n');
+  const key = arg && arg.length > 0 ? arg : String(val);
+  const isSafeValue = val && val.constructor && val.constructor.name === 'SafeString';
+  const result = i18n.lookup(key);
+  if (isSafeValue) {
+    const { markSafe } = require('./security');
+    return markSafe(String(result));
+  }
+  return String(result);
+});
+
+/**
+ * `regroup` filter — groups a list of objects by a common attribute.
+ * Returns an array of { grouper, list } objects suitable for iteration.
+ *
+ *   {% for group in items|regroup:"category" %}
+ *     <h3>{{ group.grouper }}</h3>
+ *     {% for item in group.list %}
+ *       <p>{{ item.name }}</p>
+ *     {% endfor %}
+ *   {% endfor %}
+ */
+registerFilter('regroup', (val, arg) => {
+  if (!Array.isArray(val)) return [];
+  const key = String(arg || '');
+  const groups = new Map();
+  for (const item of val) {
+    const grouper = item && typeof item === 'object' ? (item[key] !== undefined ? item[key] : null) : null;
+    const grouperKey = grouper === null ? '__null__' : String(grouper);
+    if (!groups.has(grouperKey)) {
+      groups.set(grouperKey, { grouper, list: [] });
+    }
+    groups.get(grouperKey).list.push(item);
+  }
+  return Array.from(groups.values());
+});
+
+/**
+ * `strftime` filter — formats a Date using `date-fns` format strings.
+ * Supports all `date-fns` format tokens (pp, yyyy, MM, dd, HH, mm, ss, etc.)
+ *
+ *   {{ now|strftime:"PPpp" }}  → "Aug 31, 2026 at 10:24 PM"
+ *   {{ now|strftime:"yyyy-MM-dd" }}  → "2026-08-31"
+ *   {{ now|strftime:"HH:mm:ss" }}    → "22:24:56"
+ */
+registerFilter('strftime', (val, arg) => {
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return String(val);
+  const fmt = String(arg === null || arg === undefined ? 'yyyy-MM-dd' : arg);
+  try {
+    const { format } = require('date-fns');
+    return format(d, fmt);
+  } catch (e) {
+    // If date-fns is not available or format is invalid, fallback
+    return d.toISOString();
+  }
+});
+
 module.exports = { registerFilter, getFilter };

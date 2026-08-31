@@ -1,7 +1,7 @@
 /**
  * Control flow template tags: if, for, with, cycle, comment, with, firstof.
  */
-const { Parser } = require('../parser');
+const { Parser, parseVariableExpression } = require('../parser');
 
 /**
  * Helper to parse a string into an array of tokens.
@@ -200,15 +200,35 @@ class IfNode {
 }
 
 class ForNode {
-  constructor(loopVars, iterablePath, body, emptyBody) {
+  constructor(loopVars, iterablePath, body, emptyBody, filters = []) {
     this.loopVars = loopVars;
     this.iterablePath = iterablePath;
+    this.filters = filters;
     this.body = body;
     this.emptyBody = emptyBody;
   }
 
   render(context) {
-    const rawItems = context.get(this.iterablePath);
+    let rawItems = context.get(this.iterablePath);
+
+    // Apply any filters on the iterable path (e.g. items|regroup:"category")
+    const { getFilter } = require('../filters');
+    for (const filterInfo of this.filters) {
+      const filterFn = getFilter(filterInfo.name);
+      if (!filterFn) {
+        throw new Error(`Unknown filter: '${filterInfo.name}'`);
+      }
+      let argVal = undefined;
+      if (filterInfo.arg) {
+        if (filterInfo.arg.type === 'literal') {
+          argVal = filterInfo.arg.value;
+        } else if (filterInfo.arg.type === 'variable') {
+          argVal = context.get(filterInfo.arg.value);
+        }
+      }
+      rawItems = filterFn(rawItems, argVal);
+    }
+
     let items = [];
 
     if (Array.isArray(rawItems)) {
@@ -468,7 +488,7 @@ function parseFor(tagContent, parser) {
     throw new Error(`Invalid for tag format: '${tagContent}'`);
   }
   const loopVars = match[1].split(',').map(s => s.trim()).filter(Boolean);
-  const iterablePath = match[2].trim();
+  const iterableExpr = match[2].trim();
   const body = parser.parse(['empty', 'endfor']);
   let emptyBody = null;
 
@@ -483,7 +503,9 @@ function parseFor(tagContent, parser) {
     parser.advance();
   }
 
-  return new ForNode(loopVars, iterablePath, body, emptyBody);
+  // Parse the iterable expression to support filters: items|regroup:"category"
+  const parsedIterable = parseVariableExpression(iterableExpr);
+  return new ForNode(loopVars, parsedIterable.varPath, body, emptyBody, parsedIterable.filters);
 }
 
 function parseWith(tagContent, parser) {

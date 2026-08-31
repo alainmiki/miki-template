@@ -183,18 +183,80 @@ function parseCsrfToken(tagContent, parser) {
   return new CsrfTokenNode();
 }
 
+class WidthRatioNode {
+  constructor(value, maxValue, maxWidth) {
+    this.value = parseFloat(value);
+    this.maxValue = parseFloat(maxValue);
+    this.maxWidth = parseInt(maxWidth, 10);
+  }
+
+  render(context) {
+    if (!isFinite(this.value) || !isFinite(this.maxValue) || this.maxValue === 0) {
+      return '0';
+    }
+    const ratio = Math.floor((this.value / this.maxValue) * this.maxWidth);
+    return String(Math.max(0, Math.min(ratio, this.maxWidth)));
+  }
+}
+
+class DebugNode {
+  render(context) {
+    // Dump the current context (scopes) for debugging
+    const dump = {
+      scopes: context.scopes.map(s => {
+        if (s && typeof s === 'object') {
+          const out = {};
+          for (const k of Object.keys(s)) {
+            if (k.startsWith('__')) continue;
+            try {
+              const v = s[k];
+              out[k] = typeof v === 'function' ? '[function]' : v;
+            } catch (e) {
+              out[k] = '[unreadable]';
+            }
+          }
+          return out;
+        }
+        return String(s);
+      })
+    };
+    const { escapeHtml, markSafe } = require('../security');
+    return markSafe('<pre>' + escapeHtml(JSON.stringify(dump, null, 2)) + '</pre>');
+  }
+}
+
+function parseWidthRatio(tagContent, parser) {
+  // {% widthratio this_value max_value max_width %}
+  const parts = tagContent.replace(/^widthratio\s+/, '').trim().split(/\s+/);
+  if (parts.length < 3) {
+    throw new Error(`'widthratio' tag requires 3 arguments: value, max_value, max_width`);
+  }
+  return new WidthRatioNode(parts[0], parts[1], parts[2]);
+}
+
+function parseDebug(tagContent, parser) {
+  return new DebugNode();
+}
+
 function parseCspNonceAttr(tagContent, parser) {
   return new CspNonceAttrNode();
 }
 
 class LoadNode {
-  constructor(library) {
-    this.library = library;
+  constructor(libraries) {
+    this.libraries = Array.isArray(libraries) ? libraries : [libraries];
   }
 
   render(context) {
-    // For now, just return empty string - load tag is for extensibility
-    // which we don't implement yet but needed for Django compatibility
+    const { activateLibrary, hasLibrary } = require('../libraries');
+    for (const lib of this.libraries) {
+      if (hasLibrary(lib)) {
+        activateLibrary(lib);
+      } else {
+        // Emit a comment-style warning for missing library
+        console.warn(`[miki-template] Library not found: '${lib}'`);
+      }
+    }
     return '';
   }
 }
@@ -224,8 +286,7 @@ function parseLoad(tagContent, parser) {
   if (parts.length === 0) {
     throw new Error("'load' tag requires at least one argument");
   }
-  // The library name - we ignore it for now but could load custom tags/filters
-  return new LoadNode(parts[0]);
+  return new LoadNode(parts);
 }
 
 function parseTemplatetag(tagContent, parser) {
@@ -244,6 +305,8 @@ module.exports = {
   CspNonceAttrNode,
   LoadNode,
   TemplatetagNode,
+  WidthRatioNode,
+  DebugNode,
   parsers: {
     static: parseStatic,
     url: parseUrl,
@@ -252,6 +315,8 @@ module.exports = {
     csrf_token: parseCsrfToken,
     csp_nonce_attr: parseCspNonceAttr,
     load: parseLoad,
-    templatetag: parseTemplatetag
+    templatetag: parseTemplatetag,
+    widthratio: parseWidthRatio,
+    debug: parseDebug
   }
 };

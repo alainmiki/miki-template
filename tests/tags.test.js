@@ -137,3 +137,67 @@ test('Tags - unclosed with throws', () => {
     render('{% with a=b %}{{ a }}', { b: 1 });
   }, /Unexpected end|endwith/i);
 });
+
+test('Tags - widthratio', () => {
+  // 25 out of 100 with max width 150 = floor(25/100 * 150) = 37
+  assert.strictEqual(render('{% widthratio 25 100 150 %}', {}), '37');
+  // Edge cases
+  assert.strictEqual(render('{% widthratio 0 100 150 %}', {}), '0');
+  assert.strictEqual(render('{% widthratio 100 100 150 %}', {}), '150');
+  assert.strictEqual(render('{% widthratio 200 100 150 %}', {}), '150');
+});
+
+test('Tags - debug', () => {
+  const output = render('{% debug %}', { foo: 'bar' });
+  assert.ok(output.includes('foo'));
+  assert.ok(output.includes('bar'));
+});
+
+test('Tags - i18n trans tag', () => {
+  const { setLanguage, registerTranslation, render } = require('../src/index');
+  registerTranslation('en', { 'Hello, World!': 'Bonjour, le monde !' });
+  setLanguage('en');
+  const output = render('{% trans "Hello, World!" %}', {});
+  assert.strictEqual(output, 'Bonjour, le monde !');
+});
+
+test('Tags - i18n language block', () => {
+  const { setLanguage, registerTranslation, render } = require('../src/index');
+  registerTranslation('fr', { 'Welcome': 'Bienvenue' });
+  const output = render('{% language "fr" %}{% trans "Welcome" %}{% endlanguage %}', {});
+  assert.strictEqual(output, 'Bienvenue');
+});
+
+test('Tags - load with real library', () => {
+  const { render, registerLibrary } = require('../src/index');
+  registerLibrary('mytestlib', {
+    filters: {
+      shout: (val) => String(val).toUpperCase() + '!'
+    }
+  });
+  const output = render('{% load mytestlib %}{{ "hello"|shout }}', {});
+  assert.strictEqual(output, 'HELLO!');
+});
+
+test('Tags - regroup filter', () => {
+  const { render } = require('../src/index');
+  const items = [
+    { category: 'A', name: 'a1' },
+    { category: 'B', name: 'b1' },
+    { category: 'A', name: 'a2' }
+  ];
+  const output = render(
+    '{% for g in items|regroup:"category" %}{{ g.grouper }}{% for i in g.list %}{{ i.name }}{% endfor %}{% endfor %}',
+    { items }
+  );
+  assert.strictEqual(output, 'Aa1a2Bb1');
+});
+
+test('Filters - strftime with date-fns', () => {
+  const { render, getFilter } = require('../src/index');
+  const strftime = getFilter('strftime');
+  const result = strftime(new Date('2026-08-31T22:00:00'), 'yyyy-MM-dd');
+  assert.strictEqual(result, '2026-08-31');
+  const result2 = strftime(new Date('2026-08-31T22:00:00'), 'HH:mm');
+  assert.ok(result2.startsWith('22:'));
+});
