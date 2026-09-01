@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "test": "node --test tests/*.test.js tests/*.test.mjs",
+    "test": "node -e \"const fs=require('fs');const path=require('path');const files=fs.readdirSync('tests').filter(f=>f.endsWith('.test.js')||f.endsWith('.test.mjs')).map(f=>path.join('tests',f));require('child_process').execSync('node --test '+files.join(' '),{stdio:'inherit'})\"",
     "bench": "node benchmarks/run.js"
   },
   "keywords": [
