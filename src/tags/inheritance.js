@@ -6,7 +6,7 @@ const path = require('path');
 
 // Helper to resolve expression values
 function resolveValue(token, context) {
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
   return context.get(token);
@@ -156,7 +156,7 @@ class IncludeNode {
 
 // --- Tag Registry Parsers ---
 
-function parseExtends(tagContent, parser) {
+function parseExtends(tagContent, _parser) {
   // tagContent: "extends 'base.html'"
   const parentTemplateExpr = tagContent.slice(8).trim();
   return new ExtendsNode(parentTemplateExpr);
@@ -184,7 +184,7 @@ function parseBlock(tagContent, parser) {
   return blockNode;
 }
 
-function parseInclude(tagContent, parser) {
+function parseInclude(tagContent, _parser) {
   // tagContent: "include 'header.html'" or "include 'header.html' with val1=var1"
   const content = tagContent.slice(8).trim();
   

@@ -23,7 +23,7 @@ class TransNode {
     }
     // For unquoted keys: if the key is a variable name, resolve it
     let key = this.key;
-    if (!key.startsWith('"') && !key.startsWith("'") && !key.includes(' ')) {
+    if (!key.startsWith('"') && !key.startsWith('\'') && !key.includes(' ')) {
       const resolved = context.get(key);
       if (typeof resolved === 'string' && resolved.length > 0) {
         key = resolved;
@@ -43,7 +43,7 @@ class LanguageNode {
 
   render(context) {
     // Strip quotes
-    const lang = this.lang.startsWith('"') || this.lang.startsWith("'")
+    const lang = this.lang.startsWith('"') || this.lang.startsWith('\'')
       ? this.lang.slice(1, -1)
       : (context.get(this.lang) || this.lang);
     const previous = i18n.getLanguage();
@@ -103,17 +103,15 @@ class BlockTransNode {
 
 // --- Parsers ---
 
-function parseTrans(tagContent, parser) {
+function parseTrans(tagContent, _parser) {
   // {% trans "key" %}
   // {% trans "Hello %s" name=user.name %}
   // {% trans context "key" %}
   const trimmed = tagContent.slice(5).trim(); // strip "trans"
   const tokens = trimmed.match(/(?:"[^"]*"|'[^']*'|\S+)/g) || [];
 
-  let context = null;
   let keyIdx = 0;
   if (tokens[0] && tokens[0] === 'context') {
-    context = tokens[1];
     keyIdx = 2;
   }
   const key = tokens[keyIdx] || '';
@@ -123,7 +121,7 @@ function parseTrans(tagContent, parser) {
     if (eq > 0) {
       const name = tokens[i].slice(0, eq);
       let val = tokens[i].slice(eq + 1);
-      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
         val = val.slice(1, -1);
       }
       args[name] = val;
@@ -144,7 +142,6 @@ function parseLanguage(tagContent, parser) {
 
 function parseBlockTrans(tagContent, parser) {
   // Collect body until {% endblocktrans %}
-  const start = parser.index;
   const body = parser.parse(['blocktrans_internal_marker']); // placeholder
   // Actually we need a different approach: scan raw body and parse it ourselves
   // because blocktrans parses its own text content as a template.
@@ -209,7 +206,7 @@ class PluralMappingNode {
   render() { return ''; }
 }
 
-function parsePlural(tagContent, parser) {
+function parsePlural(tagContent, _parser) {
   // {% plural count %}
   const rest = tagContent.slice(6).trim();
   const eq = rest.indexOf('=');

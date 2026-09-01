@@ -5,7 +5,7 @@
 // Helper to resolve expression values
 function resolveValue(token, context) {
   if (!token) return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
   return context.get(token);
@@ -136,13 +136,13 @@ class CspNonceAttrNode {
 
 // --- Tag Registry Parsers ---
 
-function parseStatic(tagContent, parser) {
+function parseStatic(tagContent, _parser) {
   // tagContent: "static 'css/style.css'"
   const pathExpr = tagContent.slice(6).trim();
   return new StaticNode(pathExpr);
 }
 
-function parseUrl(tagContent, parser) {
+function parseUrl(tagContent, _parser) {
   // tagContent: "url 'route_name' arg1 arg2"
   const content = tagContent.slice(3).trim();
   
@@ -156,7 +156,7 @@ function parseUrl(tagContent, parser) {
   return new UrlNode(routeNameExpr, argsExprs);
 }
 
-function parseRegroup(tagContent, parser) {
+function parseRegroup(tagContent, _parser) {
   // tagContent: "regroup people by gender as grouped"
   const match = tagContent.match(/^regroup\s+(.+?)\s+by\s+(.+?)\s+as\s+(.+)$/);
   if (!match) {
@@ -179,7 +179,7 @@ function parseSpaceless(tagContent, parser) {
   return new SpacelessNode(body);
 }
 
-function parseCsrfToken(tagContent, parser) {
+function parseCsrfToken(_tagContent, _parser) {
   return new CsrfTokenNode();
 }
 
@@ -190,7 +190,7 @@ class WidthRatioNode {
     this.maxWidth = parseInt(maxWidth, 10);
   }
 
-  render(context) {
+  render(_context) {
     if (!isFinite(this.value) || !isFinite(this.maxValue) || this.maxValue === 0) {
       return '0';
     }
@@ -211,7 +211,7 @@ class DebugNode {
             try {
               const v = s[k];
               out[k] = typeof v === 'function' ? '[function]' : v;
-            } catch (e) {
+            } catch {
               out[k] = '[unreadable]';
             }
           }
@@ -225,20 +225,20 @@ class DebugNode {
   }
 }
 
-function parseWidthRatio(tagContent, parser) {
+function parseWidthRatio(tagContent, _parser) {
   // {% widthratio this_value max_value max_width %}
   const parts = tagContent.replace(/^widthratio\s+/, '').trim().split(/\s+/);
   if (parts.length < 3) {
-    throw new Error(`'widthratio' tag requires 3 arguments: value, max_value, max_width`);
+    throw new Error('\'widthratio\' tag requires 3 arguments: value, max_value, max_width');
   }
   return new WidthRatioNode(parts[0], parts[1], parts[2]);
 }
 
-function parseDebug(tagContent, parser) {
+function parseDebug(_tagContent, _parser) {
   return new DebugNode();
 }
 
-function parseCspNonceAttr(tagContent, parser) {
+function parseCspNonceAttr(_tagContent, _parser) {
   return new CspNonceAttrNode();
 }
 
@@ -247,7 +247,7 @@ class LoadNode {
     this.libraries = Array.isArray(libraries) ? libraries : [libraries];
   }
 
-  render(context) {
+  render(_context) {
     const { activateLibrary, hasLibrary } = require('../libraries');
     for (const lib of this.libraries) {
       if (hasLibrary(lib)) {
@@ -266,7 +266,7 @@ class TemplatetagNode {
     this.token = token;
   }
 
-  render(context) {
+  render(_context) {
     const map = {
       'openblock': '{%',
       'closeblock': '%}',
@@ -281,15 +281,15 @@ class TemplatetagNode {
   }
 }
 
-function parseLoad(tagContent, parser) {
+function parseLoad(tagContent, _parser) {
   const parts = tagContent.trim().split(/\s+/);
   if (parts.length === 0) {
-    throw new Error("'load' tag requires at least one argument");
+    throw new Error('\'load\' tag requires at least one argument');
   }
   return new LoadNode(parts);
 }
 
-function parseTemplatetag(tagContent, parser) {
+function parseTemplatetag(tagContent, _parser) {
   const parts = tagContent.trim().split(/\s+/);
   // First part is the tag name, rest is the argument
   const token = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];

@@ -1,7 +1,7 @@
 /**
  * Control flow template tags: if, for, with, cycle, comment, with, firstof.
  */
-const { Parser, parseVariableExpression } = require('../parser');
+const { parseVariableExpression } = require('../parser');
 
 /**
  * Helper to parse a string into an array of tokens.
@@ -20,7 +20,7 @@ function tokenizeExpr(exprStr) {
       continue;
     }
 
-    if (ch === '"' || ch === "'") {
+    if (ch === '"' || ch === '\'') {
       const quote = ch;
       let str = '';
       i++;
@@ -85,7 +85,7 @@ function tokenizeExpr(exprStr) {
  */
 function resolveValue(token, context) {
   if (!token) return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
   if (!isNaN(token) && token !== '') {
@@ -113,17 +113,17 @@ function evaluateCondition(exprStr, context) {
     const a = vals.pop();
     let result;
     switch (op) {
-      case '==': result = a == b; break;
-      case '!=': result = a != b; break;
-      case '<':  result = a < b;  break;
-      case '<=': result = a <= b; break;
-      case '>':  result = a > b;  break;
-      case '>=': result = a >= b; break;
-      case 'and': result = !!(a && b); break;
-      case 'or':  result = !!(a || b); break;
-      case 'in':    result = Array.isArray(b) || typeof b === 'string' ? b.includes(a) : false; break;
-      case 'not in': result = !(Array.isArray(b) || typeof b === 'string' ? b.includes(a) : false); break;
-      default: result = false;
+    case '==': result = a == b; break;
+    case '!=': result = a != b; break;
+    case '<':  result = a < b;  break;
+    case '<=': result = a <= b; break;
+    case '>':  result = a > b;  break;
+    case '>=': result = a >= b; break;
+    case 'and': result = !!(a && b); break;
+    case 'or':  result = !!(a || b); break;
+    case 'in':    result = Array.isArray(b) || typeof b === 'string' ? b.includes(a) : false; break;
+    case 'not in': result = !(Array.isArray(b) || typeof b === 'string' ? b.includes(a) : false); break;
+    default: result = false;
     }
     vals.push(result);
   }
@@ -340,7 +340,7 @@ class CommentNode {
     this.body = body;
   }
 
-  render(context) {
+  render(_context) {
     return '';
   }
 }
@@ -399,7 +399,7 @@ function parsePartialDef(tagContent, parser) {
     throw new Error('partialdef tag requires a name');
   }
   let name = nameMatch[1];
-  if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith("'") && name.endsWith("'"))) {
+  if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith('\'') && name.endsWith('\''))) {
     name = name.slice(1, -1);
   }
   const inline = content.includes('inline');
@@ -411,14 +411,14 @@ function parsePartialDef(tagContent, parser) {
   return new PartialDefNode(name, body, inline);
 }
 
-function parsePartial(tagContent, parser) {
+function parsePartial(tagContent, _parser) {
   const content = tagContent.slice(7).trim();
   const nameMatch = content.match(/^(".*?"|'.*?'|\S+)/);
   if (!nameMatch) {
     throw new Error('partial tag requires a name');
   }
   let name = nameMatch[1];
-  if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith("'") && name.endsWith("'"))) {
+  if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith('\'') && name.endsWith('\''))) {
     name = name.slice(1, -1);
   }
   return new PartialNode(name);
@@ -525,7 +525,7 @@ function parseWith(tagContent, parser) {
       if (eqIdx === -1) continue;
       const name = token.slice(0, eqIdx).trim();
       let valPath = token.slice(eqIdx + 1).trim();
-      if ((valPath.startsWith('"') && valPath.endsWith('"')) || (valPath.startsWith("'") && valPath.endsWith("'"))) {
+      if ((valPath.startsWith('"') && valPath.endsWith('"')) || (valPath.startsWith('\'') && valPath.endsWith('\''))) {
         valPath = valPath.slice(1, -1);
       }
       mappings.push({ name, valPath });
@@ -541,7 +541,7 @@ function parseWith(tagContent, parser) {
   return new WithNode(mappings, body);
 }
 
-function parseCycle(tagContent, parser) {
+function parseCycle(tagContent, _parser) {
   const content = tagContent.slice(5).trim();
   const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
   const matches = content.match(argRegex) || [];
@@ -559,7 +559,7 @@ function parseCycle(tagContent, parser) {
   return new CycleNode(args, asName);
 }
 
-function parseFirstof(tagContent, parser) {
+function parseFirstof(tagContent, _parser) {
   const content = tagContent.slice(8).trim();
   const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
   const args = (content.match(argRegex) || []).map(a => a.trim()).filter(Boolean);

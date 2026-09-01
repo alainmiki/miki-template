@@ -14,7 +14,6 @@ const { SafeString, markSafe, isSafe, escapeHtml } = require('./security');
 const { getCompiled, clearCache } = require('./cache');
 const { registerHelper } = require('./tags/helpers');
 const { registerTag, getTagRegistry } = require('./tags/registry');
-const { asyncRenderAST } = require('./asyncRender');
 
 // Load control tags
 const controlTags = require('./tags/control');

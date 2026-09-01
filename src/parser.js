@@ -9,7 +9,7 @@ class TextNode {
     this.content = content;
   }
 
-  render(context) {
+  render(_context) {
     return this.content;
   }
 }
@@ -71,7 +71,7 @@ function parseVariableExpression(expr) {
   let literalValue = null;
 
   // Check for string literal as base value
-  if (idx < len && (expr[idx] === '"' || expr[idx] === "'")) {
+  if (idx < len && (expr[idx] === '"' || expr[idx] === '\'')) {
     const quote = expr[idx];
     idx++;
     let strVal = '';
@@ -118,7 +118,7 @@ function parseVariableExpression(expr) {
         skipWhitespace();
 
         // Parse argument (string literal, number, boolean, null, or variable)
-        if (expr[idx] === '"' || expr[idx] === "'") {
+        if (expr[idx] === '"' || expr[idx] === '\'') {
           const quote = expr[idx];
           idx++; // Skip opening quote
           let argVal = '';

@@ -177,10 +177,10 @@ registerFilter('date_format', (val, pattern) => {
     date = new Date(val);
   }
   if (isNaN(date.getTime())) return '';
-  const fmt = pattern || "yyyy-MM-dd'T'HH:mm:ssxxx";
+  const fmt = pattern || 'yyyy-MM-dd\'T\'HH:mm:ssxxx';
   try {
     return formatDate(date, fmt);
-  } catch (_) {
+  } catch {
     return '';
   }
 });
@@ -196,7 +196,7 @@ registerFilter('strftime', (val, pattern) => {
   const fmt = pattern || 'PPpp';
   try {
     return formatDate(date, fmt);
-  } catch (_) {
+  } catch {
     return '';
   }
 });
@@ -517,10 +517,11 @@ registerFilter('strftime', (val, arg) => {
   try {
     const { format } = require('date-fns');
     return format(d, fmt);
-  } catch (e) {
+  } catch {
     // If date-fns is not available or format is invalid, fallback
     return d.toISOString();
   }
 });
 
 module.exports = { registerFilter, getFilter };
+
