@@ -1,21 +1,21 @@
 {
   "name": "miki-template",
-  "displayName": "miki-template",
-  "description": "Django-style template language syntax highlighting and snippets for miki-template",
+  "displayName": "miki template",
+  "description": " template language syntax highlighting and snippets for miki-template",
   "version": "1.2.0",
   "engines": {
     "vscode": "^1.0.0"
   },
   "categories": [
     "Programming Languages",
-    "Snippets"
+    "Snippets","expressjs","django-template"
   ],
   "contributes": {
     "languages": [
       {
         "id": "miki-template",
         "aliases": ["miki-template", "miki", "django-template"],
-        "extensions": [".miki", ".miki-template"],
+        "extensions": [".miki", ".miki-template",".html"],
         "configuration": "./language-configuration.json"
       }
     ],
