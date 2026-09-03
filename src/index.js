@@ -11,7 +11,7 @@ const { Context } = require('./context');
 const { registerContextProcessor, applyContextProcessors, clearContextProcessors } = require('./context_processors');
 const { registerFilter, getFilter } = require('./filters');
 const { SafeString, markSafe, isSafe, escapeHtml } = require('./security');
-const { getCompiled, clearCache } = require('./cache');
+const { getCompiled, clearCache, getParentSource, hasParentSource } = require('./cache');
 const { registerHelper } = require('./tags/helpers');
 const { registerTag, getTagRegistry } = require('./tags/registry');
 
@@ -36,6 +36,12 @@ for (const [name, parserFn] of Object.entries(utilTags.parsers)) {
 // Load i18n tags
 const i18nTags = require('./tags/i18n');
 for (const [name, parserFn] of Object.entries(i18nTags.parsers)) {
+  registerTag(name, parserFn);
+}
+
+// Load extra utility tags
+const extraTags = require('./tags/extra');
+for (const [name, parserFn] of Object.entries(extraTags.parsers)) {
   registerTag(name, parserFn);
 }
 
@@ -65,6 +71,30 @@ for (const libName of libraries.getLibraryNames()) {
  * Render an AST recursively to resolve inheritance chain.
  * Async-aware: awaits Promises from any node.
  */
+function readParentSource(parentName, viewsDirs) {
+  for (const dir of viewsDirs) {
+    const key = dir + '\0' + parentName;
+    if (hasParentSource(key)) {
+      return getParentSource(key, () => null);
+    }
+    try {
+      const fullPath = path.resolve(dir, parentName);
+      const relative = path.relative(path.resolve(dir), fullPath);
+      if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`Extends tag attempted path traversal outside allowed views: '${parentName}'`);
+      }
+      const fileContent = fs.readFileSync(fullPath, 'utf8');
+      // Populate the LRU cache and return the value
+      return getParentSource(key, () => fileContent);
+    } catch (e) {
+      if (e.message && e.message.startsWith('Extends tag attempted path traversal')) {
+        throw e;
+      }
+    }
+  }
+  throw new Error(`Template not found: '${parentName}' in directories ${JSON.stringify(viewsDirs)}`);
+}
+
 async function renderASTAsync(nodes, context) {
   context.parentTemplate = null;
   const parts = [];
@@ -87,28 +117,7 @@ async function renderASTAsync(nodes, context) {
       viewsDirs = Array.isArray(views) ? views : [views];
     }
 
-    let fileContent = '';
-    let loaded = false;
-    for (const dir of viewsDirs) {
-      try {
-        const fullPath = path.resolve(dir, parentName);
-        const relative = path.relative(path.resolve(dir), fullPath);
-        if (relative.startsWith('..') || path.isAbsolute(relative)) {
-          throw new Error(`Extends tag attempted path traversal outside allowed views: '${parentName}'`);
-        }
-        fileContent = fs.readFileSync(fullPath, 'utf8');
-        loaded = true;
-        break;
-      } catch (e) {
-        if (e.message && e.message.startsWith('Extends tag attempted path traversal')) {
-          throw e;
-        }
-      }
-    }
-
-    if (!loaded) {
-      throw new Error(`Template not found: '${parentName}' in directories ${JSON.stringify(viewsDirs)}`);
-    }
+    const fileContent = readParentSource(parentName, viewsDirs);
 
     const parentTokens = tokenize(fileContent);
     const parentParser = new Parser(parentTokens, getTagRegistry());
@@ -159,28 +168,7 @@ function renderAST(nodes, context) {
       viewsDirs = Array.isArray(views) ? views : [views];
     }
 
-    let fileContent = '';
-    let loaded = false;
-    for (const dir of viewsDirs) {
-      try {
-        const fullPath = path.resolve(dir, parentName);
-        const relative = path.relative(path.resolve(dir), fullPath);
-        if (relative.startsWith('..') || path.isAbsolute(relative)) {
-          throw new Error(`Extends tag attempted path traversal outside allowed views: '${parentName}'`);
-        }
-        fileContent = fs.readFileSync(fullPath, 'utf8');
-        loaded = true;
-        break;
-      } catch (e) {
-        if (e.message && e.message.startsWith('Extends tag attempted path traversal')) {
-          throw e;
-        }
-      }
-    }
-
-    if (!loaded) {
-      throw new Error(`Template not found: '${parentName}' in directories ${JSON.stringify(viewsDirs)}`);
-    }
+    const fileContent = readParentSource(parentName, viewsDirs);
 
     const parentTokens = tokenize(fileContent);
     const parentParser = new Parser(parentTokens, getTagRegistry());

@@ -8,6 +8,36 @@ const CACHE_LIMIT = 100;
 const cache = new Map();
 
 /**
+ * Parent-source cache shared across renders. Populated by
+ * renderAST/renderASTAsync in src/index.js so that `{% extends %}`
+ * doesn't re-read the parent file from disk on every render.
+ */
+const parentSourceCache = new Map();
+const PARENT_SOURCE_LIMIT = 64;
+
+function getParentSource(key, loader) {
+  if (parentSourceCache.has(key)) {
+    const v = parentSourceCache.get(key);
+    parentSourceCache.delete(key);
+    parentSourceCache.set(key, v);
+    return v;
+  }
+  const v = loader();
+  if (v != null) {
+    parentSourceCache.set(key, v);
+    if (parentSourceCache.size > PARENT_SOURCE_LIMIT) {
+      const firstKey = parentSourceCache.keys().next().value;
+      parentSourceCache.delete(firstKey);
+    }
+  }
+  return v;
+}
+
+function hasParentSource(key) {
+  return parentSourceCache.has(key);
+}
+
+/**
  * Retrieve a compiled template from cache or compile it and store.
  * @param {string} templateStr – template source
  * @param {object} compileOptions – options passed to compile()
@@ -44,6 +74,7 @@ function getCompiled(templateStr, compileOptions, compileFn) {
 /** Clear the cache – useful for tests */
 function clearCache() {
   cache.clear();
+  parentSourceCache.clear();
 }
 
-module.exports = { getCompiled, clearCache };
+module.exports = { getCompiled, clearCache, getParentSource, hasParentSource };

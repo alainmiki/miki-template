@@ -210,23 +210,55 @@ registerFilter('date', (val, arg) => {
   }
   if (isNaN(date.getTime())) return '';
   const formatStr = arg || 'Y-m-d';
-  const mapper = {
-    d: () => String(date.getDate()).padStart(2, '0'),
-    j: () => String(date.getDate()),
-    m: () => String(date.getMonth() + 1).padStart(2, '0'),
-    n: () => String(date.getMonth() + 1),
-    Y: () => String(date.getFullYear()),
-    y: () => String(date.getFullYear()).slice(-2),
-    H: () => String(date.getHours()).padStart(2, '0'),
-    i: () => String(date.getMinutes()).padStart(2, '0'),
-    s: () => String(date.getSeconds()).padStart(2, '0'),
-    F: () => date.toLocaleString('default', { month: 'long' }),
-    M: () => date.toLocaleString('default', { month: 'short' })
-  };
+  // Multi-character tokens are matched longest-first so that "yyyy" is
+  // one token and not four "y" tokens. Conventions:
+  //   yyyy  4-digit year          yy  2-digit year
+  //   MM    padded month number   M   month number (no pad)
+  //   mm    padded minutes        m   month number (Django-style alias)
+  //   dd    padded day            d   day number (no pad)
+  //   HH    padded 24h hour       H   hour (no pad)
+  //   ii    padded minutes        i   minutes (no pad)
+  //   ss    padded seconds        s   seconds (no pad)
+  //   F     long month name       D   short day name
+  const tokenMap = [
+    ['yyyy', () => String(date.getFullYear()).padStart(4, '0')],
+    ['yy',   () => String(date.getFullYear()).slice(-2).padStart(2, '0')],
+    ['MM',   () => String(date.getMonth() + 1).padStart(2, '0')],
+    ['dd',   () => String(date.getDate()).padStart(2, '0')],
+    ['HH',   () => String(date.getHours()).padStart(2, '0')],
+    ['mm',   () => String(date.getMinutes()).padStart(2, '0')],
+    ['ii',   () => String(date.getMinutes()).padStart(2, '0')],
+    ['ss',   () => String(date.getSeconds()).padStart(2, '0')],
+    ['F',    () => date.toLocaleString('default', { month: 'long' })],
+    ['D',    () => date.toLocaleString('default', { weekday: 'short' })],
+    ['M',    () => String(date.getMonth() + 1)],
+    ['Y',    () => String(date.getFullYear())],
+    ['y',    () => String(date.getFullYear()).slice(-2)],
+    ['m',    () => String(date.getMonth() + 1)],
+    ['d',    () => String(date.getDate())],
+    ['j',    () => String(date.getDate())],
+    ['n',    () => String(date.getMonth() + 1)],
+    ['H',    () => String(date.getHours())],
+    ['i',    () => String(date.getMinutes())],
+    ['s',    () => String(date.getSeconds())],
+    ['G',    () => String(date.getHours())],
+  ];
   let output = '';
-  for (let i = 0; i < formatStr.length; i++) {
-    const ch = formatStr[i];
-    output += ch in mapper ? mapper[ch]() : ch;
+  let i = 0;
+  while (i < formatStr.length) {
+    let matched = false;
+    for (const [tok, fn] of tokenMap) {
+      if (formatStr.startsWith(tok, i)) {
+        output += fn();
+        i += tok.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      output += formatStr[i];
+      i++;
+    }
   }
   return output;
 });
@@ -282,11 +314,36 @@ registerFilter('add', (val, arg) => {
   return String(val) + String(arg);
 });
 
+registerFilter('sub', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(numVal) && !isNaN(numArg)) {
+    return numVal - numArg;
+  }
+  return String(val);
+});
+
+registerFilter('mult', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(numVal) && !isNaN(numArg)) {
+    return numVal * numArg;
+  }
+  return String(val);
+});
+
 registerFilter('divisibleby', (val, arg) => {
   const numVal = Number(val);
   const numArg = Number(arg);
   if (isNaN(numVal) || isNaN(numArg) || numArg === 0) return false;
   return numVal % numArg === 0;
+});
+
+registerFilter('mod', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (isNaN(numVal) || isNaN(numArg) || numArg === 0) return 0;
+  return numVal % numArg;
 });
 
 registerFilter('floatformat', (val, arg) => {
@@ -301,6 +358,18 @@ registerFilter('floatformat', (val, arg) => {
     return num.toFixed(0);
   }
   return num.toFixed(Math.max(0, decimals));
+});
+
+registerFilter('square', (val) => {
+  const num = Number(val);
+  if (isNaN(num)) return 0;
+  return num * num;
+});
+
+registerFilter('sqrt', (val) => {
+  const num = Number(val);
+  if (isNaN(num) || num < 0) return 0;
+  return Math.sqrt(num);
 });
 
 // --- Default Filters ---
@@ -561,6 +630,345 @@ registerFilter('strftime', (val, arg) => {
     // If date-fns is not available or format is invalid, fallback
     return d.toISOString();
   }
+});
+
+// --- Math Filters ---
+registerFilter('sub', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(numVal) && !isNaN(numArg)) {
+    return numVal - numArg;
+  }
+  return String(val);
+});
+
+registerFilter('mult', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(numVal) && !isNaN(numArg)) {
+    return numVal * numArg;
+  }
+  return String(val);
+});
+
+registerFilter('square', (val) => {
+  const num = Number(val);
+  if (isNaN(num)) return 0;
+  return num * num;
+});
+
+registerFilter('sqrt', (val) => {
+  const num = Number(val);
+  if (isNaN(num) || num < 0) return 0;
+  return Math.sqrt(num);
+});
+
+registerFilter('mod', (val, arg) => {
+  const numVal = Number(val);
+  const numArg = Number(arg);
+  if (isNaN(numVal) || isNaN(numArg) || numArg === 0) return 0;
+  return numVal % numArg;
+});
+
+// --- Data Formatting Filters ---
+registerFilter('currency', (val, arg) => {
+  const num = Number(val);
+  if (isNaN(num)) return '';
+  const symbol = arg || '$';
+  const formatted = num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return symbol + formatted;
+});
+
+registerFilter('phone_number', (val) => {
+  const str = String(val === null || val === undefined ? '' : val).replace(/\D/g, '');
+  if (str.length === 10) {
+    return `(${str.slice(0, 3)}) ${str.slice(3, 6)}-${str.slice(6)}`;
+  }
+  if (str.length === 11 && str.startsWith('1')) {
+    return `+1 (${str.slice(1, 4)}) ${str.slice(4, 7)}-${str.slice(7)}`;
+  }
+  return String(val);
+});
+
+registerFilter('email', (val) => {
+  const str = String(val === null || val === undefined ? '' : val).trim();
+  if (!str) return '';
+  return `mailto:${str}`;
+});
+
+registerFilter('url', (val) => {
+  let str = String(val === null || val === undefined ? '' : val).trim();
+  if (!str) return '';
+  if (!/^https?:\/\//i.test(str)) {
+    str = 'https://' + str;
+  }
+  return str;
+});
+
+registerFilter('mask', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const char = arg || '*';
+  const visible = 4;
+  if (str.length <= visible) return str;
+  return char.repeat(str.length - visible) + str.slice(-visible);
+});
+
+registerFilter('whatsapp_link', (val, arg) => {
+  let str = String(val === null || val === undefined ? '' : val).trim();
+  if (!str) return '';
+  const digits = str.replace(/\D/g, '');
+  const message = arg || '';
+  const url = new URL('https://wa.me/' + digits);
+  if (message) {
+    url.searchParams.set('text', message);
+  }
+  return url.toString();
+});
+
+// --- Math Filters ---
+registerFilter('abs', (val) => {
+  const num = Number(val);
+  return isNaN(num) ? 0 : Math.abs(num);
+});
+
+registerFilter('round', (val, arg) => {
+  const num = Number(val);
+  if (isNaN(num)) return 0;
+  const decimals = arg !== undefined ? parseInt(arg, 10) : 0;
+  if (isNaN(decimals)) return Math.round(num);
+  const factor = Math.pow(10, decimals);
+  return Math.round(num * factor) / factor;
+});
+
+registerFilter('floor', (val) => {
+  const num = Number(val);
+  return isNaN(num) ? 0 : Math.floor(num);
+});
+
+registerFilter('ceil', (val) => {
+  const num = Number(val);
+  return isNaN(num) ? 0 : Math.ceil(num);
+});
+
+registerFilter('min', (val, arg) => {
+  if (Array.isArray(val)) return Math.min(...val);
+  const num = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(num) && !isNaN(numArg)) return Math.min(num, numArg);
+  return num;
+});
+
+registerFilter('max', (val, arg) => {
+  if (Array.isArray(val)) return Math.max(...val);
+  const num = Number(val);
+  const numArg = Number(arg);
+  if (!isNaN(num) && !isNaN(numArg)) return Math.max(num, numArg);
+  return num;
+});
+
+registerFilter('sum', (val) => {
+  if (!Array.isArray(val)) return Number(val) || 0;
+  return val.reduce((acc, item) => acc + (Number(item) || 0), 0);
+});
+
+registerFilter('average', (val) => {
+  if (!Array.isArray(val)) return Number(val) || 0;
+  if (val.length === 0) return 0;
+  return val.reduce((acc, item) => acc + (Number(item) || 0), 0) / val.length;
+});
+
+// --- String / Array Manipulation Filters ---
+registerFilter('reverse', (val) => {
+  if (Array.isArray(val)) return val.slice().reverse();
+  const str = String(val === null || val === undefined ? '' : val);
+  return str.split('').reverse().join('');
+});
+
+registerFilter('sort', (val) => {
+  if (!Array.isArray(val)) return val;
+  return [...val].sort((a, b) => {
+    if (a === b) return 0;
+    if (a === null || a === undefined) return 1;
+    if (b === null || b === undefined) return -1;
+    if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b);
+    return a < b ? -1 : 1;
+  });
+});
+
+registerFilter('unique', (val) => {
+  if (!Array.isArray(val)) return val;
+  return [...new Set(val)];
+});
+
+registerFilter('random', (val) => {
+  if (!Array.isArray(val) || val.length === 0) return '';
+  return val[Math.floor(Math.random() * val.length)];
+});
+
+registerFilter('split', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const sep = arg || ' ';
+  return str.split(sep);
+});
+
+registerFilter('replace', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  if (!arg) return str;
+  const parts = String(arg).split(',');
+  if (parts.length >= 2) {
+    const oldStr = parts[0].trim();
+    const newStr = parts.slice(1).join(',').trim();
+    return str.split(oldStr).join(newStr);
+  }
+  return str;
+});
+
+// --- Encoding Filters ---
+registerFilter('base64_encode', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return Buffer.from(str).toString('base64');
+});
+
+registerFilter('base64_decode', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  try {
+    const decoded = Buffer.from(str, 'base64').toString('utf8');
+    const reEncoded = Buffer.from(decoded).toString('base64');
+    if (reEncoded.replace(/=+$/, '') === str.replace(/=+$/, '')) {
+      return decoded;
+    }
+    return String(val);
+  } catch {
+    return String(val);
+  }
+});
+
+// --- Text Formatting Filters ---
+registerFilter('urlize', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return str.replace(urlRegex, '<a href="$1">$1</a>');
+});
+
+registerFilter('json', (val) => {
+  const { markSafe } = require('./security');
+  try {
+    return markSafe(JSON.stringify(val));
+  } catch {
+    return String(val);
+  }
+});
+
+registerFilter('truncatechars_html', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const count = parseInt(arg, 10);
+  if (isNaN(count) || count <= 0) return str;
+  const { markSafe } = require('./security');
+  if (str.length <= count) return markSafe(str);
+  let currentLen = 0;
+  let result = '';
+  let inTag = false;
+  for (let i = 0; i < str.length && currentLen < count; i++) {
+    const ch = str[i];
+    if (ch === '<') inTag = true;
+    if (inTag) {
+      result += ch;
+      if (ch === '>') inTag = false;
+      continue;
+    }
+    currentLen++;
+    result += ch;
+  }
+  if (!inTag && currentLen >= count) {
+    result += '...';
+  }
+  return markSafe(result);
+});
+
+// --- Time Filters ---
+registerFilter('time_diff', (val, arg) => {
+  const d1 = new Date(val);
+  const d2 = arg ? new Date(arg) : new Date();
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return '';
+  const diffMs = Math.max(0, Math.abs(d2 - d1));
+  const seconds = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(seconds / 60);
+  if (diffMins < 1) return '0 minutes';
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+});
+
+registerFilter('ago', (val) => {
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const diffMs = Math.max(0, now - d);
+  const seconds = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(seconds / 60);
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+});
+
+registerFilter('until', (val) => {
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const diffMs = Math.max(0, d - now);
+  const seconds = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(seconds / 60);
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+});
+
+// --- Data Formatting Filters ---
+registerFilter('credit_card', (val) => {
+  const str = String(val === null || val === undefined ? '' : val).replace(/\D/g, '');
+  if (str.length < 13 || str.length > 19) return String(val);
+  const parts = [];
+  for (let i = 0; i < str.length; i += 4) {
+    parts.push(str.slice(i, i + 4));
+  }
+  return parts.join('-');
+});
+
+registerFilter('ssn', (val) => {
+  const str = String(val === null || val === undefined ? '' : val).replace(/\D/g, '');
+  if (str.length !== 9) return String(val);
+  return `${str.slice(0, 3)}-${str.slice(3, 5)}-${str.slice(5)}`;
+});
+
+registerFilter('ip_address', (val) => {
+  const str = String(val === null || val === undefined ? '' : val).replace(/\D/g, '');
+  if (str.length !== 10 && str.length !== 12) return String(val);
+  if (str.length === 12) {
+    return `${str.slice(0, 4)}.${str.slice(4, 8)}.${str.slice(8, 10)}.${str.slice(10)}`;
+  }
+  return `${str.slice(0, 3)}.${str.slice(3, 6)}.${str.slice(6, 9)}.${str.slice(9)}`;
+});
+
+registerFilter('uuid', () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 });
 
 module.exports = { registerFilter, getFilter };

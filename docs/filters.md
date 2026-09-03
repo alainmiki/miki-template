@@ -61,12 +61,6 @@ Returns the number of words (whitespace-separated tokens).
 {{ "   "|wordcount }}            → 0
 ```
 
-### `striptags`
-Removes all HTML/XML tags from the string.
-```html
-{{ "<p>Hello <b>World</b></p>"|striptags }}  → "Hello World"
-```
-
 ### `truncatewords:N`
 Truncates the string to approximately N words, appending `...`.
 ```html
@@ -78,6 +72,12 @@ Truncates to N characters (including the `...` suffix if truncation occurs).
 ```html
 {{ "Hello World"|truncatechars:8 }}  → "Hello..."
 {{ "Hi"|truncatechars:5 }}          → "Hi" (no truncation needed)
+```
+
+### `truncatechars_html:N`
+Like `truncatechars` but respects HTML tags — tags are preserved in full and only visible text counts toward the limit.
+```html
+{{ "<p>Hello world</p>"|truncatechars_html:10 }}  → "<p>Hello worl...</p>"
 ```
 
 ### `linebreaks`
@@ -94,6 +94,13 @@ Converts all newlines to `<br>` tags. Does **not** wrap in `<p>` tags.
 <!-- Output: Line one<br>Line two -->
 ```
 
+### `urlize`
+Automatically converts URLs in text into clickable `<a>` links.
+```html
+{{ "visit https://example.com for more"|urlize }}
+<!-- Output: visit <a href="https://example.com">https://example.com</a> for more -->
+```
+
 ### `cut:value`
 Removes all occurrences of the specified value from the string.
 ```html
@@ -102,15 +109,42 @@ Removes all occurrences of the specified value from the string.
 ```
 
 ### `addslashes`
-Adds backslashes before single quotes, double quotes, and backslashes (for use in JavaScript strings).
+Adds backslashes before single quotes, double quotes, and backslashes.
 ```html
-{{ 'He said "Hello"|addslashes }}  → 'He said \"Hello\"'
+{{ 'He said "Hello"'|addslashes }}  → 'He said \"Hello\"'
 ```
 
 ### `removetags:tag1,tag2,...`
 Removes the named HTML tags (and their contents).
 ```html
 {{ "<p>Hello</p><b>World</b>"|removetags:"p,b" }}  → "HelloWorld"
+```
+
+### `reverse`
+Reverses a string or array.
+```html
+{{ "hello"|reverse }}    → "olleh"
+{{ items|reverse }}      → [3, 2, 1]
+```
+
+### `split:separator`
+Splits a string into an array. Default separator is a single space.
+```html
+{{ "a,b,c"|split:"," }}     → ["a", "b", "c"]
+{{ "hello world"|split }}    → ["hello", "world"]
+```
+
+### `replace:old,new`
+Replaces occurrences of `old` with `new` in the string.
+```html
+{{ "hello world"|replace:"world,Earth" }}  → "hello Earth"
+```
+
+### `length_is:N`
+Returns `true` if the value's length equals N, otherwise `false`.
+```html
+{{ "hello"|length_is:5 }}   → true
+{{ items|length_is:3 }}     → true/false
 ```
 
 ---
@@ -131,12 +165,6 @@ Explicitly escapes HTML entities. Useful when `autoescape` is `off`.
 {% endautoescape %}
 ```
 
-### `escapejs`
-Escapes characters for safe use inside JavaScript string literals.
-```html
-{{ 'Test "quotes" and \backs'|escapejs }}
-```
-
 ---
 
 ## URL / Encoding Filters
@@ -148,16 +176,23 @@ URL-encodes the string. By default, uses query-string encoding (spaces → `+`).
 {{ "a/b c"|urlencode }}               → "a%2Fb+c"
 ```
 
-With `path` modifier, preserves slashes:
+### `escapeuri`
+Percent-encodes all special characters in a URI.
 ```html
-{{ "images/logo.png"|urlencode }}      → "images%2Flogo.png" (standard encoding)
+{{ "https://example.com?q=hello world"|escapeuri }}
+→ "https%3A%2F%2Fexample.com%3Fq%3Dhello%20world"
 ```
 
-### `escapeurl` (alias: `urlize`)
-Percent-encodes all special characters in a URL.
+### `base64_encode`
+Encodes a string to Base64.
 ```html
-{{ "https://example.com?q=hello world"|escapeurl }}
-→ "https%3A%2F%2Fexample.com%3Fq%3Dhello%20world"
+{{ "hello"|base64_encode }}  → "aGVsbG8="
+```
+
+### `base64_decode`
+Decodes a Base64 string. Returns the original value if decoding fails or produces invalid UTF-8.
+```html
+{{ "aGVsbG8="|base64_decode }}  → "hello"
 ```
 
 ---
@@ -168,21 +203,15 @@ Percent-encodes all special characters in a URL.
 Formats the value using Python-style format strings (`%s`, `%d`, etc.).
 ```html
 {{ 42|stringformat:"d" }}       → "42"
-{{ 3.14159|stringformat:"2f" }} → "3.14"
+{{ 3.14159|stringformat:".2f" }} → "3.14"
 {{ "x"|stringformat:"s" }}     → "x"
 ```
 
-### `center:N`
-Centers the string in a field of width N (padding with spaces).
+### `json`
+Safely serializes a value to JSON, marked safe for use inside `<script>` blocks.
 ```html
-{{ "Hi"|center:10 }}  → "    Hi    "
-```
-
-### `ljust:N` / `rjust:N`
-Left/right-justifies the string in a field of width N.
-```html
-{{ "Hi"|ljust:10 }}  → "Hi        "
-{{ "Hi"|rjust:10 }}  → "        Hi"
+{{ data|json }}
+<!-- Output: {"users":[{"name":"Alice"}]} (not HTML-escaped) -->
 ```
 
 ---
@@ -196,13 +225,6 @@ Returns the length of an array, object, string, or any object with a `.length` p
 {{ "hello"|length }}      → 5
 {{ object|length }}       → number of keys
 {{ undefined|length }}     → 0
-```
-
-### `length_is:N`
-Returns `true` if the value's length equals N, otherwise `false`.
-```html
-{{ "hello"|length_is:5 }}   → true
-{{ items|length_is:3 }}     → true/false
 ```
 
 ### `join:separator`
@@ -221,16 +243,22 @@ Slices an array or string like Python (`[start:end]`). Supports negative indices
 {{ "hello"|slice:"1:4" }}   → "ell"
 ```
 
-### `first`
-Returns the first element of a sequence.
+### `sort`
+Sorts an array in ascending order. Strings use locale-aware comparison.
 ```html
-{{ items|first }}  → first item
+{{ [3, 1, 2]|sort }}  → [1, 2, 3]
 ```
 
-### `last`
-Returns the last element of a sequence.
+### `unique`
+Removes duplicate values from an array.
 ```html
-{{ items|last }}   → last item
+{{ [1, 2, 2, 3]|unique }}  → [1, 2, 3]
+```
+
+### `random`
+Returns a random element from an array.
+```html
+{{ ["a", "b", "c"]|random }}  → "b" (random)
 ```
 
 ### `dictsort:"key"`
@@ -269,7 +297,7 @@ Uses the fallback value only if the original value is `null` or `undefined` (not
 ```
 
 ### `firstof`
-Returns the first truthy value from the arguments (filter form).
+Returns the first truthy value from the arguments.
 ```html
 {{ ""|firstof:user.name:guest:default }}  → user.name or "guest" or "default"
 ```
@@ -294,7 +322,7 @@ Formats a date using Django-style format codes:
 | `i` | Minutes | `00–59` |
 | `s` | Seconds | `00–59` |
 | `F` | Full month name | `January` |
-| `M` | Short month name | `Jan` |
+| `M` | Short day/month name | `Jan` |
 
 ```html
 {{ post.published|date:"Y-m-d" }}      → "2026-08-31"
@@ -328,15 +356,68 @@ Returns a human-readable "time until" string.
 {{ event.date|timeuntil }}  → "5 days"
 ```
 
+### `time_diff:date`
+Returns the absolute time difference between two dates as a human-readable string.
+```html
+{{ event.date|time_diff }}        → "3 days"
+{{ event.date|time_diff:now }}    → difference from now
+```
+
+### `ago`
+Returns a human-readable relative time string like "2 days ago", "1 hour ago", etc.
+```html
+{{ comment.created|ago }}  → "2 days ago"
+{{ comment.created|ago }}  → "just now" (if less than 1 minute ago)
+```
+
+### `until`
+Returns a human-readable string representing time until the given date.
+```html
+{{ event.date|until }}  → "3 days"
+{{ event.date|until }}  → "now" (if less than 1 minute away)
+```
+
 ---
 
 ## Numeric Filters
 
 ### `add:N`
-Adds N to the value. Also works for string concatenation.
+Adds N to the value. Also works for string concatenation and array concatenation.
 ```html
 {{ count|add:5 }}        → count + 5
-{{ items|add:other }}    → number or concatenated
+{{ items|add:other }}    → concatenated array or string
+```
+
+### `sub:N`
+Subtracts N from the value.
+```html
+{{ 10|sub:3 }}  → 7
+```
+
+### `mult:N`
+Multiplies the value by N.
+```html
+{{ 4|mult:5 }}  → 20
+```
+
+### `square`
+Returns the square of the value.
+```html
+{{ 6|square }}  → 36
+```
+
+### `sqrt`
+Returns the square root of the value. Returns 0 for negative numbers.
+```html
+{{ 9|sqrt }}    → 3
+{{ -1|sqrt }}   → 0
+```
+
+### `mod:N`
+Returns the modulo (remainder) of the value divided by N. Returns 0 if N is 0.
+```html
+{{ 10|mod:3 }}  → 1
+{{ 10|mod:0 }}  → 0
 ```
 
 ### `divisibleby:N`
@@ -361,6 +442,61 @@ Formats a number to N decimal places. Django default is 1 decimal.
 {{ 3.14159|floatformat }}    → "3.1"
 {{ 3.14159|floatformat:2 }}  → "3.14"
 {{ 3.000|floatformat:0 }}    → "3"
+```
+
+### `abs`
+Returns the absolute value of a number.
+```html
+{{ -5|abs }}  → 5
+{{ 5|abs }}   → 5
+```
+
+### `round:N`
+Rounds to N decimal places (default: 0 decimals).
+```html
+{{ 3.14159|round:2 }}  → 3.14
+{{ 3.5|round }}        → 4
+{{ 3.4|round }}        → 3
+```
+
+### `floor`
+Rounds down to the nearest integer.
+```html
+{{ 3.7|floor }}   → 3
+{{ -3.7|floor }}  → -4
+```
+
+### `ceil`
+Rounds up to the nearest integer.
+```html
+{{ 3.2|ceil }}   → 4
+{{ -3.2|ceil }}  → -3
+```
+
+### `min:N` / `min:array`
+Returns the minimum of the value and N, or the minimum element in an array.
+```html
+{{ 5|min:2 }}        → 2
+{{ [5, 2, 8]|min }}  → 2
+```
+
+### `max:N` / `max:array`
+Returns the maximum of the value and N, or the maximum element in an array.
+```html
+{{ 5|max:2 }}        → 5
+{{ [5, 2, 8]|max }}  → 8
+```
+
+### `sum`
+Returns the sum of all elements in an array.
+```html
+{{ [1, 2, 3, 4]|sum }}  → 10
+```
+
+### `average`
+Returns the arithmetic mean of an array. Returns 0 for empty arrays.
+```html
+{{ [1, 2, 3, 4]|average }}  → 2.5
 ```
 
 ---
@@ -390,6 +526,143 @@ Formats a byte count as a human-readable file size.
 {{ 1048576|filesizeformat }}        → "1.0 MB"
 {{ 0|filesizeformat }}              → "0 bytes"
 {{ 1536|filesizeformat }}           → "1.5 KB"
+```
+
+---
+
+## Data Formatting Filters
+
+### `currency:symbol`
+Formats a number as currency with thousands separators and 2 decimal places. Default symbol is `$`.
+```html
+{{ 1234.5|currency }}       → "$1,234.50"
+{{ 1234.5|currency:"€" }}   → "€1,234.50"
+```
+
+### `phone_number`
+Formats a 10-digit US phone number as `(123) 456-7890`. Handles 11-digit numbers with leading `1` as `+1 (123) 456-7890`.
+```html
+{{ "1234567890"|phone_number }}       → "(123) 456-7890"
+{{ "11234567890"|phone_number }}      → "+1 (123) 456-7890"
+```
+
+### `email`
+Wraps an email address in a `mailto:` link.
+```html
+{{ "user@example.com"|email }}  → "mailto:user@example.com"
+```
+
+### `url`
+Ensures a URL has a protocol prefix. Prepends `https://` if missing.
+```html
+{{ "example.com"|url }}          → "https://example.com"
+{{ "https://example.com"|url }} → "https://example.com"
+```
+
+### `mask:char`
+Masks all but the last 4 characters of a string. Default mask character is `*`.
+```html
+{{ "1234567890"|mask }}      → "******7890"
+{{ "1234567890"|mask:"#" }}  → "######7890"
+```
+
+### `whatsapp_link:message`
+Generates a WhatsApp link (`https://wa.me/NUMBER`) with an optional pre-filled message.
+```html
+{{ "1234567890"|whatsapp_link }}            → "https://wa.me/1234567890"
+{{ "1234567890"|whatsapp_link:"Hello" }}    → "https://wa.me/1234567890?text=Hello"
+```
+
+### `credit_card`
+Formats a credit card number with dashes every 4 digits.
+```html
+{{ "4111111111111111"|credit_card }}  → "4111-1111-1111-1111"
+```
+
+### `ssn`
+Formats a 9-digit Social Security Number as `XXX-XX-XXXX`.
+```html
+{{ "123456789"|ssn }}  → "123-45-6789"
+```
+
+### `ip_address`
+Formats a 10 or 12 digit string as a dotted IP address.
+```html
+{{ "192168011001"|ip_address }}  → "192.168.11.001"
+```
+
+### `uuid`
+Generates a random UUID v4 string.
+```html
+{{ ""|uuid }}  → "9787a126-cb81-4825-b63b-73345a51a1c1"
+```
+
+---
+
+## Humanize Filters (Built-in Library)
+
+These filters are part of the `humanize` library, activated by default or via `{% load humanize %}`.
+
+### `intcomma`
+Adds commas to thousands places.
+```html
+{{ 1234567|intcomma }}  → "1,234,567"
+```
+
+### `intword`
+Converts large numbers to human-friendly strings.
+```html
+{{ 1234567|intword }}     → "1.2 million"
+{{ 1000|intword }}        → "1.0 thousand"
+```
+
+### `apnumber`
+Converts numbers to their word equivalent (0–19).
+```html
+{{ 3|apnumber }}  → "three"
+```
+
+### `ordinal`
+Returns the ordinal suffix for a number.
+```html
+{{ 1|ordinal }}   → "1st"
+{{ 2|ordinal }}   → "2nd"
+{{ 11|ordinal }}  → "11th"
+```
+
+### `naturalday`
+Returns "today", "yesterday", "tomorrow", or the date string for other dates.
+```html
+{{ today|naturalday }}      → "today"
+{{ yesterday|naturalday }}  → "yesterday"
+```
+
+---
+
+## i18n Filters
+
+### `trans:"fallback"`
+Translate a string using the i18n registry. Falls back to the original value if no translation is found.
+
+```html
+{{ "Hello, World!"|trans }}
+{{ greeting|trans:"Hello, %s!" }}
+```
+
+---
+
+## Regroup Filter
+
+### `regroup:"key"`
+Group an array of objects by a common attribute. Returns an array of `{ grouper, list }` objects.
+
+```html
+{% for group in items|regroup:"category" %}
+  <h3>{{ group.grouper }}</h3>
+  {% for item in group.list %}
+    <p>{{ item.name }}</p>
+  {% endfor %}
+{% endfor %}
 ```
 
 ---
@@ -432,109 +705,4 @@ Filters accept the following argument types:
 {{ user.name|default:"Guest" }}           <!-- String default -->
 {{ items|slice:"1:3" }}                  <!-- Slice notation -->
 {{ price|floatformat:2 }}                 <!-- Decimal places -->
-```
-
----
-
-## i18n Filters
-
-### `trans:"fallback"`
-Translate a string using the i18n registry. Falls back to the original value if no translation is found.
-
-```html
-{{ "Hello, World!"|trans }}
-{{ greeting|trans:"Hello, %s!" }}
-```
-
----
-
-## Regroup Filter
-
-### `regroup:"key"`
-Group an array of objects by a common attribute. Returns an array of `{ grouper, list }` objects.
-
-```html
-{% for group in items|regroup:"category" %}
-  <h3>{{ group.grouper }}</h3>
-  {% for item in group.list %}
-    <p>{{ item.name }}</p>
-  {% endfor %}
-{% endfor %}
-```
-
----
-
-## String Formatting Filters
-
-### `stringformat:"fmt"`
-Format a value using Python-style format strings (`%s`, `%d`, `%.2f`, `%x`, etc.).
-
-```html
-{{ 42|stringformat:"d" }}       → "42"
-{{ 3.14159|stringformat:".2f" }} → "3.14"
-{{ "hello"|stringformat:"s" }}  → "hello"
-```
-
----
-
-## URL / Encoding Filters
-
-### `urlencode`
-URL-encode a string. Supports `query`, `path`, and `utf-8` modes.
-
-```html
-{{ "Hello World"|urlencode }}          → "Hello+World"
-{{ "a/b c"|urlencode }}               → "a%2Fb+c"
-```
-
-### `escapeuri`
-Percent-encode a URI.
-
-```html
-{{ "http://example.com/path"|escapeuri }}
-```
-
----
-
-## Text Filters
-
-### `cut:value`
-Remove all occurrences of a substring.
-
-```html
-{{ "hello hello"|cut:" " }} → "hellohello"
-```
-
-### `addslashes`
-Add backslashes before quotes and backslashes.
-
-```html
-{{ 'He said "Hi"|addslashes }} → He said \"Hi\"
-```
-
-### `removetags:tag1,tag2,...`
-Remove named HTML tags and their contents.
-
-```html
-{{ "<p>Hello</p><b>World</b>"|removetags:"p,b" }} → "HelloWorld"
-```
-
-### `length_is:N`
-Return `true` if the value's length equals N.
-
-```html
-{{ "hello"|length_is:5 }} → true
-```
-
----
-
-## Date / Time Filters
-
-### `strftime:"format"`
-Format a Date using `date-fns` format strings. More powerful than the built-in `date` filter.
-
-```html
-{{ now|strftime:"PPpp" }}        → "Aug 31, 2026 at 10:24 PM"
-{{ now|strftime:"yyyy-MM-dd" }}  → "2026-08-31"
-{{ now|strftime:"HH:mm:ss" }}    → "22:24:56"
 ```

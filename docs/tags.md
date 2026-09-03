@@ -137,6 +137,30 @@ You can also unpack tuple-like values:
 
 ---
 
+### `{% set %} / {% endset %}`
+
+Assigns a value to a variable for later use in the template. Supports both inline and block forms.
+
+**Inline form** — assign a single expression:
+
+```html
+{% set total = price|add:tax %}
+<p>Total: {{ total }}</p>
+```
+
+**Block form** — capture rendered content:
+
+```html
+{% set sidebar %}
+  {% include "sidebar.html" with user=user %}
+{% endset %}
+{{ sidebar }}
+```
+
+Variables set with `{% set %}` persist in the current scope and can be used after the tag.
+
+---
+
 ### `{% cycle %}`
 
 Outputs one of its arguments for each iteration of a loop.
@@ -180,6 +204,33 @@ With `{% else %}` for a fallback:
 {% else %}
   Anonymous
 {% endif %}
+```
+
+---
+
+### `{% ifchanged %}...{% endifchanged %}`
+
+Renders the body only when the value changes. Useful for detecting changes in loops.
+
+```html
+{% for item in items %}
+  {% ifchanged item.category %}
+    <h2>{{ item.category }}</h2>
+  {% endifchanged %}
+  <p>{{ item.name }}</p>
+{% endfor %}
+```
+
+Supports `{% else %}` for when the value does not change:
+
+```html
+{% for item in items %}
+  {% ifchanged item.category %}
+    {{ item.category }}
+  {% else %}
+    (same)
+  {% endifchanged %}
+{% endfor %}
 ```
 
 ---
@@ -345,6 +396,18 @@ Loads additional filter libraries (for future extensibility).
 ```html
 {% load i18n %}
 {% load custom_filters %}
+```
+
+---
+
+### `{% now "format" %}`
+
+Outputs the current date/time formatted with the given pattern. Uses the same format codes as the `date` filter.
+
+```html
+{% now "Y-m-d" %}           → "2026-09-03"
+{% now "H:i:s" %}           → "14:30:45"
+{% now "F j, Y" %}          → "September 3, 2026"
 ```
 
 ---

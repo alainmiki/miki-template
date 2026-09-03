@@ -201,3 +201,33 @@ test('Filters - strftime with date-fns', () => {
   const result2 = strftime(new Date('2026-08-31T22:00:00'), 'HH:mm');
   assert.ok(result2.startsWith('22:'));
 });
+
+test('Tags - now tag', () => {
+  const { render } = require('../src/index');
+  const result = render('{% now "yyyy-MM-dd" %}');
+  assert.ok(result.match(/^\d{4}-\d{2}-\d{2}$/));
+});
+
+test('Tags - set tag inline', () => {
+  const { render } = require('../src/index');
+  const result = render('{% set x = 42 %}{{ x }}');
+  assert.strictEqual(result, '42');
+});
+
+test('Tags - set tag block form', () => {
+  const { render } = require('../src/index');
+  const result = render('{% set greeting %}Hello{% endset %}{{ greeting }}');
+  assert.strictEqual(result, 'Hello');
+});
+
+test('Tags - ifchanged tag', () => {
+  const { render } = require('../src/index');
+  const result = render('{% for i in items %}{% ifchanged i %}{{ i }}{% endifchanged %}{% endfor %}', { items: [1, 1, 2, 2, 3] });
+  assert.strictEqual(result, '123');
+});
+
+test('Tags - ifchanged with else', () => {
+  const { render } = require('../src/index');
+  const result = render('{% for i in items %}{% ifchanged i %}{{ i }}{% else %}*{% endifchanged %}{% endfor %}', { items: [1, 1, 2, 2, 3] });
+  assert.strictEqual(result, '1*2*3');
+});
