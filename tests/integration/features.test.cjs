@@ -515,9 +515,14 @@ test('FILTER default_if_none: returns fallback ONLY for null/undefined, not empt
 });
 
 test('FILTER date: date_format/strftime with yyyy lowercase token', () => {
-  const d = new Date('2024-03-15T13:45:30Z');
+  // Use a TZ-stable date and derive the expected day from local
+  // components so the test is independent of the host timezone.
+  const d = new Date(Date.UTC(2024, 2, 15, 12, 0, 0));
   const out = renderString('{{ d|date_format:"yyyy-MM-dd" }}', { d });
-  assert.match(out, /^\d{4}-03-15$/);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  assert.equal(out, `${year}-${month}-${day}`);
 });
 
 test('FILTER timesince/timeuntil return non-empty strings', () => {
