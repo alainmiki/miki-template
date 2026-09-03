@@ -87,6 +87,7 @@ Full embedded language support for:
 - **HTML**: Proper tag and attribute highlighting
 - **CSS**: Syntax highlighting in `<style>` tags
 - **JavaScript**: Syntax highlighting in `<script>` tags
+- **Emmet**: Full Emmet abbreviation support for HTML and JavaScript
 - **Auto-closing**: HTML tags, brackets, and quotes
 - **Bracket matching**: HTML tags, parentheses, brackets
 
