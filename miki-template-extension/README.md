@@ -82,6 +82,14 @@ Rename any `{% block name %}` and automatically update all `{{ block.name }}` re
 ### 🎨 Semantic Highlighting
 Enhanced syntax highlighting using VS Code's Semantic Token API for better theme support and more accurate token classification.
 
+### 🌐 HTML/CSS/JS Support
+Full embedded language support for:
+- **HTML**: Proper tag and attribute highlighting
+- **CSS**: Syntax highlighting in `<style>` tags
+- **JavaScript**: Syntax highlighting in `<script>` tags
+- **Auto-closing**: HTML tags, brackets, and quotes
+- **Bracket matching**: HTML tags, parentheses, brackets
+
 ### 📋 Smart Paste
 Paste HTML content and the extension will automatically append `|safe` filter to prevent escaping issues.
 
