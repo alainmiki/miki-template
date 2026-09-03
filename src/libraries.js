@@ -239,7 +239,7 @@ registerLibrary('lorem', {
     //   {% lorem 2 w random %}  -> 2 random words
     //
     // The tag is built into the engine and requires no {% load lorem %}.
-    lorem: (tagContent, parser) => {
+    lorem: (tagContent, _parser) => {
       return {
         render: () => {
           // The tag registry calls the parser with the full content

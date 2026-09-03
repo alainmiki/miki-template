@@ -19,7 +19,15 @@ export default [
         clearInterval: 'readonly',
         setImmediate: 'readonly',
         clearImmediate: 'readonly',
-        global: 'readonly'
+        global: 'readonly',
+        // Node 18+ standard globals
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        TextEncoder: 'readonly',
+        TextDecoder: 'readonly',
+        fetch: 'readonly',
+        crypto: 'readonly',
+        performance: 'readonly'
       }
     },
     rules: {

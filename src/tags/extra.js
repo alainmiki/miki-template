@@ -122,7 +122,6 @@ function parseIfChanged(tagContent, parser) {
   // {% ifchanged [value] %}
   const conditionStr = tagContent.slice(9).trim();
   const body = parser.parse(['else', 'endifchanged']);
-  const elifBranches = [];
   let elseBody = null;
 
   while (true) {

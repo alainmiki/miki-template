@@ -224,18 +224,6 @@ function extractWithMappings(body) {
   return mappings;
 }
 
-function extractPluralMappings(body) {
-  // Look for a custom PluralNode (we mark it via a special tag)
-  // For now, treat WithNodes that have a count attribute as plural mappings.
-  const mappings = [];
-  for (const node of body) {
-    if (node.constructor.name === 'PluralMappingNode') {
-      mappings.push({ name: node.name, valPath: node.valPath });
-    }
-  }
-  return mappings;
-}
-
 class PluralMappingNode {
   constructor(name, valPath) {
     this.name = name;

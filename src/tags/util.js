@@ -350,7 +350,7 @@ class TemplatetagNode {
   }
 }
 
-function parseLoad(tagContent, parser) {
+function parseLoad(tagContent, _parser) {
   const parts = tagContent.trim().split(/\s+/);
   if (parts.length === 0) {
     throw new Error('\'load\' tag requires at least one argument');
