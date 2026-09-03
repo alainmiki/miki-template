@@ -1,21 +1,65 @@
 {
   "name": "miki-template",
   "displayName": "miki template",
-  "description": " template language syntax highlighting and snippets for miki-template",
-  "version": "1.2.0",
+  "description": "The ultimate Django & miki-template VS Code extension. Syntax highlighting, intelligent completions, hover docs, validation, go-to-definition, inlay hints, color decorations, code actions, and more.",
+  "version": "1.7.0",
   "engines": {
-    "vscode": "^1.0.0"
+    "vscode": "^1.75.0"
+  },
+  "main": "./extension.js",
+  "scripts": {
+    "test": "npm run test:grammar && npm run lint",
+    "test:grammar": "node tests/run-grammar-tests.js",
+    "lint": "eslint extension.js || echo 'ESLint not installed'",
+    "validate": "node -e \"JSON.parse(require('fs').readFileSync('package.json'))\" && echo 'package.json valid'",
+    "package": "rm -f *.vsix && vsce package --no-dependencies",
+    "publish": "vsce publish",
+    "watch": "npm run package && code --install-extension miki-template-*.vsix"
   },
   "categories": [
     "Programming Languages",
-    "Snippets","expressjs","django-template"
+    "Snippets",
+    "Formatters",
+    "Intellisense"
+  ],
+  "keywords": [
+    "django",
+    "django-template",
+    "template",
+    "miki",
+    "miki-template",
+    "html",
+    "express",
+    "templating",
+    "syntax-highlighting",
+    "snippets",
+    "autocomplete",
+    "hover",
+    "intellisense",
+    "code-actions",
+    "color-decorations",
+    "inlay-hints",
+    "bracket-matching"
+  ],
+  "activationEvents": [
+    "onLanguage:miki-template",
+    "onLanguage:django-html",
+    "workspaceContains:**/*.miki",
+    "workspaceContains:**/*.django"
   ],
   "contributes": {
     "languages": [
       {
         "id": "miki-template",
-        "aliases": ["miki-template", "miki", "django-template"],
-        "extensions": [".miki", ".miki-template",".html"],
+        "aliases": ["miki-template", "miki", "miki template", "django-template"],
+        "extensions": [".miki", ".miki-template"],
+        "firstLine": "^#\\?\\s*.*django",
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "django-html",
+        "aliases": ["Django HTML", "django-html", "django template"],
+        "extensions": [".django", ".dj"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -24,8 +68,18 @@
         "language": "miki-template",
         "scopeName": "text.html.miki",
         "path": "./syntaxes/miki-template.tmLanguage.json",
-        "tokenTypes": {
-          "text": "text.html.miki"
+        "embeddedLanguages": {
+          "text.html.basic": "html",
+          "meta.tag.any.html": "html"
+        }
+      },
+      {
+        "language": "django-html",
+        "scopeName": "text.html.django",
+        "path": "./syntaxes/miki-template.tmLanguage.json",
+        "embeddedLanguages": {
+          "text.html.basic": "html",
+          "meta.tag.any.html": "html"
         }
       }
     ],
@@ -33,14 +87,170 @@
       {
         "language": "miki-template",
         "path": "./snippets/miki-template.json"
+      },
+      {
+        "language": "django-html",
+        "path": "./snippets/miki-template.json"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "miki-template.validateAll",
+        "title": "Validate All Templates",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.insertFilter",
+        "title": "Wrap Selection with Filter",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.wrapInBlock",
+        "title": "Wrap Selection in Block",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.wrapInFor",
+        "title": "Wrap Selection in For Loop",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.wrapInIf",
+        "title": "Wrap Selection in If Condition",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.addPrettierIgnore",
+        "title": "Add prettier-ignore Comment",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.goToNextBlock",
+        "title": "Go to Next Block",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.goToPrevBlock",
+        "title": "Go to Previous Block",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.previewTemplate",
+        "title": "Preview Template",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.showOutline",
+        "title": "Show Template Outline",
+        "category": "miki-template"
+      },
+      {
+        "command": "miki-template.findBlockReferences",
+        "title": "Find Block References",
+        "category": "miki-template"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "miki-template.insertFilter",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f",
+        "when": "editorTextFocus && (languageId == 'miki-template' || languageId == 'django-html')"
+      },
+      {
+        "command": "miki-template.goToNextBlock",
+        "key": "ctrl+shift+.",
+        "mac": "cmd+shift+.",
+        "when": "editorTextFocus && (languageId == 'miki-template' || languageId == 'django-html')"
+      },
+      {
+        "command": "miki-template.goToPrevBlock",
+        "key": "ctrl+shift+,",
+        "mac": "cmd+shift+,",
+        "when": "editorTextFocus && (languageId == 'miki-template' || languageId == 'django-html')"
+      }
+    ],
+    "configuration": {
+      "title": "miki-template",
+      "type": "object",
+      "properties": {
+        "miki-template.enableValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable template validation (unclosed tags, extends placement)."
+        },
+        "miki-template.enableCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable intelligent tag and filter completions."
+        },
+        "miki-template.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hover documentation for tags and filters."
+        },
+        "miki-template.enableColorDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight color values (hex, rgb, rgba, hsl) in templates."
+        },
+        "miki-template.enableCodeActions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick fix actions for common issues."
+        },
+        "miki-template.enableInlayHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline parameter hints for filters."
+        },
+        "miki-template.enableBracketHighlight": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight matching tag brackets."
+        },
+        "miki-template.enableSmartPaste": {
+          "type": "boolean",
+          "default": true,
+          "description": "Smart paste handling for HTML content."
+        },
+        "miki-template.formatOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Format document on save (requires Prettier extension)."
+        },
+        "miki-template.formatter": {
+          "type": "string",
+          "default": "prettier",
+          "enum": ["prettier", "none"],
+          "description": "Formatter to use for miki-template files."
+        }
+      }
+    }
   },
+  "extensionDependencies": ["esbenp.prettier-vscode"],
   "publisher": "alainmiki",
   "repository": {
     "type": "git",
     "url": "https://github.com/alainmiki/miki-template.git"
   },
+  "bugs": {
+    "url": "https://github.com/alainmiki/miki-template/issues"
+  },
   "license": "MIT",
-  "icon": "icon.png"
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#092c3e",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "localInfo": [
+    {
+      "locale": "en",
+      "value": {
+        "marketplace.publisher": "alainmiki",
+        "marketplace.buyMeACoffee": "alainmiki"
+      }
+    }
+  ]
 }

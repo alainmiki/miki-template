@@ -1,114 +1,337 @@
 {
-  "miki-template": {
+  "meta": {
+    "name": "miki-template",
+    "description": "Comprehensive snippets for miki-template and Django templates"
+  },
+  "snippets": {
     "if": {
       "prefix": "if",
       "body": [
         "{% if ${1:condition} %}",
-        "  ${2:content}",
+        "  $2",
         "{% endif %}"
       ],
       "description": "If block"
+    },
+    "ifelif": {
+      "prefix": "ifelif",
+      "body": [
+        "{% if ${1:condition} %}",
+        "  $2",
+        "{% elif ${3:condition} %}",
+        "  $4",
+        "{% endif %}"
+      ],
+      "description": "If/elif block"
     },
     "ifelse": {
       "prefix": "ifelse",
       "body": [
         "{% if ${1:condition} %}",
-        "  ${2:content}",
+        "  $2",
         "{% else %}",
-        "  ${3:fallback}",
+        "  $3",
         "{% endif %}"
       ],
       "description": "If/else block"
+    },
+    "ifelifelse": {
+      "prefix": "ifelifelse",
+      "body": [
+        "{% if ${1:condition} %}",
+        "  $2",
+        "{% elif ${3:condition} %}",
+        "  $4",
+        "{% else %}",
+        "  $5",
+        "{% endif %}"
+      ],
+      "description": "If/elif/else block"
     },
     "for": {
       "prefix": "for",
       "body": [
         "{% for ${1:item} in ${2:items} %}",
-        "  ${3:{{ ${1} }}}",
+        "  $3",
         "{% empty %}",
-        "  ${4:No items}",
+        "  $4",
         "{% endfor %}"
       ],
-      "description": "For loop"
+      "description": "For loop with empty"
     },
-    "block": {
-      "prefix": "block",
+    "for-simple": {
+      "prefix": "for-simple",
       "body": [
-        "{% block ${1:name} %}",
-        "  ${2:content}",
-        "{% endblock %}"
+        "{% for ${1:item} in ${2:items} %}",
+        "  $3",
+        "{% endfor %}"
       ],
-      "description": "Block definition"
+      "description": "Simple for loop"
     },
-    "extends": {
-      "prefix": "extends",
-      "body": "{% extends \"${1:base.html}\" %}",
-      "description": "Extends parent template"
+    "forloop-counter": {
+      "prefix": "forloop",
+      "body": [
+        "{% for ${1:item} in ${2:items} %}",
+        "  {{ forloop.counter }}. ${1}",
+        "{% endfor %}"
+      ],
+      "description": "For loop with forloop.counter"
     },
-    "include": {
-      "prefix": "include",
-      "body": "{% include \"${1:header.html}\" %}",
-      "description": "Include template"
+    "forloop-nested": {
+      "prefix": "forloop-nested",
+      "body": [
+        "{% for ${1:outer} in ${2:outers %}",
+        "  {% for ${3:inner} in ${4:inners} %}",
+        "    {{ forloop.parentloop.counter }}.{{ forloop.counter }}: {{ ${3} }}",
+        "  {% endfor %}",
+        "{% endfor %}"
+      ],
+      "description": "Nested for loops with parentloop"
+    },
+    "for-unpack": {
+      "prefix": "for-unpack",
+      "body": [
+        "{% for ${1:key}, ${2:value} in ${3:dict} %}",
+        "  {{ ${1} }}: {{ ${2} }}",
+        "{% endfor %}"
+      ],
+      "description": "For loop with tuple unpacking"
     },
     "with": {
       "prefix": "with",
       "body": [
         "{% with ${1:var} as ${2:alias} %}",
-        "  ${3:{{ ${2} }}}",
+        "  $3",
         "{% endwith %}"
       ],
       "description": "With block"
     },
+    "with-multi": {
+      "prefix": "with-multi",
+      "body": [
+        "{% with ${1:var1}=${2:value1} ${3:var2}=${4:value2} %}",
+        "  $5",
+        "{% endwith %}"
+      ],
+      "description": "With multiple variables"
+    },
     "cycle": {
       "prefix": "cycle",
       "body": "{% cycle '${1:odd}' '${2:even}' %}",
-      "description": "Cycle tag"
+      "description": "Cycle between values"
     },
-    "trans": {
-      "prefix": "trans",
-      "body": "{% trans \"${1:Hello, World!}\" %}",
-      "description": "Translate string"
+    "cycle-named": {
+      "prefix": "cycle-named",
+      "body": "{% cycle '${1:odd}' '${2:even}' as ${3:marker} silent %}",
+      "description": "Named cycle with state"
     },
-    "blocktrans": {
-      "prefix": "blocktrans",
+    "firstof": {
+      "prefix": "firstof",
+      "body": "{% firstof ${1:var1} ${2:var2} \"${3:fallback}\" %}",
+      "description": "First truthy value"
+    },
+    "comment": {
+      "prefix": "comment",
       "body": [
-        "{% blocktrans with ${1:name}=${2:user.name} %}",
-        "  ${3:Hello {{ ${1} }}}",
-        "{% endblocktrans %}"
+        "{% comment %}",
+        "  $1",
+        "{% endcomment %}"
       ],
-      "description": "Translate block"
+      "description": "Comment block"
     },
-    "language": {
-      "prefix": "language",
+    "comment-inline": {
+      "prefix": "comment-inline",
+      "body": "{% comment %}$1{% endcomment %}",
+      "description": "Inline comment"
+    },
+    "verbatim": {
+      "prefix": "verbatim",
       "body": [
-        "{% language \"${1:fr}\" %}",
-        "  ${2}",
-        "{% endlanguage %}"
+        "{% verbatim %}",
+        "  $1",
+        "{% endverbatim %}"
       ],
-      "description": "Switch language"
+      "description": "Raw content (no parsing)"
+    },
+    "spaceless": {
+      "prefix": "spaceless",
+      "body": [
+        "{% spaceless %}",
+        "  $1",
+        "{% endspaceless %}"
+      ],
+      "description": "Remove whitespace"
+    },
+    "autoescape": {
+      "prefix": "autoescape",
+      "body": [
+        "{% autoescape ${1:on} %}",
+        "  $2",
+        "{% endautoescape %}"
+      ],
+      "description": "Autoescape block"
+    },
+    "block": {
+      "prefix": "block",
+      "body": [
+        "{% block ${1:name} %}",
+        "  $2",
+        "{% endblock %}"
+      ],
+      "description": "Block definition"
+    },
+    "block-super": {
+      "prefix": "block-super",
+      "body": [
+        "{% block ${1:name} %}",
+        "  {{ block.super }}",
+        "  $2",
+        "{% endblock %}"
+      ],
+      "description": "Block with block.super"
+    },
+    "extends": {
+      "prefix": "extends",
+      "body": "{% extends \"${1:base.html}\" %}",
+      "description": "Extend parent template"
+    },
+    "include": {
+      "prefix": "include",
+      "body": "{% include \"${1:template.html}\" %}",
+      "description": "Include template"
+    },
+    "include-with": {
+      "prefix": "include-with",
+      "body": "{% include \"${1:template.html}\" with ${2:var}=${3:value} %}",
+      "description": "Include with context"
+    },
+    "include-only": {
+      "prefix": "include-only",
+      "body": "{% include \"${1:template.html}\" only %}",
+      "description": "Include without context"
     },
     "partialdef": {
       "prefix": "partialdef",
       "body": [
         "{% partialdef ${1:name} %}",
-        "  ${2}",
+        "  $2",
         "{% endpartialdef %}"
       ],
-      "description": "Define partial"
+      "description": "Define partial template"
+    },
+    "partialdef-inline": {
+      "prefix": "partialdef-inline",
+      "body": [
+        "{% partialdef ${1:name} inline %}",
+        "  $2",
+        "{% endpartialdef %}"
+      ],
+      "description": "Define inline partial"
+    },
+    "partialdef-lazy": {
+      "prefix": "partialdef-lazy",
+      "body": [
+        "{% partialdef ${1:name} lazy %}",
+        "  $2",
+        "{% endpartialdef %}"
+      ],
+      "description": "Define lazy partial"
     },
     "partial": {
       "prefix": "partial",
       "body": "{% partial ${1:name} %}",
       "description": "Render partial"
     },
+    "partial-with": {
+      "prefix": "partial-with",
+      "body": "{% partial ${1:name} with ${2:var}=${3:value} %}",
+      "description": "Render partial with context"
+    },
+    "load": {
+      "prefix": "load",
+      "body": "{% load ${1:i18n} %}",
+      "description": "Load tag library"
+    },
+    "trans": {
+      "prefix": "trans",
+      "body": "{% trans \"${1:Hello, World!}\" %}",
+      "description": "Translate string"
+    },
+    "trans-var": {
+      "prefix": "trans-var",
+      "body": "{% trans \"${1:Hello, %s!}\" ${2:var} %}",
+      "description": "Translate with variable"
+    },
+    "blocktrans": {
+      "prefix": "blocktrans",
+      "body": [
+        "{% blocktrans with ${1:name}=${2:value} %}",
+        "  $3",
+        "{% endblocktrans %}"
+      ],
+      "description": "Translate block"
+    },
+    "blocktrans-plural": {
+      "prefix": "blocktrans-plural",
+      "body": [
+        "{% blocktrans with ${1:name}=${2:value} count ${3:n}=${4:items|length %}",
+        "  {{ name }} has {{ ${3} }} item.",
+        "{% plural %}",
+        "  {{ name }} has {{ ${3} }} items.",
+        "{% endblocktrans %}"
+      ],
+      "description": "Translate block with plural"
+    },
+    "language": {
+      "prefix": "language",
+      "body": [
+        "{% language \"${1:fr}\" %}",
+        "  $2",
+        "{% endlanguage %}"
+      ],
+      "description": "Switch language"
+    },
+    "regroup": {
+      "prefix": "regroup",
+      "body": [
+        "{% regroup ${1:items} by ${2:attribute} as ${3:groups} %}",
+        "{% for ${4:group} in ${3} %}",
+        "  <h3>{{ ${4}.grouper }}</h3>",
+        "{% endfor %}"
+      ],
+      "description": "Regroup by attribute"
+    },
+    "cache": {
+      "prefix": "cache",
+      "body": [
+        "{% cache ${1:timeout} ${2:key} %}",
+        "  $3",
+        "{% endcache %}"
+      ],
+      "description": "Cache block"
+    },
+    "filter-block": {
+      "prefix": "filter-block",
+      "body": [
+        "{% filter ${1:lower} %}",
+        "  $2",
+        "{% endfilter %}"
+      ],
+      "description": "Filter block"
+    },
+    "widthratio": {
+      "prefix": "widthratio",
+      "body": "{% widthratio ${1:value} ${2:max} ${3:max_width} %}",
+      "description": "Proportional width"
+    },
     "csrf": {
       "prefix": "csrf",
       "body": "{% csrf_token %}",
-      "description": "CSRF token input"
+      "description": "CSRF token"
     },
     "csp": {
       "prefix": "csp",
-      "body": "<script {% csp_nonce_attr %}></script>",
+      "body": "<script {% csp_nonce_attr %}>$1</script>",
       "description": "CSP nonce attribute"
     },
     "static": {
@@ -118,60 +341,377 @@
     },
     "url": {
       "prefix": "url",
-      "body": "{% url \"${1:route_name}\" ${2:args} %}",
-      "description": "URL for named route"
+      "body": "{% url \"${1:route}\" %}",
+      "description": "URL by name"
     },
-    "widthratio": {
-      "prefix": "widthratio",
-      "body": "{% widthratio ${1:value} ${2:max} ${3:max_width} %}",
-      "description": "Proportional width"
+    "url-args": {
+      "prefix": "url-args",
+      "body": "{% url \"${1:route}\" ${2:arg1} ${3:arg2} %}",
+      "description": "URL with positional args"
+    },
+    "url-kwargs": {
+      "prefix": "url-kwargs",
+      "body": "{% url \"${1:route}\" ${2:key}=${3:value} %}",
+      "description": "URL with keyword args"
     },
     "debug": {
       "prefix": "debug",
       "body": "{% debug %}",
-      "description": "Dump template context"
+      "description": "Debug output"
     },
-    "load": {
-      "prefix": "load",
-      "body": "{% load ${1:i18n} %}",
-      "description": "Load tag library"
+    "templatetag": {
+      "prefix": "templatetag",
+      "body": "{% templatetag ${1|openblock|closeblock|openvariable|closevariable|openbrace|closebrace|opencomment|closecomment} %}",
+      "description": "Render template tag symbol"
     },
-    "comment": {
-      "prefix": "comment",
+    "addtoblock": {
+      "prefix": "addtoblock",
       "body": [
-        "{#",
-        "  ${1:comment}",
-        "#}"
+        "{% addtoblock ${1:css %}",
+        "  $2",
+        "{% endaddtoblock %}"
       ],
-      "description": "Comment block"
+      "description": "Add content to block"
     },
-    "verbatim": {
-      "prefix": "verbatim",
+    "prettier-ignore": {
+      "prefix": "prettier-ignore",
+      "body": "{# prettier-ignore #}",
+      "description": "Prettier ignore (single line)"
+    },
+    "prettier-ignore-start": {
+      "prefix": "prettier-ignore-start",
       "body": [
-        "{% verbatim %}",
-        "  ${1}",
-        "{% endverbatim %}"
+        "{# prettier-ignore-start #}",
+        "$1",
+        "{# prettier-ignore-end #}"
       ],
-      "description": "Verbatim block"
+      "description": "Prettier ignore region"
     },
-    "regroup": {
-      "prefix": "regroup",
-      "body": "{% for ${1:group} in ${2:items}|regroup:\"${3:category}\" %}{{ ${1}.grouper }}{% endfor %}",
-      "description": "Regroup by attribute"
+    "filter-upper": {
+      "prefix": "upper",
+      "body": "{{ ${1:value}|upper }}",
+      "description": "Convert to uppercase"
     },
-    "firstof": {
-      "prefix": "firstof",
-      "body": "{% firstof ${1:var1} ${2:var2} \"${3:fallback}\" %}",
-      "description": "First truthy value"
+    "filter-lower": {
+      "prefix": "lower",
+      "body": "{{ ${1:value}|lower }}",
+      "description": "Convert to lowercase"
     },
-    "filter_block": {
-      "prefix": "filter",
+    "filter-title": {
+      "prefix": "title",
+      "body": "{{ ${1:value}|title }}",
+      "description": "Title case"
+    },
+    "filter-capfirst": {
+      "prefix": "capfirst",
+      "body": "{{ ${1:value}|capfirst }}",
+      "description": "Capitalize first letter"
+    },
+    "filter-default": {
+      "prefix": "default",
+      "body": "{{ ${1:value}|default:\"${2:fallback}\" }}",
+      "description": "Default value if falsy"
+    },
+    "filter-default-if-none": {
+      "prefix": "default_if_none",
+      "body": "{{ ${1:value}|default_if_none:\"${2:fallback}\" }}",
+      "description": "Default if None/undefined"
+    },
+    "filter-length": {
+      "prefix": "length",
+      "body": "{{ ${1:value}|length }}",
+      "description": "Length of value"
+    },
+    "filter-slice": {
+      "prefix": "slice",
+      "body": "{{ ${1:value}|slice:\"${2:0:3}\" }}",
+      "description": "Slice array/string"
+    },
+    "filter-join": {
+      "prefix": "join",
+      "body": "{{ ${1:list}|join:\"${2:, }\" }}",
+      "description": "Join array elements"
+    },
+    "filter-first": {
+      "prefix": "first",
+      "body": "{{ ${1:list}|first }}",
+      "description": "First element"
+    },
+    "filter-last": {
+      "prefix": "last",
+      "body": "{{ ${1:list}|last }}",
+      "description": "Last element"
+    },
+    "filter-truncatewords": {
+      "prefix": "truncatewords",
+      "body": "{{ ${1:text}|truncatewords:${2:10} }}",
+      "description": "Truncate by words"
+    },
+    "filter-truncatechars": {
+      "prefix": "truncatechars",
+      "body": "{{ ${1:text}|truncatechars:${2:100} }}",
+      "description": "Truncate by characters"
+    },
+    "filter-striptags": {
+      "prefix": "striptags",
+      "body": "{{ ${1:html}|striptags }}",
+      "description": "Strip HTML tags"
+    },
+    "filter-safe": {
+      "prefix": "safe",
+      "body": "{{ ${1:html}|safe }}",
+      "description": "Mark as HTML safe"
+    },
+    "filter-escape": {
+      "prefix": "escape",
+      "body": "{{ ${1:value}|escape }}",
+      "description": "Escape HTML"
+    },
+    "filter-linebreaks": {
+      "prefix": "linebreaks",
+      "body": "{{ ${1:text}|linebreaks }}",
+      "description": "Convert line breaks to HTML"
+    },
+    "filter-date": {
+      "prefix": "date",
+      "body": "{{ ${1:date}|date:\"${2:Y-m-d}\" }}",
+      "description": "Format date"
+    },
+    "filter-time": {
+      "prefix": "time",
+      "body": "{{ ${1:date}|time:\"${2:H:i}\" }}",
+      "description": "Format time"
+    },
+    "filter-add": {
+      "prefix": "add",
+      "body": "{{ ${1:value}|add:${2:1} }}",
+      "description": "Add value"
+    },
+    "filter-floatformat": {
+      "prefix": "floatformat",
+      "body": "{{ ${1:value}|floatformat:${2:2} }}",
+      "description": "Format decimal"
+    },
+    "filter-divisibleby": {
+      "prefix": "divisibleby",
+      "body": "{{ ${1:value}|divisibleby:${2:2} }}",
+      "description": "Check divisibility"
+    },
+    "filter-mod": {
+      "prefix": "mod",
+      "body": "{{ ${1:value}|mod:${2:2} }}",
+      "description": "Modulo operation"
+    },
+    "filter-with": {
+      "prefix": "with-filter",
+      "body": "{{ ${1:value}|with:${2:var}=${3:value} }}",
+      "description": "Add context to value"
+    },
+    "filter-json-script": {
+      "prefix": "json_script",
+      "body": "{{ ${1:data}|json_script:${2:'id'} }}",
+      "description": "JSON script tag"
+    },
+    "filter-urlencode": {
+      "prefix": "urlencode",
+      "body": "{{ ${1:value}|urlencode }}",
+      "description": "URL encode"
+    },
+    "filter-yesno": {
+      "prefix": "yesno",
+      "body": "{{ ${1:value}|yesno:\"${2:yes,no,maybe}\" }}",
+      "description": "Yes/No/Maybe mapping"
+    },
+    "filter-pluralize": {
+      "prefix": "pluralize",
+      "body": "{{ ${1:count}|pluralize }}",
+      "description": "Pluralize suffix"
+    },
+    "filter-pluralize-custom": {
+      "prefix": "pluralize-custom",
+      "body": "{{ ${1:count}|pluralize:\"${2:y,ies}\" }}",
+      "description": "Custom plural suffix"
+    },
+    "filter-filesizeformat": {
+      "prefix": "filesizeformat",
+      "body": "{{ ${1:bytes}|filesizeformat }}",
+      "description": "Format file size"
+    },
+    "filter-intcomma": {
+      "prefix": "intcomma",
+      "body": "{{ ${1:number}|intcomma }}",
+      "description": "Integer with commas"
+    },
+    "filter-timesince": {
+      "prefix": "timesince",
+      "body": "{{ ${1:date}|timesince }}",
+      "description": "Time since"
+    },
+    "filter-timeuntil": {
+      "prefix": "timeuntil",
+      "body": "{{ ${1:date}|timeuntil }}",
+      "description": "Time until"
+    },
+    "filter-strftime": {
+      "prefix": "strftime",
+      "body": "{{ ${1:date}|strftime:\"${2:PPpp}\" }}",
+      "description": "Format with date-fns"
+    },
+    "filter-dictsort": {
+      "prefix": "dictsort",
+      "body": "{{ ${1:list}|dictsort:\"${2:key}\" }}",
+      "description": "Sort by key"
+    },
+    "filter-dictsortreversed": {
+      "prefix": "dictsortreversed",
+      "body": "{{ ${1:list}|dictsortreversed:\"${2:key}\" }}",
+      "description": "Sort by key (reversed)"
+    },
+    "filter-slugify": {
+      "prefix": "slugify",
+      "body": "{{ ${1:value}|slugify }}",
+      "description": "URL-friendly slug"
+    },
+    "filter-wordcount": {
+      "prefix": "wordcount",
+      "body": "{{ ${1:text}|wordcount }}",
+      "description": "Count words"
+    },
+    "filter-phone2numeric": {
+      "prefix": "phone2numeric",
+      "body": "{{ ${1:value}|phone2numeric }}",
+      "description": "Phone to numeric"
+    },
+    "filter-center": {
+      "prefix": "center",
+      "body": "{{ ${1:value}|center:${2:10} }}",
+      "description": "Center text"
+    },
+    "filter-ljust": {
+      "prefix": "ljust",
+      "body": "{{ ${1:value}|ljust:${2:10} }}",
+      "description": "Left justify"
+    },
+    "filter-rjust": {
+      "prefix": "rjust",
+      "body": "{{ ${1:value}|rjust:${2:10} }}",
+      "description": "Right justify"
+    },
+    "filter-stringformat": {
+      "prefix": "stringformat",
+      "body": "{{ ${1:value}|stringformat:\"${2:s}\" }}",
+      "description": "String format"
+    },
+    "filter-cut": {
+      "prefix": "cut",
+      "body": "{{ ${1:value}|cut:\"${2: }\" }}",
+      "description": "Remove characters"
+    },
+    "filter-addslashes": {
+      "prefix": "addslashes",
+      "body": "{{ ${1:value}|addslashes }}",
+      "description": "Add slashes"
+    },
+    "filter-removetags": {
+      "prefix": "removetags",
+      "body": "{{ ${1:html}|removetags:\"${2:p,div}\" }}",
+      "description": "Remove specific tags"
+    },
+    "filter-split": {
+      "prefix": "split",
+      "body": "{{ ${1:value}|split:\"${2:,}\" }}",
+      "description": "Split string"
+    },
+    "filter-trans": {
+      "prefix": "trans-filter",
+      "body": "{{ ${1:value}|trans }}",
+      "description": "Translate value"
+    },
+    "filter-naturalday": {
+      "prefix": "naturalday",
+      "body": "{{ ${1:date}|naturalday }}",
+      "description": "Natural day format"
+    },
+    "filter-apnumber": {
+      "prefix": "apnumber",
+      "body": "{{ ${1:number}|apnumber }}",
+      "description": "American English number"
+    },
+    "filter-ordinal": {
+      "prefix": "ordinal",
+      "body": "{{ ${1:number}|ordinal }}",
+      "description": "Ordinal (1st, 2nd, etc.)"
+    },
+    "filter-intword": {
+      "prefix": "intword",
+      "body": "{{ ${1:number}|intword }}",
+      "description": "Large integer to word"
+    },
+    "filter-get-digit": {
+      "prefix": "get_digit",
+      "body": "{{ ${1:number}|get_digit:${2:1} }}",
+      "description": "Get digit by position"
+    },
+    "filter-regroup": {
+      "prefix": "regroup-filter",
+      "body": "{{ ${1:list}|regroup:\"${2:key}\" }}",
+      "description": "Regroup list"
+    },
+    "for-forloop": {
+      "prefix": "for-forloop",
       "body": [
-        "{% filter ${1:lower} %}",
-        "  ${2}",
-        "{% endfilter %}"
+        "{% for ${1:item} in ${2:items} %}",
+        "  {% if forloop.first %}",
+        "    <ul>",
+        "  {% endif %}",
+        "    <li>{{ forloop.counter }}: {{ ${1} }}</li>",
+        "  {% if forloop.last %}",
+        "    </ul>",
+        "  {% endif %}",
+        "{% endfor %}"
       ],
-      "description": "Filter block"
+      "description": "For loop with first/last detection"
+    },
+    "block-wrap": {
+      "prefix": "block-wrap",
+      "body": [
+        "{% block ${1:name} %}",
+        "  $TM_SELECTED_TEXT",
+        "{% endblock %}"
+      ],
+      "description": "Wrap selection in block"
+    },
+    "for-wrap": {
+      "prefix": "for-wrap",
+      "body": [
+        "{% for ${1:item} in ${2:items} %}",
+        "  $TM_SELECTED_TEXT",
+        "{% endfor %}"
+      ],
+      "description": "Wrap selection in for loop"
+    },
+    "if-wrap": {
+      "prefix": "if-wrap",
+      "body": [
+        "{% if ${1:condition} %}",
+        "  $TM_SELECTED_TEXT",
+        "{% endif %}"
+      ],
+      "description": "Wrap selection in if"
+    },
+    "with-wrap": {
+      "prefix": "with-wrap",
+      "body": [
+        "{% with ${1:var} as ${2:alias} %}",
+        "  $TM_SELECTED_TEXT",
+        "{% endwith %}"
+      ],
+      "description": "Wrap selection in with"
+    },
+    "filter-wrap": {
+      "prefix": "filter-wrap",
+      "body": "${TM_SELECTED_TEXT}|${1:filter}",
+      "description": "Wrap selection with filter"
     }
   }
 }
