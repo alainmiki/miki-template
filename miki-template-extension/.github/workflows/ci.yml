@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate package.json
+        run: npm run validate
+
+      - name: Check for required files
+        run: |
+          echo "Checking required files..."
+          for file in package.json extension.js README.md CHANGELOG.md LICENSE; do
+            if [ ! -f "$file" ]; then
+              echo "Missing required file: $file"
+              exit 1
+            fi
+          done
+
+  test-grammar:
+    name: Test Grammar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install test dependencies
+        run: npm install --save-dev textmate-grammar-test
+
+      - name: Run grammar tests
+        run: npm run test:grammar
+
+  package:
+    name: Package Extension
+    runs-on: ubuntu-latest
+    needs: [lint, test-grammar]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Package VSIX
+        id: package
+        run: |
+          npx vsce package --no-dependencies
+          echo "version=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
+          echo "vsix=$(ls *.vsix 2>/dev/null | head -1)" >> $GITHUB_OUTPUT
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: miki-template-${{ steps.package.outputs.version }}.vsix
+          path: ${{ steps.package.outputs.vsix }}
+
+      - name: List output files
+        run: ls -la *.vsix 2>/dev/null || echo "No VSIX files found"
+
+  publish:
+    name: Publish to Marketplace
+    runs-on: ubuntu-latest
+    needs: [package]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download VSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: miki-template-${{ needs.package.outputs.version }}.vsix
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        continue-on-error: true
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          files: *.vsix
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
