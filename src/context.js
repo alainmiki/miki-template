@@ -52,7 +52,7 @@ class Context {
     const parts = path.split('.');
     const baseName = parts[0];
 
-    let current = null;
+    let current = undefined;
     let found = false;
 
     // Search scopes from top (most local) to bottom (most global)
@@ -65,13 +65,16 @@ class Context {
     }
 
     if (!found) {
-      return '';
+      // Variable truly missing — return undefined so templates can
+      // distinguish "missing" from "explicitly null". The variable node
+      // and filters handle undefined gracefully.
+      return undefined;
     }
 
     // Traverse the rest of the dotted segments
     for (let i = 1; i < parts.length; i++) {
       if (current === undefined || current === null) {
-        return '';
+        return current === null ? null : undefined;
       }
 
       const parent = current;
@@ -84,7 +87,7 @@ class Context {
         // Handle array index resolution, e.g. items.0
         current = current[parseInt(part, 10)];
       } else {
-        return '';
+        return undefined;
       }
 
       // If the property value is a function, evaluate it (Django style)
@@ -98,7 +101,8 @@ class Context {
       current = current.call(null);
     }
 
-    return current !== undefined && current !== null ? current : '';
+    // Preserve null/undefined so filters like default_if_none can detect them.
+    return current;
   }
 
   /**

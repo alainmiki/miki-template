@@ -18,6 +18,13 @@ const path = require('path');
 
 const libraries = new Map(); // Map<name, libraryDef>
 
+// Registration functions are injected by index.js to break the
+// circular dependency between libraries.js and index.js.
+let registrationFunctions = null;
+function setRegistrationFunctions(fns) {
+  registrationFunctions = fns;
+}
+
 /**
  * Register a library.
  *
@@ -92,7 +99,9 @@ function activateLibrary(name) {
   if (!lib) {
     throw new Error(`Library not found: '${name}'`);
   }
-  const { registerTag, registerFilter, registerHelper } = require('./index');
+  // Require lazily; index.js will pass the real registration
+  // functions via setRegistrationFunctions() before calling us.
+  const { registerTag, registerFilter, registerHelper } = registrationFunctions || require('./index');
   for (const [tagName, parserFn] of Object.entries(lib.tags || {})) {
     registerTag(tagName, parserFn);
   }
@@ -199,21 +208,142 @@ registerLibrary('cache', {
   }
 });
 
-/** Lorem: generate placeholder text. */
+/** Lorem: generate placeholder text (Django-compatible). */
 registerLibrary('lorem', {
   filters: {
     lorem: (val, arg) => {
-      const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
       let n = parseInt(arg, 10);
       if (isNaN(n)) n = 5;
       if (n < 1) n = 1;
       if (n > 100) n = 100;
+      const text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
       const words = text.split(' ');
       let result = [];
       for (let i = 0; i < n; i++) {
         result.push(words[i % words.length]);
       }
       return result.join(' ');
+    }
+  },
+  tags: {
+    // Django-compatible lorem tag.
+    //
+    //   {% lorem [count] [method] [random] %}
+    //
+    //   count   - number of words/paragraphs to generate (default 1)
+    //   method  - w (words), p (HTML paragraphs), b (plain-text blocks, default)
+    //   random  - skip the common "Lorem ipsum dolor sit amet..." opening
+    //
+    //   {% lorem %}             -> one block of common Lorem ipsum
+    //   {% lorem 3 p %}         -> common paragraph + 2 random <p> blocks
+    //   {% lorem 2 w random %}  -> 2 random words
+    //
+    // The tag is built into the engine and requires no {% load lorem %}.
+    lorem: (tagContent, parser) => {
+      return {
+        render: () => {
+          // The tag registry calls the parser with the full content
+          // including the tag name. For "{% lorem 3 p random %}" the
+          // tagContent is "lorem 3 p random".
+          const parts = tagContent.trim().split(/\s+/);
+
+          // count = first numeric token (or 1 if none)
+          let n = 1;
+          for (let i = 0; i < parts.length; i++) {
+            const num = parseInt(parts[i], 10);
+            if (!isNaN(num) && String(num) === parts[i]) { n = Math.max(1, num); break; }
+          }
+          // method = w | b | p (default b, like Django)
+          let unit = 'b';
+          for (let i = 0; i < parts.length; i++) {
+            if (/^(w|b|p|words?|blocks?|paragraphs?)$/i.test(parts[i])) {
+              unit = parts[i][0].toLowerCase();
+              break;
+            }
+          }
+          // random = presence of the literal word "random"
+          const random = parts.some(t => t.toLowerCase() === 'random');
+
+          // The famous "common paragraph" Django uses as the seed.
+          const COMMON = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+          // Word bank used to assemble random text when the "random"
+          // keyword is given. Picked from the same Latin vocabulary.
+          const WORDS = ('lorem ipsum dolor sit amet consectetur adipisicing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in voluptate velit esse cillum fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum').split(' ');
+
+          // The non-random blocks cycle through a fixed set of
+          // sentences taken from the COMMON paragraph above (the
+          // first one is the "Lorem ipsum dolor sit amet" line).
+          const SENTENCES = [
+            'Lorem ipsum dolor sit amet, consectetur adipisicing elit.',
+            'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+            'Ut enim ad minim veniam, quis nostrud exercitation.',
+            'Duis aute irure dolor in reprehenderit in voluptate velit.',
+            'Excepteur sint occaecat cupidatat non proident.'
+          ];
+
+          if (unit === 'w') {
+            // Words
+            if (random) {
+              const out = [];
+              for (let i = 0; i < n; i++) {
+                out.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
+              }
+              return out.join(' ');
+            }
+            // Non-random: first word is always "lorem", the rest
+            // continue the common paragraph.
+            const commonWords = COMMON.replace(/[.,]/g, '').split(/\s+/);
+            const out = [];
+            for (let i = 0; i < n; i++) {
+              out.push(commonWords[i % commonWords.length]);
+            }
+            return out.join(' ');
+          }
+
+          if (unit === 'p') {
+            // HTML paragraphs (each wrapped in <p>...</p>)
+            const out = [];
+            for (let i = 0; i < n; i++) {
+              let paragraph;
+              if (i === 0 && !random) {
+                paragraph = COMMON;
+              } else if (random) {
+                // Generate a sentence worth of random words
+                const len = 12 + Math.floor(Math.random() * 16);
+                const words = [];
+                for (let j = 0; j < len; j++) {
+                  words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
+                }
+                paragraph = words.join(' ') + '.';
+              } else {
+                paragraph = SENTENCES[(i - 1) % (SENTENCES.length - 1) + 1];
+              }
+              out.push('<p>' + paragraph + '</p>');
+            }
+            return out.join('\n');
+          }
+
+          // unit === 'b' (default): plain-text blocks separated by blank lines
+          const out = [];
+          for (let i = 0; i < n; i++) {
+            let paragraph;
+            if (i === 0 && !random) {
+              paragraph = COMMON;
+            } else if (random) {
+              const len = 30 + Math.floor(Math.random() * 20);
+              const words = [];
+              for (let j = 0; j < len; j++) {
+                words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
+              }
+              paragraph = words.join(' ') + '.';
+            } else {
+              paragraph = SENTENCES[(i - 1) % (SENTENCES.length - 1) + 1];
+            }
+            out.push(paragraph);
+          }
+          return out.join('\n\n');
+        }
+      };
     }
   }
 });
@@ -236,5 +366,6 @@ module.exports = {
   hasLibrary,
   registerLibraryFromPath,
   activateLibrary,
+  setRegistrationFunctions,
   libraries
 };

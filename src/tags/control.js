@@ -282,15 +282,40 @@ class ForNode {
 }
 
 class WithNode {
-  constructor(mappings, body) {
+  constructor(mappings, body, aliasName = null) {
     this.mappings = mappings;
     this.body = body;
+    this.aliasName = aliasName;
   }
 
   render(context) {
     const scope = {};
     for (const mapping of this.mappings) {
-      scope[mapping.name] = context.get(mapping.valPath);
+      // The valPath may be a literal string (e.g. "Hello" with quotes) or
+      // a variable lookup (e.g. user.name). Parse quotes here.
+      const raw = mapping.valPath;
+      let value;
+      if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith('\'') && raw.endsWith('\''))) {
+        value = raw.slice(1, -1);
+      } else if (raw === 'true' || raw === 'True') {
+        value = true;
+      } else if (raw === 'false' || raw === 'False') {
+        value = false;
+      } else if (raw === 'none' || raw === 'None' || raw === 'null') {
+        value = null;
+      } else if (raw !== '' && !isNaN(Number(raw))) {
+        value = Number(raw);
+      } else {
+        value = context.get(raw);
+      }
+      scope[mapping.name] = value;
+    }
+    // If an `as alias` was used after key=value pairs, alias the last
+    // key to the alias name. This supports `{% with a=5 as answ %}` →
+    // `answ` holds the same value as `a`.
+    if (this.aliasName && this.mappings.length > 0) {
+      const last = this.mappings[this.mappings.length - 1];
+      scope[this.aliasName] = scope[last.name];
     }
     context.push(scope);
     const result = this.body.map(n => n.render(context)).join('');
@@ -314,6 +339,9 @@ class CycleNode {
 
     if (this.asName) {
       context.scopes[0][this.asName] = val;
+      // Django semantics: {% cycle "x" "y" as v %} produces NO output;
+      // the value is stored in `v` for later use (e.g. {{ v }}).
+      return '';
     }
     return String(val);
   }
@@ -379,14 +407,43 @@ class PartialDefNode {
 }
 
 class PartialNode {
-  constructor(name) {
+  constructor(name, extraMappings = []) {
     this.name = name;
+    this.extraMappings = extraMappings;
   }
 
   render(context) {
     const partial = context.getPartial(this.name);
     if (!partial) {
       throw new Error(`Partial '${this.name}' not found`);
+    }
+    // If the partial reference provided `with k=v ...`, push those
+    // values onto the scope before rendering the partial body so the
+    // body sees the overrides.
+    if (this.extraMappings && this.extraMappings.length > 0) {
+      const scope = {};
+      for (const m of this.extraMappings) {
+        const raw = m.valPath;
+        let value;
+        if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith('\'') && raw.endsWith('\''))) {
+          value = raw.slice(1, -1);
+        } else if (raw === 'true' || raw === 'True') {
+          value = true;
+        } else if (raw === 'false' || raw === 'False') {
+          value = false;
+        } else if (raw === 'none' || raw === 'None' || raw === 'null') {
+          value = null;
+        } else if (raw !== '' && !isNaN(Number(raw))) {
+          value = Number(raw);
+        } else {
+          value = context.get(raw);
+        }
+        scope[m.name] = value;
+      }
+      context.push(scope);
+      const out = partial.body.map(n => n.render(context)).join('');
+      context.pop();
+      return out;
     }
     return partial.body.map(n => n.render(context)).join('');
   }
@@ -402,7 +459,8 @@ function parsePartialDef(tagContent, parser) {
   if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith('\'') && name.endsWith('\''))) {
     name = name.slice(1, -1);
   }
-  const inline = content.includes('inline');
+  // Recognize `inline` or `inline=true` as a keyword (case-insensitive)
+  const inline = /\binline\b/.test(content);
   const body = parser.parse(['endpartialdef']);
   const next = parser.peek();
   if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endpartialdef') {
@@ -412,6 +470,8 @@ function parsePartialDef(tagContent, parser) {
 }
 
 function parsePartial(tagContent, _parser) {
+  // {% partial "name" %}
+  // {% partial "name" with k1=v1 k2=v2 %}
   const content = tagContent.slice(7).trim();
   const nameMatch = content.match(/^(".*?"|'.*?'|\S+)/);
   if (!nameMatch) {
@@ -421,7 +481,16 @@ function parsePartial(tagContent, _parser) {
   if ((name.startsWith('"') && name.endsWith('"')) || (name.startsWith('\'') && name.endsWith('\''))) {
     name = name.slice(1, -1);
   }
-  return new PartialNode(name);
+
+  // Optional `with k=v k=v` clause
+  let extraMappings = [];
+  const remaining = content.slice(nameMatch[0].length).trim();
+  const withMatch = remaining.match(/^with\s+(.+)$/s);
+  if (withMatch) {
+    extraMappings = parseKeyValuePairs(withMatch[1]);
+  }
+
+  return new PartialNode(name, extraMappings);
 }
 
 /* --- Tag Registry Parsers --- */
@@ -511,25 +580,30 @@ function parseFor(tagContent, parser) {
 function parseWith(tagContent, parser) {
   const mappings = [];
   const content = tagContent.slice(4).trim();
+  let aliasName = null;
 
+  // Support three forms (matching Django plus common extensions):
+  //   1. {% with x as y %}        — alias a single expression
+  //   2. {% with a=1, b=2 %}       — bind multiple key=value pairs
+  //   3. {% with a=1, b=2 as ans %} — bind pairs then alias the last
+  //      (the `as` introduces an extra alias for the last key)
   if (content.includes(' as ')) {
     const asIdx = content.indexOf(' as ');
-    const valPath = content.slice(0, asIdx).trim();
-    const name = content.slice(asIdx + 4).trim();
-    mappings.push({ name, valPath });
-  } else {
-    // Parse key=value pairs, handling quoted values
-    const tokens = content.match(/(?:[a-zA-Z_][a-zA-Z0-9_]*=(?:"[^"]*"|'[^']*'|[^\s]+))+/g) || [];
-    for (const token of tokens) {
-      const eqIdx = token.indexOf('=');
-      if (eqIdx === -1) continue;
-      const name = token.slice(0, eqIdx).trim();
-      let valPath = token.slice(eqIdx + 1).trim();
-      if ((valPath.startsWith('"') && valPath.endsWith('"')) || (valPath.startsWith('\'') && valPath.endsWith('\''))) {
-        valPath = valPath.slice(1, -1);
-      }
-      mappings.push({ name, valPath });
+    const left = content.slice(0, asIdx).trim();
+    aliasName = content.slice(asIdx + 4).trim();
+    if (left.includes('=')) {
+      // Form 3: pairs followed by `as alias`
+      const pairMappings = parseKeyValuePairs(left);
+      mappings.push(...pairMappings);
+    } else {
+      // Form 1: simple alias — left is an expression (literal or var)
+      mappings.push({ name: aliasName, valPath: left });
+      aliasName = null; // already used as the mapping name
     }
+  } else {
+    // Form 2: key=value pairs only
+    const pairMappings = parseKeyValuePairs(content);
+    mappings.push(...pairMappings);
   }
 
   const body = parser.parse(['endwith']);
@@ -538,7 +612,62 @@ function parseWith(tagContent, parser) {
     parser.advance();
   }
 
-  return new WithNode(mappings, body);
+  return new WithNode(mappings, body, aliasName);
+}
+
+/**
+ * Parse a comma-separated list of `key=value` pairs. Values may be
+ * quoted (single or double quotes) and may contain commas. Unquoted
+ * values are read up to the next comma or whitespace.
+ */
+function parseKeyValuePairs(content) {
+  const tokens = [];
+  let i = 0;
+  while (i < content.length) {
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (i >= content.length) break;
+
+    // Read identifier (key)
+    let key = '';
+    while (i < content.length && /[a-zA-Z0-9_]/.test(content[i])) {
+      key += content[i++];
+    }
+    if (!key) {
+      // Not a key — skip a char to avoid infinite loop
+      i++;
+      continue;
+    }
+    while (i < content.length && /\s/.test(content[i])) i++;
+
+    if (content[i] !== '=') {
+      // Malformed pair; skip to next comma
+      while (i < content.length && content[i] !== ',') i++;
+      if (content[i] === ',') i++;
+      continue;
+    }
+    i++; // consume '='
+    while (i < content.length && /\s/.test(content[i])) i++;
+
+    let val = '';
+    if (content[i] === '"' || content[i] === '\'') {
+      const quote = content[i++];
+      while (i < content.length && content[i] !== quote) {
+        if (content[i] === '\\' && i + 1 < content.length) i++;
+        val += content[i++];
+      }
+      if (content[i] === quote) i++;
+      // Keep the quotes around the literal so WithNode can recognize it
+      val = quote + val + quote;
+    } else {
+      while (i < content.length && content[i] !== ',' && !/\s/.test(content[i])) {
+        val += content[i++];
+      }
+    }
+    tokens.push({ name: key, valPath: val });
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (content[i] === ',') i++;
+  }
+  return tokens;
 }
 
 function parseCycle(tagContent, _parser) {

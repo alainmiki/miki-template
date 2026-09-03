@@ -15,7 +15,15 @@ const cache = new Map();
  * @returns {object} compiled template object
  */
 function getCompiled(templateStr, compileOptions, compileFn) {
-  const key = JSON.stringify({ templateStr, compileOptions });
+  // Build a cache key that ignores non-serializable option values
+  // (e.g. functions like urlHelper, custom callbacks) — those don't
+  // affect template compilation, only render behavior.
+  const serializable = {};
+  for (const [k, v] of Object.entries(compileOptions || {})) {
+    if (typeof v === 'function' || typeof v === 'undefined') continue;
+    serializable[k] = v;
+  }
+  const key = JSON.stringify({ templateStr, compileOptions: serializable });
   if (cache.has(key)) {
     // Move to end to mark as recently used
     const value = cache.get(key);

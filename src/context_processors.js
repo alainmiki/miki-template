@@ -25,14 +25,21 @@ function clearContextProcessors() {
 
 /**
  * Apply all registered processors to the given context object.
- * Mutates the context object by merging any returned values.
+ * Values returned by a processor that are already defined in the
+ * context are kept as-is (Django-style "existing values win" semantics
+ * so explicit render-time data always takes precedence over processor
+ * defaults).
  * @param {Object} ctx
  */
 function applyContextProcessors(ctx) {
   for (const fn of processors) {
     const result = fn(ctx);
     if (result && typeof result === 'object') {
-      Object.assign(ctx, result);
+      for (const [k, v] of Object.entries(result)) {
+        if (ctx[k] === undefined) {
+          ctx[k] = v;
+        }
+      }
     }
   }
   return ctx;

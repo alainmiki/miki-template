@@ -40,7 +40,7 @@ class VariableNode {
         }
       }
 
-      val = filterFn(val, argVal);
+      val = filterFn(val, argVal, context);
     }
 
     // Auto-escape logic – skip escaping if value is marked safe
@@ -123,6 +123,26 @@ function parseVariableExpression(expr) {
           idx++; // Skip opening quote
           let argVal = '';
           while (idx < len && expr[idx] !== quote) {
+            // Track nested {{ ... }} and {% ... %} so the closing
+            // quote isn't confused with one inside a nested template
+            // expression. This lets us write
+            //   {{ x|default:"{{ y|upper }}" }}
+            // where the inner `}}` must not close the outer string.
+            if (expr[idx] === '{' && idx + 1 < len && (expr[idx + 1] === '{' || expr[idx + 1] === '%')) {
+              const open = expr.substr(idx, 2);
+              const close = open === '{{' ? '}}' : '%}';
+              argVal += open;
+              idx += 2;
+              while (idx < len && expr.substr(idx, close.length) !== close) {
+                argVal += expr[idx];
+                idx++;
+              }
+              if (idx < len) {
+                argVal += close;
+                idx += close.length;
+              }
+              continue;
+            }
             if (expr[idx] === '\\') {
               idx++;
             }
@@ -131,7 +151,7 @@ function parseVariableExpression(expr) {
               idx++;
             }
           }
-          idx++; // Skip closing quote
+          if (idx < len) idx++; // Skip closing quote
           arg = { type: 'literal', value: argVal };
         } else {
           // Read unquoted token

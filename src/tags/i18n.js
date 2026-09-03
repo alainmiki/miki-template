@@ -141,19 +141,57 @@ function parseLanguage(tagContent, parser) {
 }
 
 function parseBlockTrans(tagContent, parser) {
-  // Collect body until {% endblocktrans %}
-  const body = parser.parse(['blocktrans_internal_marker']); // placeholder
-  // Actually we need a different approach: scan raw body and parse it ourselves
-  // because blocktrans parses its own text content as a template.
-  // We'll rewind and use the lexer on the body tokens.
-  // For simplicity here, we re-parse the entire slice as a mini-template.
-  // The body tokens between {% blocktrans %} and {% endblocktrans %} are still
-  // available because parseUntil was called.
-  // For now, treat the body as a list of nodes that we'll re-render:
+  // Collect body until {% endblocktrans %}. The parser will stop at the
+  // first matching end tag it encounters in its untilTags list.
+  const body = parser.parse(['endblocktrans']);
+  // Consume the endblocktrans token if it's still pending.
+  const next = parser.peek();
+  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endblocktrans') {
+    parser.advance();
+  }
+
+  // Parse `with name=value` and `count` from the blocktrans tag content.
+  // Format: {% blocktrans with name1=var1 name2=var2 count n %}...{% endblocktrans %}
+  const withMappings = [];
+  const pluralMappings = [];
+  const afterTrans = tagContent.replace(/^blocktrans\s*/, '').trim();
+  // Split on "with" / "count" boundaries, keeping the keywords
+  const tokens = afterTrans.match(/(?:"[^"]*"|'[^']*'|\S+)/g) || [];
+  let i = 0;
+  // Skip any leading context (e.g. "context")
+  if (tokens[i] === 'context') i += 2;
+  // Check for `with` or `count` after the main text
+  while (i < tokens.length) {
+    const tok = tokens[i];
+    if (tok === 'with') {
+      i++;
+      // Read name=var pairs until we hit end or another keyword
+      while (i < tokens.length && tokens[i].indexOf('=') > 0) {
+        const pair = tokens[i];
+        const eq = pair.indexOf('=');
+        const name = pair.slice(0, eq);
+        let val = pair.slice(eq + 1);
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
+          val = val.slice(1, -1);
+        }
+        withMappings.push({ name, valPath: val });
+        i++;
+      }
+    } else if (tok === 'count') {
+      i++;
+      // Next token is the count variable
+      if (i < tokens.length) {
+        pluralMappings.push({ name: 'count', valPath: tokens[i++] });
+      }
+    } else {
+      i++;
+    }
+  }
+
   return new BlockTransNode(
     extractTextAndVars(body),
-    extractWithMappings(body),
-    extractPluralMappings(body),
+    withMappings.length ? withMappings : extractWithMappings(body),
+    pluralMappings,
     body
   );
 }

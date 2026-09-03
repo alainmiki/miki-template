@@ -3,12 +3,20 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { Context } = require('../context');
 
-// Helper to resolve expression values
+// Helper to resolve expression values (literals, numbers, booleans, or context lookups)
 function resolveValue(token, context) {
+  if (token === undefined || token === null) return '';
+  if (typeof token !== 'string') return token;
+  if (token === '') return '';
   if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
+  if (token === 'true' || token === 'True') return true;
+  if (token === 'false' || token === 'False') return false;
+  if (token === 'none' || token === 'None' || token === 'null') return null;
+  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
   return context.get(token);
 }
 
@@ -83,14 +91,25 @@ class BlockNode {
 }
 
 class IncludeNode {
-  constructor(templateNameExpr, extraMappings) {
+  constructor(templateNameExpr, extraMappings, partialName = null) {
     this.templateNameExpr = templateNameExpr;
     this.extraMappings = extraMappings; // Array of { name, valPath }
+    this.partialName = partialName;     // When set, render only this partial
   }
 
   render(context) {
-    const templateName = resolveValue(this.templateNameExpr, context);
-    if (!templateName) return '';
+    const rawName = resolveValue(this.templateNameExpr, context);
+    if (!rawName) return '';
+
+    // Django-style partial selector: "home.html#card" means render
+    // only the `card` partial defined inside `home.html`.
+    let templateName = rawName;
+    let partialName = this.partialName;
+    const hashIdx = rawName.indexOf('#');
+    if (hashIdx >= 0) {
+      templateName = rawName.slice(0, hashIdx);
+      partialName = rawName.slice(hashIdx + 1);
+    }
 
     let viewsDirs = ['.'];
     if (context.options && context.options.settings && context.options.settings.views) {
@@ -115,11 +134,9 @@ class IncludeNode {
         loaded = true;
         break;
       } catch (e) {
-        // Propagate traversal errors, otherwise try next directory
         if (e.message && e.message.startsWith('Include tag attempted path traversal')) {
           throw e;
         }
-        // continue searching other directories
       }
     }
 
@@ -127,7 +144,9 @@ class IncludeNode {
       throw new Error(`Template not found: '${templateName}' in directories ${JSON.stringify(viewsDirs)}`);
     }
 
-    // Parse and tokenize dynamically (uses lazy imports to break loops)
+    // Parse the included file. We use the same lexer/parser/registry
+    // as the outer compile, which means {% load %}, custom tags, and
+    // all partialdefs are registered when we parse the file.
     const { tokenize } = require('../lexer');
     const { Parser } = require('../parser');
     const { getTagRegistry } = require('./registry');
@@ -136,7 +155,46 @@ class IncludeNode {
     const parser = new Parser(tokens, getTagRegistry());
     const nodes = parser.parse();
 
-    // Set up include scope
+    // If a partial selector was specified, compile the file so its
+    // partialdefs register themselves, then render only the named
+    // partial using the current context.
+    if (partialName) {
+      // Use a fresh context so partials from the included file do NOT
+      // leak into the caller's partial registry. Only the requested
+      // partial is rendered, and it can reference other partials from
+      // the same included file via the temp context's registry.
+      const tempContext = new Context({}, context.options || {});
+      nodes.map(n => n.render(tempContext));
+      const partial = tempContext.getPartial(partialName);
+      if (!partial) {
+        throw new Error(`Partial '${partialName}' not found in template '${templateName}'`);
+      }
+      // Build a render context that carries the caller's state but
+      // only the included file's partial definitions.
+      const renderCtx = new Context({}, context.options || {});
+      renderCtx.scopes = context.scopes.slice();
+      renderCtx.blocks = context.blocks;
+      renderCtx.cycleStates = context.cycleStates;
+      renderCtx.autoescape = context.autoescape;
+      renderCtx.parentTemplate = context.parentTemplate;
+      renderCtx.blockRenderIndices = context.blockRenderIndices;
+      renderCtx.partialDefs = tempContext.partialDefs;
+      // Apply include's `with` extra mappings on top of caller's ctx
+      if (this.extraMappings && this.extraMappings.length > 0) {
+        const extraScope = {};
+        for (const m of this.extraMappings) {
+          extraScope[m.name] = resolveValue(m.valPath, context);
+        }
+        renderCtx.push(extraScope);
+        const out = partial.body.map(n => n.render(renderCtx)).join('');
+        renderCtx.pop();
+        return out;
+      }
+      return partial.body.map(n => n.render(renderCtx)).join('');
+    }
+
+    // Plain include (no partial selector): render the included body
+    // inside the caller's context, applying any `with` extra mappings.
     if (this.extraMappings && this.extraMappings.length > 0) {
       const extraScope = {};
       for (const mapping of this.extraMappings) {
@@ -152,9 +210,16 @@ class IncludeNode {
   }
 }
 
-// --- Tag Registry Parsers ---
-
-// --- Tag Registry Parsers ---
+module.exports = {
+  ExtendsNode,
+  BlockNode,
+  IncludeNode,
+  parsers: {
+    extends: parseExtends,
+    block: parseBlock,
+    include: parseInclude
+  }
+};
 
 function parseExtends(tagContent, _parser) {
   // tagContent: "extends 'base.html'"
@@ -185,23 +250,77 @@ function parseBlock(tagContent, parser) {
 }
 
 function parseInclude(tagContent, _parser) {
-  // tagContent: "include 'header.html'" or "include 'header.html' with val1=var1"
+  // tagContent: "include 'header.html'" or
+  //             "include 'header.html' with val1=var1 val2='literal'"
+  //             "include 'header.html#partial_name'"
   const content = tagContent.slice(8).trim();
-  
-  // Extract template expression
-  const parts = content.split(/\s+with\s+/);
-  const templateNameExpr = parts[0].trim();
-  
-  const extraMappings = [];
-  if (parts[1]) {
-    const pairRegex = /(\w+)=([^\s]+)/g;
-    let match;
-    while ((match = pairRegex.exec(parts[1])) !== null) {
-      extraMappings.push({ name: match[1], valPath: match[2] });
+
+  // Extract template expression (may be quoted)
+  const tmplMatch = content.match(/^(".*?"|'.*?'|\S+)/);
+  if (!tmplMatch) {
+    throw new Error('include tag requires a template name');
+  }
+  const templateNameExpr = tmplMatch[1];
+  const rest = content.slice(tmplMatch[0].length).trim();
+
+  // Optional `with k1=v1 k2='v2' k3=v3`
+  let extraMappings = [];
+  if (rest) {
+    const withMatch = rest.match(/^with\s+(.+)$/s);
+    if (withMatch) {
+      extraMappings = parseKeyValuePairs(withMatch[1]);
     }
   }
 
   return new IncludeNode(templateNameExpr, extraMappings);
+}
+
+/**
+ * Parse a whitespace-separated list of `key=value` pairs. Values may be
+ * quoted (single or double quotes) or bare identifiers. The
+ * control.js parseKeyValuePairs handles commas, so prefer that — but
+ * include's `with` historically used a whitespace separator. Support
+ * both for backwards compatibility.
+ */
+function parseKeyValuePairs(str) {
+  const pairs = [];
+  let i = 0;
+  while (i < str.length) {
+    while (i < str.length && /\s/.test(str[i])) i++;
+    if (i >= str.length) break;
+
+    // Read key
+    let key = '';
+    while (i < str.length && /[a-zA-Z0-9_]/.test(str[i])) {
+      key += str[i++];
+    }
+    if (!key) { i++; continue; }
+    while (i < str.length && /\s/.test(str[i])) i++;
+    if (str[i] !== '=') { i++; continue; }
+    i++; // consume '='
+    while (i < str.length && /\s/.test(str[i])) i++;
+
+    let val = '';
+    if (str[i] === '"' || str[i] === '\'') {
+      const quote = str[i++];
+      while (i < str.length && str[i] !== quote) {
+        if (str[i] === '\\' && i + 1 < str.length) i++;
+        val += str[i++];
+      }
+      if (str[i] === quote) i++;
+      // Preserve quotes so resolveValue can recognize the literal
+      val = quote + val + quote;
+    } else {
+      // Unquoted value: read until comma or whitespace
+      while (i < str.length && str[i] !== ',' && !/\s/.test(str[i])) {
+        val += str[i++];
+      }
+      // Consume trailing comma if present
+      if (str[i] === ',') i++;
+    }
+    pairs.push({ name: key, valPath: val });
+  }
+  return pairs;
 }
 
 module.exports = {

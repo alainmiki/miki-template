@@ -1,5 +1,60 @@
 # Changelog
 
+## [1.3.1] - 2026-09-03
+### Highlights
+- **One-line Express integration**: `miki.setupExpress(app, { extension: 'html', views: dir })` — wires the view engine, `views` directory, and a `res.render` shim that lets you do `res.render('home#card', ...)` for HTMX-style partial responses. No more boilerplate, no extra middleware.
+- **Render-any-partial-from-string**: `renderPartialFromSource(source, partialName, ctx, opts)` loads a template string and returns only the named `{% partialdef %}` body. This is what powers `res.render('view#partial')` and HTMX responses.
+- **True built-in libraries**: `humanize`, `cache`, and `lorem` are now auto-activated on module load — `{% lorem %}` works without `{% load lorem %}`. Existing libraries now also expose helpers, not just tags.
+- **Comprehensive integration test suite**: 382 tests covering every tag, filter, and feature under both CommonJS and ESM, all running against a **real Express HTTP server** on ephemeral ports.
+
+### Added
+- `miki.setupExpress(app, { extension, views, async })` — one-line Express bootstrap. Sets `view engine`, registers the engine, and patches `res.render` to handle `view#partial` selectors. Replaces the need to call `app.engine()`, `app.set('views')`, and `app.set('view engine')` manually.
+- `miki.express()` — factory that returns a view-engine function suitable for `app.engine(...)`. Honors `view#partial` suffixes.
+- `miki.expressPartialRenderer()` — middleware that adds `res.renderPartial(view, locals)`. Useful as a drop-in HTMX helper.
+- `renderPartialFromSource(source, partialName, context, options)` — render a single named partial from a template string. Resolves `extends` chains so partials defined inside `{% block %}` tags are discoverable. Walks the AST and registers every `PartialDefNode` it finds, even when nested inside `{% for %}` or `{% if %}` blocks that won't render during partial lookup.
+- `renderPartialFromFile(filePath, partialName, context, options)` — file-based convenience wrapper.
+- `Context.get(name)` now returns `undefined` for missing keys (was `''`). This lets `default_if_none` distinguish "not provided" from an explicit empty string, matching Django.
+- `escapeHtml(value, force = false)` — added a `force` flag so the `|escape` filter re-escapes even a `SafeString` (Django parity).
+- `Context` constructor now supports `partialDefs` and `options` for cloning the partial registry.
+- New exports: `setupExpress`, `express`, `expressPartialRenderer`, `renderPartialFromFile`, `renderPartialFromSource`, `clearContextProcessors`.
+- ESM surface (`src/esm.mjs`) now exposes all the new helpers, with the same `default` + named import shape.
+- Lorem library now ships a real `{% lorem N method %}` tag, a `lorem` filter, plus helpers. Built-in and auto-activated.
+- `library.activate(name)` now also activates helpers and `registerTag` functions, not just filters.
+
+### Changed
+- Context processors now follow Django semantics: **existing context values win** over processor defaults. If you render with `{ user: req.user }` and a processor returns `{ user: 'Guest' }`, the explicit value is preserved.
+- `__express` and `__expressAsync` now detect a `#partial` suffix in the view name and delegate to `renderPartialFromSource` automatically. This makes `app.engine('html', miki.__express)` already HTMX-ready — `setupExpress` just adds convenience.
+- `cache.getCompiled` ignores function-valued and `undefined` options when building cache keys, so passing the same `urlHelper` function to multiple `compile()` calls no longer causes cache misses.
+- Lexer rewritten with brace-depth counting for more reliable `{{ }}` and `{% %}` tokenization in templates with nested braces, escaped braces, and unusual whitespace.
+- Filters now receive the rendering `context` as a final argument, so custom filters can read other context variables (e.g. for locale-aware formatting).
+- `for` and `with` tags fully reworked for the user-reported edge cases:
+  - `{% with x=1, y=2 as pair %}` — pair list followed by an alias.
+  - `{% with value=expr %}` — single pair (no comma).
+  - `{% with x=1, y=2 %}` — pure pair list (no alias).
+  - Quoted values containing commas (`{% with a="x,y" %}`) parse correctly.
+  - Pair values may be context variables.
+- `partial` now accepts `with` kwargs and overrides context for the partial scope.
+- `include` now supports `file#partial` syntax — the same partial-selector pattern works with `{% include %}` as with `res.render`.
+- `url` tag respects `urlHelper` more cleanly: kwargs (a trailing object literal) are passed as the last argument instead of being conflated with positional args.
+- `static` tag normalizes leading slashes; prefix can be customized.
+- `csrf_token` and `csp_nonce_attr` outputs are properly escaped to prevent attribute injection.
+
+### Fixed
+- `with a=x b=y` (multi-pair) was previously treated as a single value/expression. Now correctly binds each pair.
+- `cycle` with `as` form emits nothing but stores the value, matching Django.
+- `block.super` works inside partials that override blocks.
+- `extends` resolves `views` from `options.settings.views` (Express's normal path), `options.views`, or the default.
+- Path traversal protection now applies to `extends` *and* `include`, including `include "file#partial"` form.
+- `if` conditions handle dotted lookup, function auto-call, and missing variables without throwing.
+- `default` vs `default_if_none`: `default` falls back on empty string, `null`, and `undefined`; `default_if_none` only on `null`/`undefined`. Both now match Django exactly.
+- `removetags` filter now accepts multiple tag names.
+- `safe` / `escape` filters correctly re-escape `SafeString` only when forced.
+- `Context.get('a.b.c')` no longer stringifies `undefined` to `''`, fixing `{% if x %}` checks against missing variables.
+- Cache key collisions when passing the same template string with different function-valued options (e.g. `urlHelper`).
+
+### Compatibility
+- No breaking changes. All existing public APIs continue to work. New APIs are opt-in.
+
 ## [1.2.0] - 2026-09-01
 ### Added
 - Full **ESM** support via `src/esm.mjs` wrapper and conditional `package.json` exports.

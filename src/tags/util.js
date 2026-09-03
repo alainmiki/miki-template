@@ -2,12 +2,20 @@
  * Utility template tags: static, url, regroup, spaceless.
  */
 
-// Helper to resolve expression values
+// Helper to resolve expression values (literals, numbers, booleans, or context lookups)
 function resolveValue(token, context) {
-  if (!token) return '';
+  if (token === undefined || token === null) return '';
+  if (typeof token !== 'string') return token;
+  if (token === '') return '';
   if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
+  if (token === 'true' || token === 'True') return true;
+  if (token === 'false' || token === 'False') return false;
+  if (token === 'none' || token === 'None' || token === 'null') return null;
+  // Numeric literal (integer or float)
+  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
+  // Otherwise treat as a context variable lookup
   return context.get(token);
 }
 
@@ -18,7 +26,7 @@ class StaticNode {
 
   render(context) {
     const resolvedPath = resolveValue(this.pathExpr, context);
-    
+
     // Resolve static prefix
     let prefix = '/static/';
     if (context.options && context.options.staticUrl) {
@@ -29,29 +37,59 @@ class StaticNode {
 
     // Ensure double-slash doesn't occur and ends/starts correctly
     const base = prefix.endsWith('/') ? prefix : prefix + '/';
-    const relative = resolvedPath.startsWith('/') ? resolvedPath.slice(1) : resolvedPath;
-    
+    const relative = (typeof resolvedPath === 'string' && resolvedPath.startsWith('/'))
+      ? resolvedPath.slice(1)
+      : String(resolvedPath);
+
     return base + relative;
   }
 }
 
 class UrlNode {
-  constructor(routeNameExpr, argsExprs) {
+  constructor(routeNameExpr, positionalArgs, kwargs) {
     this.routeNameExpr = routeNameExpr;
-    this.argsExprs = argsExprs || [];
+    this.positionalArgs = positionalArgs || [];
+    // Each kwarg is { name, valueExpr } where valueExpr is the raw
+    // expression token (may be a number, a quoted string, or a var).
+    this.kwargs = kwargs || [];
   }
 
   render(context) {
     const routeName = resolveValue(this.routeNameExpr, context);
-    const resolvedArgs = this.argsExprs.map(arg => resolveValue(arg, context));
+    const resolvedPositional = this.positionalArgs.map(arg => resolveValue(arg, context));
+    const resolvedKwargs = {};
+    for (const kw of this.kwargs) {
+      resolvedKwargs[kw.name] = resolveValue(kw.valueExpr, context);
+    }
+    const hasKwargs = Object.keys(resolvedKwargs).length > 0;
 
-    // If an Express urlHelper is provided, use it
+    // If an Express urlHelper is provided, call it. We pass positional
+    // args spread, and (only when kwargs are present) a kwargs object
+    // as the last argument. This keeps the common `{{ url 'r' 42 }}`
+    // case with a `(name, ...args) => string` helper simple.
     if (context.options && typeof context.options.urlHelper === 'function') {
-      return context.options.urlHelper(routeName, ...resolvedArgs);
+      if (hasKwargs) {
+        return context.options.urlHelper(routeName, ...resolvedPositional, resolvedKwargs);
+      }
+      return context.options.urlHelper(routeName, ...resolvedPositional);
     }
 
-    // Fallback URL generator
-    return '/' + [routeName, ...resolvedArgs].filter(Boolean).join('/');
+    // Fallback URL builder: convert dotted route names into deep paths
+    // (e.g. "user.profile.posts.show" -> "/user/profile/posts/show")
+    // and append positional args. Kwargs are appended as query string.
+    const deepPath = String(routeName).split('.').map(seg => seg).join('/');
+    const parts = ['/' + deepPath, ...resolvedPositional
+      .filter(v => v !== '' && v !== null && v !== undefined)
+      .map(v => String(v))];
+    let url = parts.join('/');
+    if (hasKwargs) {
+      const qs = Object.keys(resolvedKwargs)
+        .filter(k => resolvedKwargs[k] !== undefined)
+        .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(String(resolvedKwargs[k]))}`)
+        .join('&');
+      if (qs) url += '?' + qs;
+    }
+    return url;
   }
 }
 
@@ -118,9 +156,14 @@ class SpacelessNode {
 class CsrfTokenNode {
   render(context) {
     const token = context.get('csrf_token') || '';
-    const html = `<input type="hidden" name="csrfmiddlewaretoken" value="${token}">`;
-    const { markSafe } = require('../security');
-    return markSafe(html);
+    // Escape the token for safe interpolation into an HTML attribute.
+    // CSRF tokens are typically alphanumeric, but defending against
+    // malicious or malformed token values is required to prevent
+    // attribute injection (" onerror=... etc).
+    const { escapeHtml, markSafe } = require('../security');
+    return markSafe(
+      `<input type="hidden" name="csrfmiddlewaretoken" value="${escapeHtml(String(token), true)}">`
+    );
   }
 }
 
@@ -128,9 +171,9 @@ class CspNonceAttrNode {
   render(context) {
     const nonce = context.get('csp_nonce') || '';
     if (!nonce) return '';
-    const html = `nonce="${nonce}"`;
-    const { markSafe } = require('../security');
-    return markSafe(html);
+    // Escape the nonce for safe interpolation into an attribute value.
+    const { escapeHtml, markSafe } = require('../security');
+    return markSafe(`nonce="${escapeHtml(String(nonce), true)}"`);
   }
 }
 
@@ -143,17 +186,43 @@ function parseStatic(tagContent, _parser) {
 }
 
 function parseUrl(tagContent, _parser) {
-  // tagContent: "url 'route_name' arg1 arg2"
+  // tagContent examples:
+  //   "url 'route_name' arg1 arg2"
+  //   "url 'route.name' 34"
+  //   "url 'user.show' 34 email phone"
+  //   "url 'user.show' userId=34 tab='posts'"
+  //   "url 'user.show' 34 tab='posts'"
   const content = tagContent.slice(3).trim();
-  
-  // Extract route name and arguments
+
+  // Tokenize respecting quoted strings.
   const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
   const matches = content.match(argRegex) || [];
-  
-  const routeNameExpr = matches[0];
-  const argsExprs = matches.slice(1);
 
-  return new UrlNode(routeNameExpr, argsExprs);
+  if (matches.length === 0) {
+    throw new Error('url tag requires a route name');
+  }
+  const routeNameExpr = matches[0];
+  const positionalArgs = [];
+  const kwargs = [];
+
+  for (let i = 1; i < matches.length; i++) {
+    const tok = matches[i];
+    // Detect `key=value` pattern (not a quoted string)
+    const isQuoted = (tok.startsWith('"') && tok.endsWith('"')) ||
+                      (tok.startsWith('\'') && tok.endsWith('\''));
+    if (!isQuoted) {
+      const eq = tok.indexOf('=');
+      if (eq > 0) {
+        const name = tok.slice(0, eq);
+        const valueExpr = tok.slice(eq + 1);
+        kwargs.push({ name, valueExpr });
+        continue;
+      }
+    }
+    positionalArgs.push(tok);
+  }
+
+  return new UrlNode(routeNameExpr, positionalArgs, kwargs);
 }
 
 function parseRegroup(tagContent, _parser) {
@@ -281,10 +350,19 @@ class TemplatetagNode {
   }
 }
 
-function parseLoad(tagContent, _parser) {
+function parseLoad(tagContent, parser) {
   const parts = tagContent.trim().split(/\s+/);
   if (parts.length === 0) {
     throw new Error('\'load\' tag requires at least one argument');
+  }
+  // Pre-activate the library now so any tags it provides are available
+  // to the rest of the parser. The render-time activation in LoadNode
+  // is a no-op if the library is already active.
+  const { activateLibrary, hasLibrary } = require('../libraries');
+  for (const lib of parts) {
+    if (hasLibrary(lib)) {
+      activateLibrary(lib);
+    }
   }
   return new LoadNode(parts);
 }

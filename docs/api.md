@@ -7,8 +7,13 @@ This document lists the public API exported by **miki-template** for developers 
 | `compile(templateStr, options?)` | `compile(string, object?) → { render, asyncRender, renderBlock, renderPartial }` | Compiles a template string into a renderable object. Optional `options` can include `views` directories, custom tags/filters, etc. | `const tpl = compile('Hello {{ name }}');` |
 | `render(templateStr, context?, options?)` | `render(string, object?, object?) → string` | One‑off rendering of a template string with the provided context. | `render('Hello {{ name }}', { name: 'World' });` |
 | `asyncRender(templateStr, context?, options?)` | `asyncRender(string, object?, object?) → Promise<string>` | Asynchronous rendering (useful with async helpers). | `await asyncRender(tpl, ctx);` |
-| `__express(filePath, options, callback)` | `__express(string, object, function)` | Express view engine adapter – reads the file at `filePath` and renders it. | `app.set('view engine', 'miki');` |
-| `__expressAsync(filePath, options)` | `__expressAsync(string, object) → Promise<string>` | Async Express 5+ view engine adapter. Returns a Promise that resolves to rendered HTML. | `app.engine('html', miki.__expressAsync);` |
+| `__express(filePath, options, callback)` | `__express(string, object, function)` | Express view engine adapter – reads the file at `filePath` and renders it. Honors `view#partial` suffixes for HTMX-style partial responses. | `app.engine('html', miki.__express);` |
+| `__expressAsync(filePath, options)` | `__expressAsync(string, object) → Promise<string>` | Async Express 5+ view engine adapter. Returns a Promise that resolves to rendered HTML. Also honors `view#partial` suffixes. | `app.engine('html', miki.__expressAsync);` |
+| `express(options?)` | `express(object?) → function` | Factory that returns a view-engine function suitable for `app.engine(...)`. Honors `view#partial` selectors. | `app.engine('html', miki.express());` |
+| `setupExpress(app, opts?)` | `setupExpress(expressApp, object?) → void` | **One-line Express integration.** Wires `app.engine(...)`, `app.set('views')`, and patches `res.render` so `res.render('view#partial', ...)` returns just that partial. Options: `{ extension?, views?, async? }`. | `miki.setupExpress(app, { extension: 'html', views: './views' });` |
+| `expressPartialRenderer()` | `expressPartialRenderer() → function` | Express middleware that adds `res.renderPartial(view, locals)`. Useful as a drop-in HTMX helper without the full `setupExpress` shim. | `app.use(miki.expressPartialRenderer());` |
+| `renderPartialFromFile(filePath, partialName, context?, options?)` | `renderPartialFromFile(string, string, object?, object?) → string` | Load a file from disk and render only the named `{% partialdef %}`. | `miki.renderPartialFromFile('views/home.html', 'card', { user });` |
+| `renderPartialFromSource(source, partialName, context?, options?)` | `renderPartialFromSource(string, string, object?, object?) → string` | Render a single named partial directly from a template string. Walks the AST (and `extends` chain) to discover partials nested inside blocks. | `miki.renderPartialFromSource(src, 'card', ctx, { views });` |
 | `stripExpressContext(options)` | `stripExpressContext(object) → object` | Remove Express framework keys (`_locals`, `settings`, `cache`) from an options object. | `const ctx = stripExpressContext(res.locals);` |
 | `clearCache()` | `clearCache() → void` | Clear the in-memory compiled template cache. | `clearCache();` |
 | `registerTag(name, parserFn)` | `registerTag(string, function)` | Register a custom tag parser. Must be called before compiling templates. | `registerTag('mytag', parserFn);` |
@@ -39,6 +44,11 @@ const {
   asyncRender,
   __express,
   __expressAsync,
+  express,
+  setupExpress,
+  expressPartialRenderer,
+  renderPartialFromFile,
+  renderPartialFromSource,
   stripExpressContext,
   clearCache,
   registerTag,
@@ -46,6 +56,7 @@ const {
   getFilter,
   registerHelper,
   registerContextProcessor,
+  clearContextProcessors,
   registerTranslation,
   setLanguage,
   getLanguage,
@@ -69,6 +80,11 @@ import {
   asyncRender,
   __express,
   __expressAsync,
+  express,
+  setupExpress,
+  expressPartialRenderer,
+  renderPartialFromFile,
+  renderPartialFromSource,
   stripExpressContext,
   clearCache,
   registerTag,
@@ -76,6 +92,7 @@ import {
   getFilter,
   registerHelper,
   registerContextProcessor,
+  clearContextProcessors,
   registerTranslation,
   setLanguage,
   getLanguage,
@@ -92,7 +109,7 @@ import {
 
 // Or import all as default
 import miki from 'miki-template';
-const { render: mikiRender } = miki;
+const { render: mikiRender, setupExpress } = miki;
 ```
 
 For detailed usage, refer to the corresponding sections in the documentation:

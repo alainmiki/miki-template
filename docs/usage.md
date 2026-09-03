@@ -407,14 +407,59 @@ const html = await asyncRender(template, { db });
 
 ## Express Integration
 
-### Basic Setup
+### One-Line Setup (recommended)
+
+`miki.setupExpress(app, opts)` wires the view engine, the `views` directory, and a `res.render` shim that makes `res.render('view#partial', ...)` return just the named `{% partialdef %}` body — perfect for HTMX.
+
+```javascript
+const express = require('express');
+const miki = require('miki-template');
+
+const app = express();
+
+// That single line: registers the engine, sets views dir, enables #partial selectors.
+miki.setupExpress(app, { extension: 'html', views: './views' });
+
+// Full-page render
+app.get('/', (req, res) => res.render('home', { user: req.user }));
+
+// HTMX partial response — just append `#partialName` to the view name.
+// Internally this calls the {% partialdef card %} body inside views/home.html.
+app.get('/partials/:name', (req, res) =>
+  res.render(`home#${req.params.name}`, { user: req.user })
+);
+
+app.listen(3000);
+```
+
+Options:
+
+| Option | Default | Description |
+|---|---|---|
+| `extension` | `'html'` | File extension for views. Use `'miki'` if you prefer `.miki` files. |
+| `views` | `app.get('views')` | Views directory (passed to `app.set('views', ...)`). |
+| `async` | `false` | Use the async engine (`__expressAsync`). For Express 5 with async helpers. |
+
+> The `res.render` shim intercepts **only** view names containing a `#`. Everything else (full pages, `res.render(view, cb)`, callback forms) goes through Express's normal view lookup, so the integration is fully compatible with existing Express middleware.
+
+### Just-the-Middleware Variant
+
+If you already have your own `app.engine()` setup and just want partial responses, add the middleware:
+
+```javascript
+const miki = require('miki-template');
+app.use(miki.expressPartialRenderer());
+
+app.get('/card', (req, res) => res.renderPartial('home#card', { user: req.user }));
+```
+
+### Manual Setup (still supported)
 
 ```javascript
 const express = require('express');
 const { __express } = require('miki-template');
 
 const app = express();
-
 app.engine('html', __express);
 app.set('view engine', 'html');
 app.set('views', './views');
@@ -432,9 +477,11 @@ app.listen(3000);
 
 ### Async Express Views
 
-Express 5+ supports async route handlers natively:
+Express 5+ supports async route handlers natively. Pass `async: true` to `setupExpress`, or use `__expressAsync` directly:
 
 ```javascript
+miki.setupExpress(app, { extension: 'html', views: './views', async: true });
+
 app.get('/user/:id', async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).send('Not found');

@@ -30,19 +30,21 @@ test('Context - basic dotted lookups', () => {
   assert.strictEqual(ctx.get('user.profile.name'), 'Miki');
   assert.strictEqual(ctx.get('user.profile.age'), 30);
   assert.strictEqual(ctx.get('items.1'), 'banana');
-  assert.strictEqual(ctx.get('user.profile.missing'), '');
+  // Missing key now returns undefined (so filters like default_if_none
+  // can detect missing values) instead of empty string.
+  assert.strictEqual(ctx.get('user.profile.missing'), undefined);
 });
 
 test('Context - scope pushing and popping', () => {
   const ctx = new Context({ name: 'Global' });
   ctx.push({ name: 'Local', age: 25 });
-  
+
   assert.strictEqual(ctx.get('name'), 'Local');
   assert.strictEqual(ctx.get('age'), 25);
 
   ctx.pop();
   assert.strictEqual(ctx.get('name'), 'Global');
-  assert.strictEqual(ctx.get('age'), '');
+  assert.strictEqual(ctx.get('age'), undefined);
 });
 
 test('Context - automatic function calling', () => {

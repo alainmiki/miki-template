@@ -32,9 +32,11 @@ function isSafe(value) {
 
 /**
  * Escape a string's HTML special characters unless it is marked safe.
+ * If `force` is true (used by the |escape filter), even a SafeString is
+ * re-escaped. This matches Django's `{{ value|escape }}` semantics.
  */
-function escapeHtml(value) {
-  if (value instanceof SafeString) {
+function escapeHtml(value, force = false) {
+  if (value instanceof SafeString && !force) {
     return value.toString();
   }
 

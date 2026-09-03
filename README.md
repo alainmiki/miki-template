@@ -7,9 +7,11 @@ A robust, production-ready template engine that brings **Django's template langu
 
 ## 🚀 Features
 
+- **One-line Express integration**: `miki.setupExpress(app, { extension: 'html', views: dir })` — wires the engine, views directory, and a `res.render` shim that makes `res.render('home#card', ...)` Just Work for HTMX-style partial responses. **No boilerplate, no extra middleware.**
+- **Partial responses out of the box**: `{% partialdef %}` blocks can be rendered by name with `res.render('view#partial', ...)`, `miki.expressPartialRenderer()` middleware (`res.renderPartial(...)`), or `renderPartialFromSource(...)`.
 - **Full Syntax Parity**: Supports variables, dotted lookups, filters (`|`), and block tags (`{% %}`).
 - **Template Inheritance**: Multi-level inheritance with `extends`, block overrides, and `{{ block.super }}` support.
-- **Express Integration**: Simple, zero-config integration via `app.engine()`.
+- **Built-in libraries**: `humanize`, `cache`, and `lorem` ship pre-activated. `{% lorem 5 p %}` works without `{% load lorem %}`.
 - **ESM & CommonJS**: Works seamlessly with both `import` and `require` syntax.
 - **Security by Default**: Auto-escaping enabled by default with a `SafeString` wrapper.
 - **CSRF & CSP Support**: Native tags for `{% csrf_token %}` and `{% csp_nonce_attr %}` to keep apps secure out-of-the-box.
@@ -108,47 +110,61 @@ console.log(result); // Output: "Hello World!"
 
 ### Express Integration
 
-**CommonJS:**
+**The recommended, one-line setup** — wires the view engine, views directory, and partial responses in a single call:
+
 ```javascript
 const express = require('express');
-const { __express: renderDtpl } = require('miki-template');
+const miki = require('miki-template');
 
 const app = express();
+miki.setupExpress(app, { extension: 'html', views: './views' });
 
-// Register both .html and .miki extensions
-app.engine('html', renderDtpl);
-app.engine('miki', renderDtpl);
-app.set('view engine', 'miki');
+// Full page
+app.get('/', (req, res) => res.render('home', { user: req.user }));
+
+// HTMX / partial response — just append `#partialName` to the view name
+app.get('/partials/:name', (req, res) =>
+  res.render(`home#${req.params.name}`, { user: req.user })
+);
+
+app.listen(3000);
+```
+
+> `setupExpress` calls `app.engine()`, `app.set('views')`, and `app.set('view engine')` for you, and patches `res.render` so `view#partial` is dispatched to the partial renderer (not the file system). It works equally well for `.miki` files — just pass `extension: 'miki'`.
+
+**The classic, fully manual setup still works** if you prefer it:
+
+```javascript
+const express = require('express');
+const { __express } = require('miki-template');
+
+const app = express();
+app.engine('html', __express);
+app.set('view engine', 'html');
 app.set('views', './views');
-
-app.get('/', (req, res) => {
-  res.render('home', {
-    title: 'Django Templates in Node!',
-    items: ['Apple', 'Banana', 'Orange']
-  });
-});
-
-app.listen(3000, () => console.log('App listening on port 3000'));
 ```
 
 **ESM:**
+
 ```javascript
 import express from 'express';
-import { __express as renderDtpl } from 'miki-template';
+import miki from 'miki-template';
 
 const app = express();
-app.engine('html', renderDtpl);
-app.set('view engine', 'html');
-app.set('views', './views');
+miki.setupExpress(app, { extension: 'html', views: './views' });
+```
 
-app.get('/', (req, res) => {
-  res.render('home', {
-    title: 'Django Templates with ESM!',
-    items: ['Apple', 'Banana', 'Orange']
-  });
-});
+**Async Express 5+:**
+```javascript
+miki.setupExpress(app, { extension: 'html', views: './views', async: true });
+```
 
-app.listen(3000, () => console.log('App listening on port 3000'));
+**Or, if you only want partial responses** without changing your engine registration, add the middleware:
+
+```javascript
+app.use(miki.expressPartialRenderer());
+
+app.get('/card', (req, res) => res.renderPartial('home#card', { user: req.user }));
 ```
 
 ---

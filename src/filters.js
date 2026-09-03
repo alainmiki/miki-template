@@ -12,7 +12,9 @@ function getFilter(name) {
 
 function escapeValue(val) {
   const { escapeHtml, markSafe } = require('./security');
-  return markSafe(escapeHtml(val));
+  // force=true ensures even SafeString values are re-escaped, matching
+  // Django's `{{ value|escape }}` semantics.
+  return markSafe(escapeHtml(val, true));
 }
 
 function markValueSafe(val) {
@@ -302,13 +304,47 @@ registerFilter('floatformat', (val, arg) => {
 });
 
 // --- Default Filters ---
-registerFilter('default', (val, arg) => {
-  return val === null || val === undefined || val === '' ? arg : val;
+// When the fallback contains template syntax ({% ... %} or {{ ... }}),
+// it is rendered against the current context. This matches Django's
+// behavior where `{{ x|default:"{% lorem 1 %}" }}` produces lorem text
+// when x is empty.
+registerFilter('default', (val, arg, ctx) => {
+  if (val !== null && val !== undefined && val !== '') return val;
+  return renderFallbackTemplate(arg, ctx);
 });
 
-registerFilter('default_if_none', (val, arg) => {
-  return (val === null || val === undefined) ? arg : val;
+registerFilter('default_if_none', (val, arg, ctx) => {
+  if (val !== null && val !== undefined) return val;
+  return renderFallbackTemplate(arg, ctx);
 });
+
+/**
+ * If `arg` looks like a mini-template (contains `{% ... %}` or
+ * `{{ ... }}`), compile and render it. Otherwise return it as-is.
+ */
+function renderFallbackTemplate(arg, ctx) {
+  if (typeof arg !== 'string') return arg;
+  if (!/\{[{%]/.test(arg)) return arg;
+  try {
+    // Lazy require to avoid circular dependency with index.js
+    const { render } = require('./index');
+    // Merge all active scopes (top-most wins) into a plain object
+    let merged = {};
+    if (ctx && Array.isArray(ctx.scopes)) {
+      // scopes[0] is the topmost (most local). Iterate from bottom
+      // (root) to top so topmost values win.
+      for (let i = ctx.scopes.length - 1; i >= 0; i--) {
+        const s = ctx.scopes[i];
+        if (s && typeof s === 'object' && !s.__forloop && !s.__block) {
+          Object.assign(merged, s);
+        }
+      }
+    }
+    return render(arg, merged);
+  } catch {
+    return arg;
+  }
+}
 
 registerFilter('firstof', (...args) => {
   for (const arg of args) {
@@ -445,15 +481,19 @@ registerFilter('addslashes', (val) => {
 registerFilter('removetags', (val, arg) => {
   const str = String(val === null || val === undefined ? '' : val);
   if (!arg) return str;
-  const tags = arg.split(',').map(t => t.trim()).filter(Boolean);
+  // Django's removetags accepts space-separated tag names (and tolerates commas).
+  const tags = String(arg).split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
   let result = str;
   for (const tag of tags) {
     const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     result = result.replace(new RegExp(`<\\/${escaped}>`, 'gi'), '');
-    result = result.replace(new RegExp(`<${escaped}[^>]*>`, 'gi'), '');
+    result = result.replace(new RegExp(`<${escaped}\\b[^>]*>`, 'gi'), '');
     result = result.replace(new RegExp(`<${escaped}>`, 'gi'), '');
   }
-  return result;
+  // The result is intentionally safe (we just produced raw HTML by
+  // removing tags) and must not be re-escaped.
+  const { markSafe } = require('./security');
+  return markSafe(result);
 });
 
 /**

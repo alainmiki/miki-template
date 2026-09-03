@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  <h1>{{ heading }}</h1>
+  <ul>
+  {% for item in items %}
+    <li>{{ forloop.counter }}: {{ item|upper }}</li>
+  {% empty %}
+    <li>No items</li>
+  {% endfor %}
+  </ul>
+  <p>User: {{ user.name|title }}</p>
+</body>
+</html>

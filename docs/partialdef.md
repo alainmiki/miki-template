@@ -1,6 +1,6 @@
 # Partial Definition (`partialdef`)
 
-`partialdef` is the cornerstone feature that brings Django‑style **named template fragments** to Node.js. It allows you to define a reusable block once and render it multiple times, optionally **inline** for immediate output.
+`partialdef` is the cornerstone feature that brings Django‑style **named template fragments** to Node.js. It allows you to define a reusable block once and render it multiple times, optionally **inline** for immediate output. Combined with the `setupExpress` helper, partials can be served as standalone HTTP responses for HTMX-style UIs.
 
 ## Syntax
 ```html
@@ -17,6 +17,12 @@
 ```
 The engine looks up the definition in the current rendering **Context** (`context.partialDefs`) and injects the rendered output.
 
+## Including a Partial From Another File
+Use the `file#partial` syntax to include just a single named partial:
+```html
+{% include "home.html#card" with title="Hi" %}
+```
+
 ## API Usage
 ```js
 const tpl = `{% partialdef api %}API {{ data }}{% endpartialdef %}`;
@@ -24,11 +30,34 @@ const compiled = compile(tpl);
 const out = compiled.renderPartial('api', { data: 123 }); // "API 123"
 ```
 
+`renderPartialFromSource` and `renderPartialFromFile` are also exported at the top level:
+```js
+const miki = require('miki-template');
+miki.renderPartialFromFile('views/home.html', 'card', { user: req.user });
+miki.renderPartialFromSource(src, 'card', { user: req.user }, { views: 'views' });
+```
+
+## Serving a Partial Over HTTP (HTMX)
+With `miki.setupExpress(app, { extension: 'html', views: './views' })`, the same `res.render(...)` call you use for full pages also serves a single partial by appending `#partialName` to the view name:
+
+```javascript
+app.get('/partials/:name', (req, res) =>
+  res.render(`home#${req.params.name}`, { user: req.user })
+);
+```
+
+The same effect can be obtained via the lighter `expressPartialRenderer()` middleware:
+```javascript
+app.use(miki.expressPartialRenderer());
+app.get('/card', (req, res) => res.renderPartial('home#card', { user: req.user }));
+```
+
 ## Features
 - **Full tag parity** – conditionals (`if`), loops (`for`), variable scoping (`with`) work inside a `partialdef`.
 - **Nested partials** – you can define a partial inside another; inner definitions are registered first and can be used by the outer.
 - **Scope isolation** – each rendering of a partial receives its own scope, mirroring Django’s behavior.
 - **Inline rendering** – render inline without an extra `{% partial %}` tag (`{% partialdef foo inline %}…{% endpartialdef %}`).
+- **`with` arguments** – bind extra context values when rendering: `{% partial card with title="Hello" description="World" %}`.
 - **Performance** – partials are compiled once per template; subsequent renders reuse the compiled AST.
 
 ## Common Pitfalls
