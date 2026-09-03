@@ -20,7 +20,7 @@
     "Programming Languages",
     "Snippets",
     "Formatters",
-    "Intellisense"
+    "Extension Packs"
   ],
   "keywords": [
     "django",
@@ -70,7 +70,11 @@
         "path": "./syntaxes/miki-template.tmLanguage.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
-          "meta.tag.any.html": "html"
+          "meta.tag.any.html": "html",
+          "meta.tag.style.html": "css",
+          "meta.tag.script.html": "javascript",
+          "source.css": "css",
+          "source.js": "javascript"
         }
       },
       {
@@ -79,7 +83,11 @@
         "path": "./syntaxes/miki-template.tmLanguage.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
-          "meta.tag.any.html": "html"
+          "meta.tag.any.html": "html",
+          "meta.tag.style.html": "css",
+          "meta.tag.script.html": "javascript",
+          "source.css": "css",
+          "source.js": "javascript"
         }
       }
     ],

@@ -1,146 +1,388 @@
 {
-  "scopeName": "text.html.miki",
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "miki-template",
+  "scopeName": "text.html.miki",
+  "fileTypes": ["miki", "miki-template", "html", "django", "dj"],
+  "tokenColors": [
+    {
+      "name": "Template Tags",
+      "scope": ["entity.name.tag.django"],
+      "settings": {
+        "foreground": "#E8BF6A",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Template Variables (block.super)",
+      "scope": ["variable.other.django"],
+      "settings": {
+        "foreground": "#9CDCFE"
+      }
+    },
+    {
+      "name": "Template Filter Functions",
+      "scope": ["support.function.django"],
+      "settings": {
+        "foreground": "#4EC9B0"
+      }
+    },
+    {
+      "name": "Template Strings",
+      "scope": ["string.quoted.double.django", "string.quoted.single.django"],
+      "settings": {
+        "foreground": "#CE9178"
+      }
+    },
+    {
+      "name": "Template Numbers",
+      "scope": ["constant.numeric.django"],
+      "settings": {
+        "foreground": "#B5CEA8"
+      }
+    },
+    {
+      "name": "Template Language Constants",
+      "scope": ["constant.language.django"],
+      "settings": {
+        "foreground": "#569CD6"
+      }
+    },
+    {
+      "name": "Template Operators",
+      "scope": ["keyword.operator.django"],
+      "settings": {
+        "foreground": "#D4D4D4",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Template Punctuation",
+      "scope": ["punctuation.separator.django", "punctuation.separator.key-value.django"],
+      "settings": {
+        "foreground": "#808080"
+      }
+    },
+    {
+      "name": "Template Comments",
+      "scope": ["comment.block.django"],
+      "settings": {
+        "foreground": "#6A9955",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "name": "Template Filter Punctuation",
+      "scope": ["punctuation.separator.filter.django", "punctuation.separator.filter-argument.django"],
+      "settings": {
+        "foreground": "#C586C0"
+      }
+    },
+    {
+      "name": "Prettier Ignore",
+      "scope": ["meta.prettier-ignore.django", "meta.prettier-ignore-region.django"],
+      "settings": {
+        "foreground": "#FFDD00",
+        "fontStyle": "italic"
+      }
+    }
+  ],
   "patterns": [
     {
-      "include": "#comment"
+      "include": "#comments"
     },
     {
-      "include": "#tag"
+      "include": "#prettier-ignore"
     },
     {
-      "include": "#variable"
+      "include": "#prettier-ignore-region"
     },
     {
-      "include": "#string"
+      "include": "#tag-block"
+    },
+    {
+      "include": "#variable-block"
+    },
+    {
+      "include": "#embedded-html"
+    },
+    {
+      "include": "#embedded-css"
+    },
+    {
+      "include": "#embedded-javascript"
     }
   ],
   "repository": {
-    "comment": {
-      "name": "comment.block.miki",
-      "begin": "\\{#",
-      "end": "#\\}",
-      "beginCaptures": {
-        "0": { "name": "punctuation.definition.comment.begin.miki" }
-      },
-      "endCaptures": {
-        "0": { "name": "punctuation.definition.comment.end.miki" }
-      }
-    },
-    "tag": {
-      "name": "meta.tag.miki",
-      "begin": "\\{%",
-      "end": "%\\}",
-      "beginCaptures": {
-        "0": { "name": "punctuation.definition.tag.begin.miki" }
-      },
-      "endCaptures": {
-        "0": { "name": "punctuation.definition.tag.end.miki" }
-      },
+    "comments": {
       "patterns": [
         {
-          "name": "entity.name.tag.miki",
-          "match": "(?i)\\b(if|elif|else|endif|for|empty|endfor|with|endwith|cycle|comment|endcomment|verbatim|endverbatim|include|extends|block|endblock|partialdef|endpartialdef|partial|load|templatetag|trans|blocktrans|language|endlanguage|plural|widthratio|debug|endif|endfor|endwith|endblock|endcomment|endverbatim|endpartialdef|endblocktrans|endlanguage|endcache|endmarkdown)\\b"
-        },
-        {
-          "name": "string.quoted.double.miki",
-          "match": "\"[^\"]*\""
-        },
-        {
-          "name": "string.quoted.single.miki",
-          "match": "'[^']*'"
-        },
-        {
-          "name": "constant.numeric.miki",
-          "match": "\\b\\d+\\b"
-        },
-        {
-          "name": "keyword.operator.miki",
-          "match": "(?i)\\b(and|or|not|in|not in)\\b"
-        },
-        {
-          "name": "punctuation.separator.miki",
-          "match": "="
+          "name": "comment.block.django",
+          "begin": "\\{#",
+          "end": "#\\}",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.begin.django" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.comment.end.django" }
+          }
         }
       ]
     },
-    "variable": {
-      "name": "variable.other.miki",
-      "begin": "\\{\\{",
-      "end": "\\}\\}",
+    "prettier-ignore": {
+      "name": "meta.prettier-ignore.django",
+      "match": "\\{#\\s*prettier-ignore\\s*#\\}",
+      "captures": {
+        "0": { "name": "comment.block.django" }
+      }
+    },
+    "prettier-ignore-region": {
+      "name": "meta.prettier-ignore-region.django",
+      "begin": "\\{#\\s*prettier-ignore-start\\s*#\\}",
+      "end": "\\{#\\s*prettier-ignore-end\\s*#\\}",
       "beginCaptures": {
-        "0": { "name": "punctuation.definition.variable.begin.miki" }
+        "0": { "name": "punctuation.definition.comment.begin.django" }
       },
       "endCaptures": {
-        "0": { "name": "punctuation.definition.variable.end.miki" }
+        "0": { "name": "punctuation.definition.comment.end.django" }
+      }
+    },
+    "tag-block": {
+      "name": "meta.tag.django",
+      "begin": "(\\{%)(-?|\\s*)",
+      "end": "(-?\\s*%\\})",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.django" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.django" }
       },
       "patterns": [
         {
-          "name": "variable.other.miki",
+          "name": "entity.name.tag.django",
+          "match": "(?i)\\b(if|elif|else|endif|for|empty|endfor|with|endwith|cycle|firstof|comment|endcomment|verbatim|endverbatim|include|extends|block|endblock|block.super|partialdef|endpartialdef|partial|load|splural|autoescape|autoescapeoff|endautoescape|filter|endfilter|spaceless|endspaceless|templatetag|endtemplatetag|trans|blocktrans|endblocktrans|language|endlanguage|plural|regroup|widthratio|debug|csrf_token|csp_nonce_attr|static|url|addtoblock|endaddtoblock)\\b"
+        },
+        {
+          "name": "variable.other.django",
           "match": "[a-zA-Z_][a-zA-Z0-9_.]*"
         },
         {
-          "include": "#filter"
-        },
-        {
-          "name": "string.quoted.double.miki",
+          "name": "string.quoted.double.django",
           "match": "\"[^\"]*\""
         },
         {
-          "name": "string.quoted.single.miki",
+          "name": "string.quoted.single.django",
           "match": "'[^']*'"
+        },
+        {
+          "name": "constant.numeric.django",
+          "match": "\\b\\d+\\.?\\d*\\b"
+        },
+        {
+          "name": "constant.language.django",
+          "match": "\\b(true|false|null|undefined)\\b"
+        },
+        {
+          "name": "keyword.operator.django",
+          "match": "(?i)\\b(and|or|not|in|not in)\\b"
+        },
+        {
+          "name": "punctuation.separator.django",
+          "match": "="
+        },
+        {
+          "name": "punctuation.separator.key-value.django",
+          "match": "\\b(as)\\b"
         }
       ]
     },
-    "filter": {
-      "name": "meta.filter.miki",
-      "begin": "\\|",
-      "end": "(?=\\}|$)",
+    "variable-block": {
+      "name": "meta.variable.django",
+      "begin": "(\\{\\{)(-?|\\s*)",
+      "end": "(-?\\s*\\}\\})",
       "beginCaptures": {
-        "0": { "name": "punctuation.separator.filter.miki" }
+        "1": { "name": "punctuation.definition.variable.begin.django" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.variable.end.django" }
       },
       "patterns": [
         {
-          "name": "support.function.miki",
-          "match": "[a-zA-Z_][a-zA-Z0-9_]*"
+          "include": "#django-variables"
         },
         {
-          "begin": ":",
-          "beginCaptures": {
-            "0": { "name": "punctuation.separator.filter.argument.miki" }
-          },
+          "include": "#filters"
+        }
+      ]
+    },
+    "django-variables": {
+      "patterns": [
+        {
+          "name": "variable.other.django",
+          "match": "[a-zA-Z_][a-zA-Z0-9_.]*"
+        },
+        {
+          "name": "string.quoted.double.django",
+          "match": "\"[^\"]*\""
+        },
+        {
+          "name": "string.quoted.single.django",
+          "match": "'[^']*'"
+        },
+        {
+          "name": "constant.numeric.django",
+          "match": "\\b\\d+\\.?\\d*\\b"
+        }
+      ]
+    },
+    "filters": {
+      "name": "meta.filter.django",
+      "begin": "(\\|)",
+      "end": "(\\}\\}|\\|$)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.separator.filter.django" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.separator.filter.django" }
+      },
+      "patterns": [
+        {
+          "name": "support.function.django",
+          "match": "(?i)\\b(upper|lower|title|capfirst|slugify|wordcount|striptags|truncatewords|truncatechars|truncatewords_html|truncatechars_html|linebreaks|linebreaksbr|cut|addslashes|removetags|safe|escape|escapejs|urlencode|escapeuri|urlize|stringformat|center|ljust|rjust|length|length_is|join|slice|first|last|dictsort|dictsortreversed|default|default_if_none|firstof|date|time|strftime|date_format|timesince|timeuntil|add|addtoblock|divisibleby|floatformat|yesno|pluralize|pluralize_either|filesizeformat|trans|regroup|intcomma|intword|apnumber|ordinal|naturalday|ordinal|lorem|get_digit|phone2numeric|pprint|make_list|unordered_list|json_script|json_script_filter|urt|datetime|field_class|strip|force_escape|linebreak_filter|truncatewords_filter|truncatechars_filter|safeseq|unordered_list|random|filesizeformat_pprint)\\b"
+        },
+        {
+          "name": "punctuation.separator.filter-argument.django",
+          "begin": "(:)",
           "end": "(?=\\||\\}\\})",
+          "beginCaptures": {
+            "1": { "name": "punctuation.separator.filter.argument.django" }
+          },
           "patterns": [
             {
-              "name": "string.quoted.double.miki",
+              "name": "string.quoted.double.django",
               "match": "\"[^\"]*\""
             },
             {
-              "name": "string.quoted.single.miki",
+              "name": "string.quoted.single.django",
               "match": "'[^']*'"
             },
             {
-              "name": "constant.numeric.miki",
-              "match": "\\b\\d+\\b"
+              "name": "constant.numeric.django",
+              "match": "\\b\\d+\\.?\\d*\\b"
             },
             {
-              "name": "variable.other.miki",
+              "name": "variable.other.django",
               "match": "[a-zA-Z_][a-zA-Z0-9_.]*"
             }
           ]
         }
       ]
     },
-    "string": {
-      "name": "string.quoted.double.miki",
-      "begin": "\"",
-      "end": "\"",
-      "beginCaptures": {
-        "0": { "name": "punctuation.definition.string.begin.miki" }
-      },
-      "endCaptures": {
-        "0": { "name": "punctuation.definition.string.end.miki" }
-      }
+    "embedded-html": {
+      "patterns": [
+        {
+          "name": "meta.tag.any.html",
+          "begin": "(<)(style)\\b(?=[^>]*>)",
+          "end": "(</)(style)(>)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.html" },
+            "2": { "name": "entity.name.tag.style.html" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.html" },
+            "2": { "name": "entity.name.tag.style.html" },
+            "3": { "name": "punctuation.definition.tag.end.html" }
+          },
+          "patterns": [
+            {
+              "include": "source.css"
+            }
+          ]
+        },
+        {
+          "name": "meta.tag.any.html",
+          "begin": "(<)(script)\\b(?=[^>]*>)",
+          "end": "(</)(script)(>)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.html" },
+            "2": { "name": "entity.name.tag.script.html" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.html" },
+            "2": { "name": "entity.name.tag.script.html" },
+            "3": { "name": "punctuation.definition.tag.end.html" }
+          },
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        },
+        {
+          "name": "meta.tag.any.html",
+          "begin": "(<)([a-zA-Z][a-zA-Z0-9:-]*)(?=[^>]*>)",
+          "end": "(/>)|(>)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.html" },
+            "2": { "name": "entity.name.tag.html" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.html" },
+            "2": { "name": "punctuation.definition.tag.end.html" }
+          },
+          "patterns": [
+            {
+              "name": "meta.attribute.html",
+              "begin": "\\b([a-zA-Z:-]+)(?=\\s*=)",
+              "end": "(?<!=)",
+              "beginCaptures": {
+                "1": { "name": "entity.other.attribute-name.html" }
+              },
+              "patterns": [
+                {
+                  "name": "string.quoted.double.html",
+                  "match": "\"([^\"]*)\""
+                },
+                {
+                  "name": "string.quoted.single.html",
+                  "match": "'([^']*)'"
+                },
+                {
+                  "name": "string.unquoted.html",
+                  "match": "[^\\s>]+"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "embedded-css": {
+      "patterns": [
+        {
+          "name": "meta.tag.style.html",
+          "begin": "<style[^>]*>",
+          "end": "</style>",
+          "patterns": [
+            {
+              "include": "source.css"
+            }
+          ]
+        }
+      ]
+    },
+    "embedded-javascript": {
+      "patterns": [
+        {
+          "name": "meta.tag.script.html",
+          "begin": "<script[^>]*>",
+          "end": "</script>",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
     }
   }
 }
