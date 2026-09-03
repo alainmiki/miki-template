@@ -1,0 +1,162 @@
+{
+  "grammarTests": [
+    {
+      "name": "Basic template structure",
+      "input": "{% extends \"base.html\" %}\n{% block content %}\n{{ title }}\n{% endblock %}",
+      "expectedTokens": [
+        { "line": 0, "scope": "meta.tag.django" },
+        { "line": 0, "scope": "entity.name.tag.django" },
+        { "line": 1, "scope": "meta.tag.django" },
+        { "line": 2, "scope": "meta.variable.django" },
+        { "line": 2, "scope": "support.function.django" }
+      ]
+    },
+    {
+      "name": "If/else/endif tags",
+      "input": "{% if user.is_authenticated %}\n  <p>Hello</p>\n{% else %}\n  <p>Login</p>\n{% endif %}",
+      "expectedTags": ["if", "else", "endif"]
+    },
+    {
+      "name": "For loop with empty",
+      "input": "{% for item in items %}\n  {{ item }}\n{% empty %}\n  No items\n{% endfor %}",
+      "expectedTags": ["for", "empty", "endfor"]
+    },
+    {
+      "name": "Filter chain",
+      "input": "{{ name|lower|capfirst|truncatewords:10 }}",
+      "expectedFilters": ["lower", "capfirst", "truncatewords"]
+    },
+    {
+      "name": "Comment block",
+      "input": "{# This is a comment #}",
+      "scope": "comment.block.django"
+    },
+    {
+      "name": "Prettier ignore",
+      "input": "{# prettier-ignore #}",
+      "scope": "meta.prettier-ignore.django"
+    },
+    {
+      "name": "Include with context",
+      "input": "{% include \"partial.html\" with user=user %}",
+      "expectedTags": ["include"]
+    },
+    {
+      "name": "Partialdef and partial",
+      "input": "{% partialdef card %}\n<div>{{ title }}</div>\n{% endpartialdef %}\n{% partial card %}",
+      "expectedTags": ["partialdef", "endpartialdef", "partial"]
+    },
+    {
+      "name": "i18n tags",
+      "input": "{% trans \"Hello\" %}\n{% blocktrans with name=user.name %}\n  {{ name }}\n{% endblocktrans %}",
+      "expectedTags": ["trans", "blocktrans", "endblocktrans"]
+    },
+    {
+      "name": "Operators",
+      "input": "{% if user.age >= 18 and user.is_verified or user.is_admin %}",
+      "expectedOperators": ["and", "or"]
+    },
+    {
+      "name": "Cycle tag",
+      "input": "{% cycle 'odd' 'even' as marker silent %}",
+      "expectedTags": ["cycle"]
+    },
+    {
+      "name": "Widthratio",
+      "input": "{% widthratio this_value max_value 100 %}",
+      "expectedTags": ["widthratio"]
+    },
+    {
+      "name": "Cache tag",
+      "input": "{% cache 500 my_key %}\n{{ content }}\n{% endcache %}",
+      "expectedTags": ["cache", "endcache"]
+    },
+    {
+      "name": "Spaceless",
+      "input": "{% spaceless %}\n  <p>   </p>\n{% endspaceless %}",
+      "expectedTags": ["spaceless", "endspaceless"]
+    },
+    {
+      "name": "Autoescape",
+      "input": "{% autoescape off %}\n{{ html|safe }}\n{% endautoescape %}",
+      "expectedTags": ["autoescape", "endautoescape"]
+    },
+    {
+      "name": "With block",
+      "input": "{% with user.profile as profile %}\n  {{ profile.name }}\n{% endwith %}",
+      "expectedTags": ["with", "endwith"]
+    },
+    {
+      "name": "Regroup",
+      "input": "{% regroup items by category as grouped %}\n{% for group in grouped %}\n  {{ group.grouper }}\n{% endfor %}",
+      "expectedTags": ["regroup"]
+    },
+    {
+      "name": "Block.super",
+      "input": "{% block content %}\n  {{ block.super }}\n{% endblock %}",
+      "expectedTokens": [{ "scope": "variable.other.django" }]
+    },
+    {
+      "name": "CSRF token",
+      "input": "{% csrf_token %}",
+      "expectedTags": ["csrf_token"]
+    },
+    {
+      "name": "Static tag",
+      "input": "{% static \"css/style.css\" %}",
+      "expectedTags": ["static"]
+    },
+    {
+      "name": "URL tag",
+      "input": "{% url \"home\" user.id %}",
+      "expectedTags": ["url"]
+    },
+    {
+      "name": "Debug tag",
+      "input": "{% debug %}",
+      "expectedTags": ["debug"]
+    },
+    {
+      "name": "Verbatim",
+      "input": "{% verbatim %}\n  {{ not_a_variable }}\n  {% not_a_tag %}\n{% endverbatim %}",
+      "expectedTags": ["verbatim", "endverbatim"]
+    },
+    {
+      "name": "Filter block",
+      "input": "{% filter upper %}\n  {{ name }}\n{% endfilter %}",
+      "expectedTags": ["filter", "endfilter"]
+    },
+    {
+      "name": "Template tag symbol",
+      "input": "{% templatetag openblock %}",
+      "expectedTags": ["templatetag"]
+    },
+    {
+      "name": "Addtoblock",
+      "input": "{% addtoblock css %}\n.selector { color: red; }\n{% endaddtoblock %}",
+      "expectedTags": ["addtoblock", "endaddtoblock"]
+    }
+  ],
+  "validationTests": [
+    {
+      "name": "Unclosed if tag",
+      "input": "{% if condition %}\n  content\n{% endfor %}",
+      "expectedErrors": ["Unclosed tag: {% if %}"]
+    },
+    {
+      "name": "Mismatched tags",
+      "input": "{% if condition %}\n  content\n{% endfor %}",
+      "expectedErrors": ["Mismatched tag: expected {% endif %} but found {% endfor %}"]
+    },
+    {
+      "name": "Extends not first",
+      "input": "{% if true %}\n{% extends \"base.html\" %}\n{% endif %}",
+      "expectedErrors": ["{% extends %} must be the first tag"]
+    },
+    {
+      "name": "Tag after extends",
+      "input": "{% extends \"base.html\" %}\n{% if true %}\n{% include \"other.html\" %}\n{% endif %}",
+      "expectedErrors": []
+    }
+  ]
+}
