@@ -236,6 +236,22 @@
       }
     }
   },
+  "emmet": {
+    "includeLanguages": {
+      "miki-template": "html",
+      "django-html": "html"
+    },
+    "syntaxProfiles": {
+      "miki-template": {
+        "tag-case": "lower",
+        "attr-case": "lower"
+      },
+      "django-html": {
+        "tag-case": "lower",
+        "attr-case": "lower"
+      }
+    }
+  },
   "extensionDependencies": ["esbenp.prettier-vscode"],
   "publisher": "alainmiki",
   "repository": {
