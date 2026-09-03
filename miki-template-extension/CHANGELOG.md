@@ -5,6 +5,24 @@ All notable changes to this extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-09-03
+
+### Added
+
+- **Rename Blocks (F2)**: Rename `{% block name %}` across workspace with F2
+- **Path Completions**: Auto-suggest template files for `{% include %}` and `{% extends %}`
+- **Semantic Token Provider**: Enhanced semantic highlighting with proper token classification
+- **HTML/CSS/JS Embedded Support**: Full syntax highlighting for embedded languages
+- **Emmet Support**: HTML and JavaScript Emmet abbreviations work in templates
+- **CSS in `<style>` tags**: Proper CSS syntax highlighting
+- **JS in `<script>` tags**: Proper JavaScript syntax highlighting
+
+### Fixed
+
+- Grammar patterns for proper HTML scope activation
+- Embedded language mappings for CSS and JavaScript
+- Multiple bug fixes and improvements
+
 ## [1.7.0] - 2026-09-03
 
 ### Added

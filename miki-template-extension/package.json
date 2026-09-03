@@ -2,7 +2,7 @@
   "name": "miki-template",
   "displayName": "miki template",
   "description": "The ultimate Django & miki-template VS Code extension. Syntax highlighting, intelligent completions, hover docs, validation, go-to-definition, inlay hints, color decorations, code actions, and more.",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "engines": {
     "vscode": "^1.75.0"
   },

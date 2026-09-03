@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ siteName|default:'Home page Here'|title }} | {{ block.super }}
+{% endblock %}
+
+{% block content %}
+  {% partialdef card  inline %}
+  <div class="card">
+    <h3>{{ title|default:'No title' }}</h3>
+    <p>{{ description|default:'{% lorem 20 %}'|upper }}</p>
+  </div>
+  {% endpartialdef %}
+
+  {% partial card with title='Hello' description='World' %}
+
+  {% with a=5 %}
+    <marquee behavior="" direction="">
+      <span>some new stuff with with tag : {{ a|add:5 }}</span>
+    </marquee>
+  {% endwith %}
+
+  {{ name }}
+  {{ login.name }}
+  {{ login.email }}
+  <h1>Users table goes below</h1>
+  <table border="3">
+    <th>name</th>
+    <th>email</th>
+    <th>action</th>
+
+    {% for user in users %}
+      <tr>
+        <td>{{ user.name|title }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <a href="">Delete user</a>
+        </td>
+      </tr>
+    {% endfor %}
+    
+  </table>
+  <h1>Data list</h1>
+  <h2>data list of data</h2>
+  {% for obj in data %}
+    {% partialdef mike inline %}
+
+    <li>{{ obj.name }}</li>
+    <li>{{ forloop.counter }}</li>
+   <li> {{ obj.email }}</li>
+    {% endpartialdef %}
+  {% endfor %}
+
+  <h2>users list of data</h2>
+  <ul style="background-color: aqua;color: blueviolet; list-style-type:upper-roman;">
+
+    {% for obj in users %}
+    {% partial mike %}
+    {% endfor %}
+  </ul>
+
+  <h3>form with crsf</h3>
+
+  <form action="">
+    {% csrf_token %}
+    <input type="text" name="" id="" title="some text"/>
+  </form>
+<h3>included content here</h3>
+  {% include 'cmpnt.html#me' %}
+
+
+{% endblock %}

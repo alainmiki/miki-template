@@ -1,0 +1,11 @@
+{% partialdef me %}
+<h2>here is some content</h2>
+{% endpartialdef %}
+{% partialdef you %}
+<h2>here is some content for you</h2>
+{% endpartialdef %}
+{% partialdef us inline %}
+{% partial me%}
+{% partial you%}
+<h2>here is some content for us</h2>
+{% endpartialdef %}
