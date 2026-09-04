@@ -26,7 +26,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
@@ -60,7 +59,7 @@ jobs:
 
       - name: Read package version
         id: ver
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
       - name: Check tag does not already exist
         run: |
@@ -76,25 +75,23 @@ jobs:
           git tag -a "v${{ steps.ver.outputs.version }}" -m "v${{ steps.ver.outputs.version }}"
           git push origin "v${{ steps.ver.outputs.version }}"
 
-      - name: Read release notes
+      - name: Build release body
         id: notes
+        env:
+          NOTES_FILE: .github/release-notes/v${{ steps.ver.outputs.version }}.md
+          VERSION: ${{ steps.ver.outputs.version }}
         run: |
-          F=".github/release-notes/v${{ steps.ver.outputs.version }}.md"
-          if [ -f "$F" ]; then
-            {
-              echo "body<<EOF"
-              cat "$F"
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "body<<EOF"
-              echo "## v${{ steps.ver.outputs.version }}"
+          {
+            echo "body<<EOF_RELEASE"
+            if [ -f "$NOTES_FILE" ]; then
+              cat "$NOTES_FILE"
+            else
+              echo "## v${VERSION}"
               echo ""
               echo "See [CHANGELOG.md](../../blob/main/CHANGELOG.md) for details."
-              echo "EOF"
-            } >> "$GITHUB_OUTPUT"
-          fi
+            fi
+            echo "EOF_RELEASE"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -102,7 +99,6 @@ jobs:
           tag_name: v${{ steps.ver.outputs.version }}
           name: v${{ steps.ver.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
-          fail_on_unmatched_files: true
 
       - name: Publish to npm
         run: npm publish --access public
