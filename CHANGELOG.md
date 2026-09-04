@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.3] - 2026-09-04
+### Fixed
+- **`date` and `time` filters** — multi-character tokens (`yyyy`, `MM`, `dd`, `HH`, `mm`, `ii`, `ss`) now work correctly. Previously `"yyyy-MM-dd"` rendered as `"24242424-JunJun-1515"` because each character was treated as an independent token. The fix uses longest-first token matching and adds backward-compatible single-character aliases (`m`/`d`/`H`/`i`/`s` for Django-style unpadded values).
+
+### Performance
+- **Inheritance parent-source cache** — `{% extends %}` no longer re-reads the parent template from disk on every render. A 64-entry LRU cache in `src/cache.js` (`getParentSource` / `hasParentSource`) memoises the parent source. Inheritance rendering improved from ~481 rps to **~2,056 rps** in the stress benchmark (4.3× faster, no functional change).
+
+### Tooling
+- **`benchmarks/stress.mjs`** — comprehensive 37-check stress benchmark covering correctness, compile speed, render speed, cache behavior, scale, endurance, partial rendering, async, and concurrency. Run with `node benchmarks/stress.mjs`. Exits with code 1 on any failure.
+- **`eslint.config.mjs`** — added `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder`, `fetch`, `crypto`, `performance` to the Node 18+ globals list so `no-undef` no longer flags standard Web APIs.
+- Removed dead code flagged by the linter: unused `elifBranches` variable in `parseIfChanged`, unused `extractPluralMappings` function in `i18n.js`. Renamed unused tag-parser `parser` parameters to `_parser` in `lorem` library and `parseLoad`.
+
+### Verification
+- `npx eslint src/**/*.js` — 0 errors, 0 warnings
+- `npm test` — 397/397 passing
+- `node benchmarks/stress.mjs` — 37/37 passing
+
 ## [1.3.1] - 2026-09-03
 ### Highlights
 - **One-line Express integration**: `miki.setupExpress(app, { extension: 'html', views: dir })` — wires the view engine, `views` directory, and a `res.render` shim that lets you do `res.render('home#card', ...)` for HTMX-style partial responses. No more boilerplate, no extra middleware.
