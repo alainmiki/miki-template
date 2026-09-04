@@ -315,6 +315,27 @@ registerTag('hello', (tagContent, parser) => {
 
 ---
 
+## 🚀 Releasing
+
+Releases are fully automatic. Pick the bump you want and run one command:
+
+```bash
+npm run release:patch   # 1.3.3 → 1.3.4
+npm run release:minor   # 1.3.3 → 1.4.0
+npm run release:major   # 1.3.3 → 2.0.0
+```
+
+That bumps `package.json`, creates a `chore(release): vX.Y.Z` commit, and pushes to `main`. The CI then:
+
+1. Runs lint + test + the strict benchmark (must pass)
+2. Creates an annotated `vX.Y.Z` git tag and pushes it
+3. Creates a GitHub Release with notes from `.github/release-notes/vX.Y.Z.md` (optional)
+4. Publishes to npm
+
+Nothing else to click. The whole pipeline is in `.github/workflows/release.yml`.
+
+---
+
 ## 🔒 Security
 - **HTML Auto-escaping**: Enabled by default to guard against Cross-Site Scripting (XSS).
 - **SafeString Wrapper**: Explicitly bypass escaping using the `|safe` filter or marking variables via `markSafe(val)`.

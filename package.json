@@ -12,7 +12,10 @@
   },
   "scripts": {
     "test": "node -e \"const fs=require('fs');const path=require('path');function walk(d){const out=[];for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())out.push(...walk(p));else if(/\\\\.test\\\\.(cjs|mjs|js)$/.test(e.name))out.push(p);}return out;}const files=walk('tests');require('child_process').execSync('node --test '+files.join(' '),{stdio:'inherit'})\"",
-    "bench": "node benchmarks/run.js"
+    "bench": "node benchmarks/run.js",
+    "release:patch": "npm version patch --no-git-tag-version -m \"chore(release): v%s\" && git push origin main",
+    "release:minor": "npm version minor --no-git-tag-version -m \"chore(release): v%s\" && git push origin main",
+    "release:major": "npm version major --no-git-tag-version -m \"chore(release): v%s\" && git push origin main"
   },
   "keywords": [
     "django",
