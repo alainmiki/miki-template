@@ -1,6 +1,6 @@
 {
   "name": "miki-template",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Django-Style template engine for Node.js and Express",
   "main": "src/index.js",
   "exports": {
