@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.4] - 2026-09-05
+### Fixed
+- **Express views path resolution** — normalize `views` entries and ensure miki treats file paths as directories when resolving templates and `#partial` lookups. This fixes `Failed to lookup view "home" in views directory ".../dir"` when `miki-template` is used from a host project's `node_modules` and `views` is passed as a file path.
+
 ## [1.3.3] - 2026-09-04
 ### Fixed
 - **`date` and `time` filters** — multi-character tokens (`yyyy`, `MM`, `dd`, `HH`, `mm`, `ii`, `ss`) now work correctly. Previously `"yyyy-MM-dd"` rendered as `"24242424-JunJun-1515"` because each character was treated as an independent token. The fix uses longest-first token matching and adds backward-compatible single-character aliases (`m`/`d`/`H`/`i`/`s` for Django-style unpadded values).

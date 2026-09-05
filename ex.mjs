@@ -10,10 +10,10 @@ const dir=path.join(process.cwd(),"dir")
   // app.set('views', dir);
   miki.setupExpress(app, { extension: 'html', views: dir });
 
-  registerContextProcessor((cx)=>({
-    siteName:"code with miki",
-    login:{'name':"miki", 'email':"miki@example.com"}
-  }))
+  // registerContextProcessor((cx)=>({
+  //   siteName:"code with miki",
+  //   login:{'name':"miki", 'email':"miki@example.com"}
+  // }))
   app.get("/",(req,res)=>{
     const users=[
       {'name':"miki", 'email':"miki@example.com"},
@@ -24,7 +24,7 @@ const dir=path.join(process.cwd(),"dir")
       {name:"miki", email:"jack@miki.com",address:"kumba"},
       {name:"luis",email:"luis@miki.com",address:"kumba"}
     ]
-    res.render("home",{name:"miki-template context", users:users, data:data})
+    res.render("index",{name:"miki-template context", users:users, data:data})
     // res.send(content)
   })
 

@@ -51,6 +51,24 @@ const i18n = require('./i18n');
 // Plugin/filter library system
 const libraries = require('./libraries');
 
+// Normalize views entries: if a views entry points to a file,
+// return its directory so lookups work regardless of whether the
+// caller passed a file path or a directory.
+function normalizeViews(views) {
+  if (!views) return ['.'];
+  const arr = Array.isArray(views) ? views.slice() : [views];
+  return arr.map(v => {
+    try {
+      const st = fs.statSync(v);
+      if (st.isFile()) return path.dirname(v);
+      return v;
+    } catch (e) {
+      // If the path doesn't exist or can't be stat'd, return as-is.
+      return v;
+    }
+  });
+}
+
 // Inject the registration functions so libraries can activate without
 // triggering a circular require. This must happen BEFORE the
 // auto-activation loop below.
@@ -110,11 +128,9 @@ async function renderASTAsync(nodes, context) {
 
     let viewsDirs = ['.'];
     if (context.options && context.options.settings && context.options.settings.views) {
-      const views = context.options.settings.views;
-      viewsDirs = Array.isArray(views) ? views : [views];
+      viewsDirs = normalizeViews(context.options.settings.views);
     } else if (context.options && context.options.views) {
-      const views = context.options.views;
-      viewsDirs = Array.isArray(views) ? views : [views];
+      viewsDirs = normalizeViews(context.options.views);
     }
 
     const fileContent = readParentSource(parentName, viewsDirs);
@@ -161,11 +177,9 @@ function renderAST(nodes, context) {
 
     let viewsDirs = ['.'];
     if (context.options && context.options.settings && context.options.settings.views) {
-      const views = context.options.settings.views;
-      viewsDirs = Array.isArray(views) ? views : [views];
+      viewsDirs = normalizeViews(context.options.settings.views);
     } else if (context.options && context.options.views) {
-      const views = context.options.views;
-      viewsDirs = Array.isArray(views) ? views : [views];
+      viewsDirs = normalizeViews(context.options.views);
     }
 
     const fileContent = readParentSource(parentName, viewsDirs);
@@ -382,9 +396,9 @@ function renderPartialFromFile(fileName, partialName, contextObj, options) {
 
   let viewsDirs = ['.'];
   if (options.settings && options.settings.views) {
-    viewsDirs = Array.isArray(options.settings.views) ? options.settings.views : [options.settings.views];
+    viewsDirs = normalizeViews(options.settings.views);
   } else if (options.views) {
-    viewsDirs = Array.isArray(options.views) ? options.views : [options.views];
+    viewsDirs = normalizeViews(options.views);
   }
 
   let fileContent = null;
@@ -489,7 +503,7 @@ function __express(filePath, options, callback) {
     try {
       const fileContent = fs.readFileSync(realFilePath, 'utf8');
       const renderOptions = {
-        views: realFilePath,
+        views: path.dirname(realFilePath),
         ...(options || {})
       };
       const ctx = stripExpressContext(options);
@@ -578,11 +592,9 @@ function renderPartialFromSource(fileContent, partialName, contextObj, options, 
       const parentName = tempContext.parentTemplate;
       let viewsDirs = ['.'];
       if (options && options.settings && options.settings.views) {
-        const v = options.settings.views;
-        viewsDirs = Array.isArray(v) ? v : [v];
+        viewsDirs = normalizeViews(options.settings.views);
       } else if (options && options.views) {
-        const v = options.views;
-        viewsDirs = Array.isArray(v) ? v : [v];
+        viewsDirs = normalizeViews(options.views);
       }
       for (const dir of viewsDirs) {
         const parentPath = require('path').resolve(dir, parentName);
@@ -649,7 +661,7 @@ function __expressAsync(filePath, options) {
       try {
         const fileContent = fs.readFileSync(realFilePath, 'utf8');
         const renderOptions = {
-          views: realFilePath,
+          views: path.dirname(realFilePath),
           ...(options || {})
         };
         const ctx = stripExpressContext(options);
@@ -792,9 +804,21 @@ function setupExpress(app, opts = {}) {
       const candidates = extname
         ? [fileName]
         : [fileName + '.' + configExt, fileName + '.miki'];
-      const viewsDir = configViews
+      let viewsDir = configViews
         || (this.req && this.req.app ? this.req.app.get('views') : null)
         || process.cwd() + '/views';
+      // Normalize arrays or accidental file paths to directories
+      if (Array.isArray(viewsDir)) {
+        const arr = normalizeViews(viewsDir);
+        viewsDir = arr.length > 0 ? arr[0] : viewsDir[0];
+      } else {
+        try {
+          const st = fs.statSync(viewsDir);
+          if (st.isFile()) viewsDir = path.dirname(viewsDir);
+        } catch (e) {
+          // ignore
+        }
+      }
       let filePath = null;
       for (const cand of candidates) {
         const p = require('path').resolve(viewsDir, cand);
@@ -867,7 +891,17 @@ function expressPartialRenderer() {
       const candidates = ext
         ? [fileName]
         : [fileName + '.html', fileName + '.miki'];
-      const viewsDir = req.app.get('views');
+      let viewsDir = req.app.get('views');
+      // Normalize viewsDir to a directory if needed
+      if (Array.isArray(viewsDir)) {
+        const arr = normalizeViews(viewsDir);
+        viewsDir = arr.length > 0 ? arr[0] : viewsDir[0];
+      } else {
+        try {
+          const st = fs.statSync(viewsDir);
+          if (st.isFile()) viewsDir = path.dirname(viewsDir);
+        } catch (e) {}
+      }
       let filePath = null;
       for (const cand of candidates) {
         try {
