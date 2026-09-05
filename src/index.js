@@ -69,6 +69,97 @@ function normalizeViews(views) {
   });
 }
 
+// Find a template file by name in the provided views directories.
+// Supports searching recursively through subdirectories when the
+// template name is a bare name (no path separators). Returns the
+// absolute path to the first matching file, or null if not found.
+function findTemplateInViews(templateName, viewsDirs) {
+  if (!templateName) return null;
+  const hasExt = /\.[a-z0-9]+$/i.test(templateName);
+  // Candidate basenames to look for when doing recursive search
+  const candidateBasenames = hasExt ? [path.basename(templateName)] : [path.basename(templateName) + '.html', path.basename(templateName) + '.miki'];
+
+  // Normalize templateName's separators to the platform so direct
+  // resolves work when callers use forward slashes on Windows.
+  const templateNameNorm = templateName.replace(/\//g, path.sep);
+
+  for (const dir of viewsDirs) {
+    // Also consider app-style 'templates' directories nested inside
+    // the views root (e.g. project/app/templates/...)
+    const appTemplateDirs = findTemplatesDirsUnder(dir);
+    const searchDirs = [dir, ...appTemplateDirs];
+    for (const sdir of searchDirs) {
+      // Try direct resolution: if caller provided a path (like "nested/index")
+      // resolve it relative to the search dir and try supported extensions.
+      const basePath = path.resolve(sdir, templateNameNorm);
+      if (hasExt) {
+        try { if (fs.existsSync(basePath)) return basePath; } catch {}
+      } else {
+        try { if (fs.existsSync(basePath + '.html')) return basePath + '.html'; } catch {}
+        try { if (fs.existsSync(basePath + '.miki')) return basePath + '.miki'; } catch {}
+      }
+
+      // If templateName is a bare name (no path separators), search
+      // recursively under the search dir for matching filenames.
+      if (!templateName.includes('/') && !templateName.includes(path.sep)) {
+        const stack = [sdir];
+        while (stack.length) {
+          const cur = stack.pop();
+          let entries;
+          try { entries = fs.readdirSync(cur, { withFileTypes: true }); } catch (e) { continue; }
+          for (const ent of entries) {
+            const p = path.join(cur, ent.name);
+            if (ent.isDirectory()) {
+              stack.push(p);
+              continue;
+            }
+            if (!ent.isFile()) continue;
+            const relative = path.relative(path.resolve(sdir), p);
+            if (relative.startsWith('..') || path.isAbsolute(relative)) continue;
+            for (const candBasename of candidateBasenames) {
+              if (ent.name === candBasename) return p;
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// Search for "app-style" templates directories under the provided
+// views directories. Many projects place templates inside an app
+// submodule under `appname/templates/...`. This helper will locate
+// any `templates` directories and search them for candidates.
+let appTemplateDirNames = ['templates'];
+
+function setAppTemplateDirNames(names) {
+  if (!names) return;
+  if (Array.isArray(names)) appTemplateDirNames = names.slice();
+  else if (typeof names === 'string') appTemplateDirNames = [names];
+}
+
+function getAppTemplateDirNames() {
+  return appTemplateDirNames.slice();
+}
+
+function findTemplatesDirsUnder(dir) {
+  const results = [];
+  const stack = [dir];
+  while (stack.length) {
+    const cur = stack.pop();
+    let entries;
+    try { entries = fs.readdirSync(cur, { withFileTypes: true }); } catch (e) { continue; }
+    for (const ent of entries) {
+      const p = path.join(cur, ent.name);
+      if (!ent.isDirectory()) continue;
+      if (appTemplateDirNames.includes(ent.name)) results.push(p);
+      stack.push(p);
+    }
+  }
+  return results;
+}
+
 // Inject the registration functions so libraries can activate without
 // triggering a circular require. This must happen BEFORE the
 // auto-activation loop below.
@@ -101,15 +192,28 @@ function readParentSource(parentName, viewsDirs) {
       if (relative.startsWith('..') || path.isAbsolute(relative)) {
         throw new Error(`Extends tag attempted path traversal outside allowed views: '${parentName}'`);
       }
-      const fileContent = fs.readFileSync(fullPath, 'utf8');
-      // Populate the LRU cache and return the value
-      return getParentSource(key, () => fileContent);
+      if (fs.existsSync(fullPath)) {
+        const fileContent = fs.readFileSync(fullPath, 'utf8');
+        // Populate the LRU cache and return the value
+        return getParentSource(key, () => fileContent);
+      }
     } catch (e) {
       if (e.message && e.message.startsWith('Extends tag attempted path traversal')) {
         throw e;
       }
     }
   }
+
+  // Fallback: try recursive search through subfolders in the provided
+  // views directories. This enables Django-like behavior where a
+  // template may be placed in a nested folder and referenced by name.
+  const found = findTemplateInViews(parentName, viewsDirs);
+  if (found) {
+    const key = path.dirname(found) + '\0' + parentName;
+    const fileContent = fs.readFileSync(found, 'utf8');
+    return getParentSource(key, () => fileContent);
+  }
+
   throw new Error(`Template not found: '${parentName}' in directories ${JSON.stringify(viewsDirs)}`);
 }
 
@@ -134,6 +238,18 @@ async function renderASTAsync(nodes, context) {
     }
 
     const fileContent = readParentSource(parentName, viewsDirs);
+
+    // If parent not found by direct resolution, try recursive search
+    // (search subfolders) using the new helper. This ensures extends
+    // can locate parent templates placed in nested directories.
+    if (!fileContent) {
+      const found = findTemplateInViews(parentName, viewsDirs);
+      if (found) {
+        const fileContent2 = fs.readFileSync(found, 'utf8');
+        const key = path.dirname(found) + '\0' + parentName;
+        return getParentSource(key, () => fileContent2);
+      }
+    }
 
     const parentTokens = tokenize(fileContent);
     const parentParser = new Parser(parentTokens, getTagRegistry());
@@ -426,6 +542,14 @@ function renderPartialFromFile(fileName, partialName, contextObj, options) {
       }
     }
     if (loaded) break;
+  }
+  // Fallback: try recursive search if not loaded
+  if (!loaded) {
+    const found = findTemplateInViews(fileName, viewsDirs);
+    if (found) {
+      fileContent = fs.readFileSync(found, 'utf8');
+      loaded = true;
+    }
   }
   if (!loaded) {
     throw new Error(
@@ -827,6 +951,11 @@ function setupExpress(app, opts = {}) {
           break;
         }
       }
+      // Fallback: recursive search for templates in subfolders
+      if (!filePath) {
+        const found = findTemplateInViews(fileName, [viewsDir]);
+        if (found) filePath = found;
+      }
       if (!filePath) {
         const err = new Error(
           `Failed to lookup view "${view}" in views directory "${viewsDir}"`
@@ -910,6 +1039,11 @@ function expressPartialRenderer() {
           filePath = null;
         } catch { filePath = null; }
       }
+      // Fallback: recursive search for templates in subfolders
+      if (!filePath) {
+        const found = findTemplateInViews(fileName, Array.isArray(viewsDir) ? viewsDir : [viewsDir]);
+        if (found) filePath = found;
+      }
       if (!filePath) {
         return res.status(404).send(
           `Template not found: '${fileName}' in '${viewsDir}'`
@@ -933,6 +1067,10 @@ function expressPartialRenderer() {
 }
 
 module.exports = {
+  // Export the finder to allow unit tests to call it directly
+  findTemplateInViews,
+  setAppTemplateDirNames,
+  getAppTemplateDirNames,
   compile,
   render,
   asyncRender,

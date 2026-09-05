@@ -44,6 +44,11 @@ const {
   escapeHtml
 } = cjsModule;
 
+// Re-export the finder for ESM tests
+export const findTemplateInViews = cjsModule.findTemplateInViews;
+export const setAppTemplateDirNames = cjsModule.setAppTemplateDirNames;
+export const getAppTemplateDirNames = cjsModule.getAppTemplateDirNames;
+
 export {
   compile,
   render,

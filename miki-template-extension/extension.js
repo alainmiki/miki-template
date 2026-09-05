@@ -894,7 +894,7 @@ function activate(context) {
 			const selection = editor.selection;
 			const selectedText = editor.document.getText(selection);
 			editor.edit(editBuilder => {
-				editBuilder.replace(selection, `{% block ${1:name} %}\n${selectedText}\n{% endblock %}`);
+				editBuilder.replace(selection, '{% block ${1:name} %}\n' + selectedText + '\n{% endblock %}');
 			});
 		}),
 
@@ -904,7 +904,7 @@ function activate(context) {
 			const selection = editor.selection;
 			const selectedText = editor.document.getText(selection);
 			editor.edit(editBuilder => {
-				editBuilder.replace(selection, `{% for ${1:item} in ${2:items} %}\n${selectedText}\n{% endfor %}`);
+				editBuilder.replace(selection, '{% for ${1:item} in ${2:items} %}\n' + selectedText + '\n{% endfor %}');
 			});
 		}),
 
@@ -914,7 +914,7 @@ function activate(context) {
 			const selection = editor.selection;
 			const selectedText = editor.document.getText(selection);
 			editor.edit(editBuilder => {
-				editBuilder.replace(selection, `{% if ${1:condition} %}\n${selectedText}\n{% endif %}`);
+				editBuilder.replace(selection, '{% if ${1:condition} %}\n' + selectedText + '\n{% endif %}');
 			});
 		}),
 

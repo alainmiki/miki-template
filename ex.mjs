@@ -10,6 +10,8 @@ const dir=path.join(process.cwd(),"dir")
   // app.set('views', dir);
   miki.setupExpress(app, { extension: 'html', views: dir });
 
+
+  
   // registerContextProcessor((cx)=>({
   //   siteName:"code with miki",
   //   login:{'name':"miki", 'email':"miki@example.com"}

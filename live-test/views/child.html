@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Child - {{ title }}{% endblock %}
+{% block content %}
+  <h2>Child Content</h2>
+  <p>{{ message }}</p>
+  {{ block.super }}
+{% endblock %}
