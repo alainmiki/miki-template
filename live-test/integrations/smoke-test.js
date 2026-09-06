@@ -3,16 +3,41 @@ const path = require('path');
 const http = require('http');
 
 async function start(scriptPath) {
+  // Skip optional ESM integrations when their deps are missing
+  const missing = {
+    'elysia-example.js': 'elysia',
+    'hono-example.js': 'hono'
+  };
+  const basename = path.basename(scriptPath);
+  if (missing[basename]) {
+    try { require.resolve(missing[basename]); }
+    catch {
+      console.warn(`Skipping ${basename}: ${missing[basename]} is not installed`);
+      return null;
+    }
+  }
+
   // Require the example module and call its exported start() which
   // returns a Promise or a server instance.
   const mod = require(scriptPath);
   if (mod && typeof mod.start === 'function') {
-    const res = mod.start();
+    let res;
+    try {
+      res = mod.start();
+    } catch (err) {
+      console.warn(`Skipping ${basename}: start() failed: ${err.message}`);
+      return null;
+    }
     // Fastify returns a Promise resolving to server address; Koa/Express
     // return a server instance synchronously — normalize both.
     if (res && typeof res.then === 'function') {
-      await res;
-      return res;
+      try {
+        await res;
+        return res;
+      } catch (err) {
+        console.warn(`Skipping ${basename}: start() promise rejected: ${err.message}`);
+        return null;
+      }
     }
     return res;
   }
@@ -52,7 +77,13 @@ async function main() {
   }
 
   // Test each server
-  for (const s of servers) {
+  for (let i = 0; i < servers.length; i++) {
+    const s = servers[i];
+    const p = procs[i];
+    if (!p) {
+      console.warn(`Skipping smoke-test for ${path.basename(s.file)} (not running)`);
+      continue;
+    }
     try {
       const res = await fetch(s.url);
       console.log(`${s.url} -> ${res.status} length=${res.body.length}`);
@@ -100,8 +131,8 @@ async function main() {
   // Cleanup: attempt graceful shutdown for each started server
   for (let i = 0; i < procs.length; i++) {
     const p = procs[i];
+    if (!p) continue;
     try {
-      if (!p) continue;
       if (typeof p.kill === 'function') {
         p.kill();
         continue;

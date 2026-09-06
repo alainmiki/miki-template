@@ -5,5 +5,9 @@
   "dependencies": {
     "express": "^5.2.1",
     "miki-template": "file:../miki-template-2.0.0.tgz"
+  },
+  "devDependencies": {
+    "elysia": "^1.4.30",
+    "hono": "^4.13.7"
   }
 }
