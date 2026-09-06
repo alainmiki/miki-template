@@ -252,13 +252,14 @@ Resolve properties dynamically on nested objects or arrays. If the resolved valu
 
 ### Built-in Filters
 Apply filters using pipes (`|`). Arguments are passed after a colon (`:`).
-- **Text**: `upper`, `lower`, `title`, `capfirst`, `slugify`, `wordcount`, `striptags`, `linebreaks`, `linebreaksbr`, `truncatewords:N`, `truncatechars:N`.
+- **Text**: `upper`, `lower`, `title`, `capfirst`, `slugify`, `wordcount`, `striptags`, `linebreaks`, `linebreaksbr`, `truncatewords:N`, `truncatechars:N`, `truncatechars_html:N`.
 - **HTML**: `safe`, `escape`.
-- **List**: `length`, `join:","`, `slice:"start:end"`, `dictsort:"key"`, `dictsortreversed:"key"`.
-- **Default**: `default:"fallback"`, `default_if_none:"fallback"`.
-- **Date/Time**: `date:"Y-m-d"`, `time:"H:i"`, `timesince`, `timeuntil`.
-- **Numeric**: `add:5`, `divisibleby:2`, `floatformat:2`.
-- **Misc**: `yesno:"yes,no,maybe"`, `pluralize:"suffix"`, `filesizeformat`.
+- **List**: `length`, `join:","`, `slice:"start:end"`, `dictsort:"key"`, `dictsortreversed:"key"`, `sort`, `unique`, `random`, `reverse`, `split:","`, `replace:"old,new"`.
+- **Default**: `default:"fallback"`, `default_if_none:"fallback"`, `firstof:v1 v2 v3`.
+- **Date/Time**: `date:"Y-m-d"`, `time:"H:i"`, `date_format:"yyyy-MM-dd"`, `strftime:"PPpp"`, `timesince`, `timeuntil`, `ago`, `until`, `time_diff:other_date`.
+- **Numeric**: `add:5`, `sub:3`, `mult:2`, `divisibleby:2`, `mod:3`, `floatformat:2`, `square`, `sqrt`, `abs`, `round:2`, `floor`, `ceil`, `min:10`, `max:100`, `sum`, `average`.
+- **Currency/Data**: `currency:"$"`, `phone_number`, `email`, `url`, `mask:"*"`, `whatsapp_link:"msg"`, `credit_card`, `ssn`, `ip_address`, `uuid`, `filesizeformat`, `yesno:"yes,no,maybe"`, `pluralize:"s"`, `urlencode`, `escapeuri`, `stringformat:"%s"`, `cut:"text"`, `addslashes`, `removetags:"p,div"`, `trans`, `regroup:"attr"`, `json`, `urlize`.
+- **Encoding**: `base64_encode`, `base64_decode`.
 
 ### Built-in Control Tags
 - **if / elif / else / endif**: Supports conditional expressions with operators: `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`, `and`, `or`, `not`.
@@ -291,9 +292,64 @@ Apply filters using pipes (`|`). Arguments are passed after a colon (`:`).
     <tr class="{% cycle 'row-odd' 'row-even' %}">...</tr>
   {% endfor %}
   ```
+- **firstof**: Return the first truthy value.
+  ```html
+  {% firstof var1 var2 var3 "fallback" %}
+  ```
+- **set**: Assign variables.
+  ```html
+  {% set total = price * quantity %}
+  {% set greeting %}Hello {{ name }}{% endset %}
+  ```
+- **ifchanged / endifchanged**: Render only when value changes.
+  ```html
+  {% for item in items %}
+    {% ifchanged item.category %}
+      <h2>{{ item.category }}</h2>
+    {% endifchanged %}
+  {% endfor %}
+  ```
+- **now**: Output current date/time.
+  ```html
+  {% now "Y-m-d H:i:s" %}
+  ```
+- **static**: Generate static file URLs.
+  ```html
+  {% static "css/style.css" %}
+  ```
+- **url**: Build URLs from route names.
+  ```html
+  {% url 'user.profile' user.id %}
+  ```
+- **regroup**: Group lists by attribute.
+  ```html
+  {% for group in items|regroup:"category" %}
+    <h3>{{ group.grouper }}</h3>
+  {% endfor %}
+  ```
+- **spaceless**: Remove whitespace between tags.
+  ```html
+  {% spaceless %}<div>  <span>hi</span>  </div>{% endspaceless %}
+  ```
+- **widthratio**: Calculate ratios.
+  ```html
+  {% widthratio value max max_width %}
+  ```
+- **debug**: Dump template context.
+  ```html
+  {% debug %}
+  ```
 - **autoescape on/off**: Control auto-escaping block behavior.
 - **verbatim / endverbatim**: Treat raw text inside literally.
 - **comment / endcomment**: Block comment ignored during parse.
+- **load**: Activate template libraries.
+  ```html
+  {% load lorem humanize %}
+  ```
+- **templatetag**: Output literal template tag tokens.
+  ```html
+  {% templatetag openblock %} if user.is_admin {% templatetag closeblock %}
+  ```
 
 ### Security Tags
 - **csrf_token**: Automatically outputs a hidden input carrying the CSRF token from the context variable `csrf_token`.

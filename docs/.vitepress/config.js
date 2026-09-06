@@ -60,7 +60,9 @@ export default defineConfig({
         { text: 'compile()', link: '/api/compile' },
         { text: 'asyncRender()', link: '/api/async-render' },
         { text: 'renderPartial()', link: '/api/render-partial' },
-        { text: 'setupExpress()', link: '/api/setup-express' }
+        { text: 'setupExpress()', link: '/api/setup-express' },
+        { text: 'Filters', link: '/api/filters' },
+        { text: 'Tags', link: '/api/tags' }
       ],
       '/integrations/': [
         { text: 'Integrations', link: '/integrations/' },
