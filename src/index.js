@@ -894,10 +894,79 @@ function setupExpress(app, opts = {}) {
   // Install the raw engine so Express can use it
   app.engine(ext, async ? __expressAsync : __express);
 
+  // Expand configured view roots to include nested directories that
+  // actually contain template files. Express will only check the
+  // directories returned by `app.get('views')`, so if templates live
+  // inside nested app folders (e.g. `packages/*/templates/...`), we
+  // must include those directories explicitly so `res.render('name')`
+  // succeeds without additional work by users.
+  function expandViewsForExpress(viewsInput, maxDepth = 6) {
+    const seen = new Set();
+    const results = [];
+    const roots = normalizeViews(viewsInput || (app.get && app.get('views')) || ['.']);
+    const isTemplateFile = name => /\.(html|miki)$/i.test(name);
+
+    for (const r of roots) {
+      let rootPath;
+      try { rootPath = path.resolve(r); } catch { continue; }
+      if (seen.has(rootPath)) continue;
+      seen.add(rootPath);
+      // BFS/DFS limited traversal
+      const stack = [{ dir: rootPath, depth: 0 }];
+      while (stack.length) {
+        const cur = stack.pop();
+        let entries;
+        try { entries = fs.readdirSync(cur.dir, { withFileTypes: true }); } catch { continue; }
+        let hasTemplate = false;
+        for (const ent of entries) {
+          if (ent.isFile() && isTemplateFile(ent.name)) {
+            hasTemplate = true;
+            break;
+          }
+        }
+        if (hasTemplate) {
+          if (!seen.has(cur.dir)) {
+            seen.add(cur.dir);
+            results.push(cur.dir);
+          }
+        }
+        if (cur.depth < maxDepth) {
+          for (const ent of entries) {
+            if (!ent.isDirectory()) continue;
+            const name = ent.name;
+            if (name === 'node_modules' || name === '.git' || name === 'dist' || name === 'build') continue;
+            const child = path.join(cur.dir, name);
+            if (!seen.has(child)) stack.push({ dir: child, depth: cur.depth + 1 });
+          }
+        }
+      }
+      // Always include the root itself so existing layouts still work
+      if (!results.includes(rootPath)) results.unshift(rootPath);
+    }
+    return results;
+  }
+
   // Capture config in a closure so patchedRender can use it even
   // when called before the request handler runs.
   const configExt = ext;
   const configViews = opts.views;
+
+  // Expand and set the app 'views' so Express's resolver can find
+  // templates placed in nested directories. Only do this when a
+  // non-empty views value exists (we don't want to change defaults
+  // if user intentionally left it unset).
+  try {
+    const currentViews = app.get && app.get('views') ? app.get('views') : configViews || app.get && app.get('views');
+    if (currentViews) {
+      const expanded = expandViewsForExpress(currentViews);
+      if (expanded && expanded.length) {
+        app.set('views', expanded);
+      }
+    }
+  } catch (e) {
+    // Don't crash setupExpress if view expansion fails; fallback to
+    // whatever the app already had configured.
+  }
 
   // Capture the original res.render so we can dispatch on #partial
   const originalRender = app.response.render;
@@ -951,9 +1020,19 @@ function setupExpress(app, opts = {}) {
           break;
         }
       }
-      // Fallback: recursive search for templates in subfolders
+      // Fallback: recursive search for templates in subfolders. If
+      // the configured views is an array, search all normalized
+      // entries rather than only the first directory so app-style
+      // templates under other roots are discovered.
       if (!filePath) {
-        const found = findTemplateInViews(fileName, [viewsDir]);
+        let searchDirs = [viewsDir];
+        if (Array.isArray(viewsDir)) {
+          searchDirs = normalizeViews(viewsDir);
+        } else if (Array.isArray(configViews)) {
+          // If setupExpress was given an array, include its normalized form
+          searchDirs = normalizeViews(configViews);
+        }
+        const found = findTemplateInViews(fileName, searchDirs);
         if (found) filePath = found;
       }
       if (!filePath) {
@@ -984,11 +1063,55 @@ function setupExpress(app, opts = {}) {
       }
     }
 
-    // No partial selector: behave exactly like the original res.render
-    if (cb) {
-      return originalRender.call(this, view, opts, cb);
+    // No partial selector: behave exactly like the original res.render.
+    // If Express fails to locate the view (no recursive lookup),
+    // fall back to our recursive/app-style finder and invoke the
+    // engine directly with the resolved file path.
+    try {
+      if (cb) {
+        return originalRender.call(this, view, opts, cb);
+      }
+      return originalRender.call(this, view, opts);
+    } catch (err) {
+      // Detect Express view-not-found error and attempt fallback
+      if (err && typeof err.message === 'string' && err.message.includes('Failed to lookup view')) {
+        // Determine normalized view roots to search. Prefer arrays
+        // returned by app.get('views') (Express supports arrays).
+        let roots = [];
+        try {
+          const appViews = this.req && this.req.app ? this.req.app.get('views') : null;
+          if (appViews) roots = roots.concat(Array.isArray(appViews) ? normalizeViews(appViews) : [appViews]);
+        } catch (e) {}
+        if (configViews) roots = roots.concat(Array.isArray(configViews) ? normalizeViews(configViews) : [configViews]);
+        // If expandViewsForExpress was used earlier, app.get('views')
+        // may already be an expanded array of candidate dirs. Ensure
+        // uniqueness and absolute resolution.
+        roots = roots.filter(Boolean).map(r => path.resolve(r));
+        roots = Array.from(new Set(roots));
+
+        // Try to find the template file using our recursive finder.
+        const searchRoots = roots.length ? roots : [process.cwd()];
+        const found = findTemplateInViews(view, searchRoots);
+        if (found) {
+          // Invoke the engine directly with the resolved file path.
+          try {
+            if (cb) return (__express)(found, opts, cb);
+            return __express(found, opts, (err2, html) => {
+              if (err2) {
+                if (cb) return cb(err2);
+                throw err2;
+              }
+              this.send(html);
+            });
+          } catch (e2) {
+            if (cb) return cb(e2);
+            throw e2;
+          }
+        }
+      }
+      // Not our error or fallback failed — rethrow
+      throw err;
     }
-    return originalRender.call(this, view, opts);
   };
 }
 
@@ -1039,9 +1162,20 @@ function expressPartialRenderer() {
           filePath = null;
         } catch { filePath = null; }
       }
-      // Fallback: recursive search for templates in subfolders
+      // Fallback: recursive search for templates in subfolders. Prefer
+      // searching all normalized view roots so templates in sibling
+      // folders (project-level `templates/`, packages/*/templates, etc.)
+      // are found.
       if (!filePath) {
-        const found = findTemplateInViews(fileName, Array.isArray(viewsDir) ? viewsDir : [viewsDir]);
+        let searchDirs = Array.isArray(viewsDir) ? normalizeViews(viewsDir) : [viewsDir];
+        // Also include the app-level configured views array if present
+        try {
+          const appViews = req.app.get('views');
+          if (Array.isArray(appViews)) {
+            searchDirs = searchDirs.concat(normalizeViews(appViews));
+          }
+        } catch (e) {}
+        const found = findTemplateInViews(fileName, searchDirs);
         if (found) filePath = found;
       }
       if (!filePath) {

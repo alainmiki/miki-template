@@ -132,6 +132,16 @@ app.listen(3000);
 
 > `setupExpress` calls `app.engine()`, `app.set('views')`, and `app.set('view engine')` for you, and patches `res.render` so `view#partial` is dispatched to the partial renderer (not the file system). It works equally well for `.miki` files — just pass `extension: 'miki'`.
 
+Note on template discovery: `setupExpress` now expands the `app.get('views')`
+value to include nested directories that contain template files. This
+means templates placed in project-level `templates/`, package-level
+`packages/*/templates/...`, or app-specific folders (e.g. `app_templates/`)
+will be discovered automatically when calling `res.render('name')`.
+
+If your project uses a different convention than `templates`, call
+`setAppTemplateDirNames()` to customize the names that the engine
+recognizes when scanning for app-style template folders.
+
 **The classic, fully manual setup still works** if you prefer it:
 
 ```javascript

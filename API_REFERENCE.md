@@ -107,6 +107,33 @@ app.get('/', (req, res) => {
 });
 ```
 
+### Template discovery helpers
+
+`miki-template` exposes helpers to discover templates across multiple
+`views` roots and to configure what directory names are considered
+app-style template folders (e.g. `templates` or `app_templates`). These
+are useful for projects that place templates in nested app folders or
+package-level `templates/` directories.
+
+#### `findTemplateInViews(name, viewsDirs)`
+
+Search for a template by `name` across the provided `viewsDirs` array
+or single string. Performs direct resolution first, then a recursive
+search for bare filenames. Returns the absolute file path or `null`.
+
+Example:
+```js
+const found = require('miki-template').findTemplateInViews('detail', ['./views', './templates']);
+```
+
+#### `setAppTemplateDirNames(names)` / `getAppTemplateDirNames()`
+
+Configure and retrieve the directory names treated as app-style
+template folders when scanning the project tree. The default is
+`['templates']`. Use `setAppTemplateDirNames(['templates','app_templates'])`
+to include additional conventions.
+
+
 ---
 
 ### `registerTag(name, parserFn)`
