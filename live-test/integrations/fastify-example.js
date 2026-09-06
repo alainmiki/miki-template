@@ -9,5 +9,9 @@ app.get('/', async (request, reply) => {
   reply.type('text/html').send(html);
 });
 
-if (require.main === module) app.listen(3002, () => console.log('Fastify example listening on 3002'));
+if (require.main === module) {
+  app.listen({ port: 3002, host: '127.0.0.1' })
+    .then(() => console.log('Fastify example listening on 3002'))
+    .catch(err => { console.error('Fastify failed to start', err); process.exit(1); });
+}
 module.exports = app;

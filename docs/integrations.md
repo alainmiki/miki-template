@@ -186,5 +186,29 @@ Tips and best practices
 - For non-Express frameworks, call `miki.render()` (sync) or `miki.asyncRender()` (async) and set `options.views` to your views root (or pass absolute file paths resolved with your framework).
 - To support Django-style app templates (e.g. `packages/*/templates/...`), call `miki.setAppTemplateDirNames(['templates','app_templates'])` early in your app startup if you use a custom folder name.
 
+Engine usage & partial rendering
+
+Use the engine APIs directly when you don't want framework-specific wiring or when you need fine-grained control over `views` roots.
+
+```js
+const miki = require('miki-template');
+const path = require('path');
+
+// Sync render of a named partial inside a template file
+const html = miki.render('home#card', { user: 'Alice', title: 'Card' }, { views: path.resolve('./views') });
+
+// Async render when templates use async helpers
+const htmlAsync = await miki.asyncRender('home#card', { user: 'Bob' }, { views: path.resolve('./views') });
+
+// If your project arranges templates under custom folder names, configure
+// what constitutes an "app template" directory before rendering:
+miki.setAppTemplateDirNames(['templates', 'app_templates']);
+
+// To locate a template file programmatically without rendering, use the
+// exported finder helper:
+const found = miki.findTemplateInViews('home', [path.resolve('./views')]);
+if (found) console.log('Resolved to', found);
+```
+
 Further reading
 - See the main API docs for `setupExpress`, `render`, and `asyncRender` in `docs/api.md`.
