@@ -1,17 +1,17 @@
 [
   {
     "name": "small",
-    "syncAvgMs": "0.04",
+    "syncAvgMs": "0.01",
     "asyncAvgMs": "0.03"
   },
   {
     "name": "medium",
-    "syncAvgMs": "0.00",
+    "syncAvgMs": "0.01",
     "asyncAvgMs": "0.01"
   },
   {
     "name": "large",
-    "syncAvgMs": "0.00",
+    "syncAvgMs": "0.01",
     "asyncAvgMs": "0.01"
   }
 ]
