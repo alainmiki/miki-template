@@ -1,3 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Run integration smoke-test
+        run: node live-test/integrations/smoke-test.js
 # CI Workflow — lint + test on every push and PR.
 #
 # Releases are handled by .github/workflows/release.yml, which triggers
