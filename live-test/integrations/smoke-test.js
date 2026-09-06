@@ -93,6 +93,32 @@ async function fetch(url) {
     console.error('Engine partial render failed:', e && e.stack ? e.stack : e);
   }
 
-  // Cleanup
-  for (const p of procs) p.kill();
+  // Cleanup: attempt graceful shutdown for each started server
+  for (let i = 0; i < procs.length; i++) {
+    const p = procs[i];
+    try {
+      if (!p) continue;
+      if (typeof p.kill === 'function') {
+        p.kill();
+        continue;
+      }
+      if (typeof p.close === 'function') {
+        p.close();
+        continue;
+      }
+      // Fastify may return an address string; try to require module and call exported stop/close
+      try {
+        const mod = require(servers[i].file);
+        if (mod) {
+          if (typeof mod.stop === 'function') await mod.stop();
+          else if (typeof mod.close === 'function') await mod.close();
+          else if (mod.app && typeof mod.app.close === 'function') mod.app.close();
+        }
+      } catch (e) {
+        // ignore
+      }
+    } catch (e) {
+      // ignore errors during cleanup
+    }
+  }
 })();
