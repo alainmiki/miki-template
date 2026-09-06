@@ -1,6 +1,6 @@
 {
   "name": "miki-template",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Django-Style template engine for Node.js and Express",
   "main": "src/index.js",
   "exports": {
@@ -17,19 +17,25 @@
     "express",
     "nodejs",
     "bun",
-    "esm"
+    "esm",
+    "koa",
+    "fastify",
+    "nestjs"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "date-fns": "^3.6.0",
-    "fastify": "^5.12.3",
-    "he": "^1.2.0",
-    "koa": "^3.2.1"
+    "he": "^1.2.0"
   },
   "devDependencies": {
+    "koa": "^3.2.1",
+    "fastify": "^5.12.3",
+    "ejs": "^6.0.1",
     "eslint": "^8.50.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "handlebars": "^4.7.9",
+    "pug": "^3.0.4"
   },
   "scripts": {
     "test": "node -e \"const fs=require('fs');const path=require('path');function walk(d){const out=[];for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())out.push(...walk(p));else if(/\\\\.test\\\\.(cjs|mjs|js)$/.test(e.name))out.push(p);}return out;}const files=walk('tests');require('child_process').execSync('node --test '+files.join(' '),{stdio:'inherit'})\"",

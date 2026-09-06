@@ -1,0 +1,17 @@
+[
+  {
+    "name": "handlebars:small",
+    "medianMs": 0.0024000000000086175,
+    "rps": 416667
+  },
+  {
+    "name": "handlebars:medium",
+    "medianMs": 0.020599999999973306,
+    "rps": 48544
+  },
+  {
+    "name": "handlebars:large",
+    "medianMs": 1.512900000000002,
+    "rps": 661
+  }
+]

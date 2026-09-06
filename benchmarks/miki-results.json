@@ -1,0 +1,17 @@
+[
+  {
+    "name": "miki:small",
+    "medianMs": 0.008700000000004593,
+    "rps": 114943
+  },
+  {
+    "name": "miki:medium",
+    "medianMs": 0.0021999999999593456,
+    "rps": 454545
+  },
+  {
+    "name": "miki:large",
+    "medianMs": 0.0020999999999844476,
+    "rps": 476190
+  }
+]

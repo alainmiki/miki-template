@@ -34,13 +34,17 @@ async function fetch(url) {
   });
 }
 
-(async () => {
+async function main() {
   const root = path.resolve(__dirname);
   const servers = [
     { file: path.join(root, 'express-example.js'), url: 'http://localhost:3000/' },
     { file: path.join(root, 'koa-example.js'), url: 'http://localhost:3001/' },
     { file: path.join(root, 'fastify-example.js'), url: 'http://localhost:3002/' }
   ];
+  // Add ESM-based examples (elysia, hono). These will be spawned as
+  // child processes if they cannot be required as modules.
+  servers.push({ file: path.join(root, 'elysia-example.js'), url: 'http://localhost:3004/' });
+  servers.push({ file: path.join(root, 'hono-example.js'), url: 'http://localhost:3005/' });
 
   const procs = [];
   for (const s of servers) {
@@ -70,7 +74,7 @@ async function fetch(url) {
     try { miki = require('miki-template'); } catch (e) { miki = require('../..'); }
 
     // For each framework, test programmatic partial rendering and finder behavior
-    const frameworks = ['express', 'koa', 'fastify'];
+    const frameworks = ['express', 'koa', 'fastify', 'elysia', 'hono'];
     for (const name of frameworks) {
       const viewsDir = path.resolve(__dirname, '..', 'views');
       try {
@@ -121,4 +125,11 @@ async function fetch(url) {
       // ignore errors during cleanup
     }
   }
-})();
+}
+
+if (require.main === module) {
+  main().catch(err => {
+    console.error('smoke-test failed', err && err.stack ? err.stack : err);
+    process.exit(1);
+  });
+}
