@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install
-        run: npm ci
+        run: npm install
       - name: Run unit tests
         run: npm test
       - name: Run integration smoke-test
@@ -48,7 +48,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm install
       - name: Lint code
         run: npx eslint src/**/*.js
 
@@ -61,6 +61,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci
+      - run: npm install
       - name: Run test suite
         run: npm test

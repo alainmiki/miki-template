@@ -22,7 +22,7 @@
     "fastify",
     "nestjs"
   ],
-  "author": "",
+  "author": "Alain Miki aka Coder Miki",
   "license": "MIT",
   "dependencies": {
     "date-fns": "^3.6.0",
