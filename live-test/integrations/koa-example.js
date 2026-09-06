@@ -1,6 +1,6 @@
 const Koa = require('koa');
 const path = require('path');
-const miki = require('../');
+const miki = require('../../');
 
 const app = new Koa();
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const miki = require('../');
+const miki = require('../../');
 
 const app = express();
 miki.setupExpress(app, { extension: 'html', views: path.resolve(__dirname, '..', 'views') });

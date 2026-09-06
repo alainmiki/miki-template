@@ -50,6 +50,20 @@ async function fetch(url) {
     console.log(`/partial -> ${res.status} length=${res.body.length}`);
   } catch (e) { console.error('Partial fetch failed', e.message || e); }
 
+  // Programmatic engine tests: render('home#card') via the engine APIs
+  try {
+    const miki = require('../..');
+    const viewsDir = path.resolve(__dirname, '..', 'views');
+    // asyncRender with partial
+    const asyncHtml = await miki.asyncRender('home#card', { user: 'EngineAsync', title: 'EngineCard' }, { views: viewsDir });
+    console.log('engine asyncRender(home#card) length=' + asyncHtml.length);
+    // sync render (no async helpers present in template)
+    const syncHtml = miki.render('home#card', { user: 'EngineSync', title: 'EngineCard' }, { views: viewsDir });
+    console.log('engine render(home#card) length=' + syncHtml.length);
+  } catch (e) {
+    console.error('Engine partial render failed:', e && e.stack ? e.stack : e);
+  }
+
   // Cleanup
   for (const p of procs) p.kill();
 })();

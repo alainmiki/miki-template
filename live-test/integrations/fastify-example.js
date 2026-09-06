@@ -1,6 +1,6 @@
 const Fastify = require('fastify');
 const path = require('path');
-const miki = require('../');
+const miki = require('../../');
 
 const app = Fastify();
 
