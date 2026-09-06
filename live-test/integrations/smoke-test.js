@@ -65,14 +65,30 @@ async function fetch(url) {
 
   // Programmatic engine tests: render('home#card') via the engine APIs
   try {
-    const miki = require('../..');
-    const viewsDir = path.resolve(__dirname, '..', 'views');
-    // asyncRender with partial
-    const asyncHtml = await miki.asyncRender('home#card', { user: 'EngineAsync', title: 'EngineCard' }, { views: viewsDir });
-    console.log('engine asyncRender(home#card) length=' + asyncHtml.length);
-    // sync render (no async helpers present in template)
-    const syncHtml = miki.render('home#card', { user: 'EngineSync', title: 'EngineCard' }, { views: viewsDir });
-    console.log('engine render(home#card) length=' + syncHtml.length);
+    // Try requiring as if the package were installed; fallback to local
+    let miki;
+    try { miki = require('miki-template'); } catch (e) { miki = require('../..'); }
+
+    // For each framework, test programmatic partial rendering and finder behavior
+    const frameworks = ['express', 'koa', 'fastify'];
+    for (const name of frameworks) {
+      const viewsDir = path.resolve(__dirname, '..', 'views');
+      try {
+        const asyncHtml = await miki.asyncRender('home#card', { user: name + 'Async', title: name + 'Card' }, { views: viewsDir });
+        console.log(`${name}: asyncRender(home#card) length=${asyncHtml.length}`);
+      } catch (e) { console.error(`${name}: asyncRender failed`, e && e.message ? e.message : e); }
+
+      try {
+        const syncHtml = miki.render('home#card', { user: name + 'Sync', title: name + 'Card' }, { views: viewsDir });
+        console.log(`${name}: render(home#card) length=${syncHtml.length}`);
+      } catch (e) { console.error(`${name}: render failed`, e && e.message ? e.message : e); }
+
+      // Finder tests: simulate multiple view roots including nested app-template dirs
+      try {
+        const found = miki.findTemplateInViews('home', [viewsDir, path.resolve(__dirname, '..')]);
+        console.log(`${name}: finder resolved -> ${found ? found : 'not found'}`);
+      } catch (e) { console.error(`${name}: finder error`, e && e.message ? e.message : e); }
+    }
   } catch (e) {
     console.error('Engine partial render failed:', e && e.stack ? e.stack : e);
   }
