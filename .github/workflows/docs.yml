@@ -1,0 +1,86 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and deploy docs to GitHub Pages
+        run: npm run docs:build
+
+  sync-wiki:
+    runs-on: ubuntu-latest
+    needs: deploy-docs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Clone wiki repository
+        run: |
+          git clone https://github.com/${{ github.repository }}.wiki.git wiki-repo || true
+
+      - name: Sync docs to wiki
+        if: hashFiles('wiki-repo/.git/config') != ''
+        run: |
+          mkdir -p wiki-repo
+          cd wiki-repo
+          
+          # Copy all markdown docs to wiki root
+          cp ../docs/*.md .
+          
+          # Remove index.md if it exists (GitHub wiki uses README.md as home page)
+          if [ -f index.md ]; then
+            if [ -f README.md ]; then
+              rm index.md
+            else
+              mv index.md README.md
+            fi
+          fi
+          
+          # Commit and push if there are changes
+          git add -A
+          git diff --cached --quiet || {
+            git commit -m "docs: sync documentation to wiki"
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git master
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wiki sync skipped
+        if: hashFiles('wiki-repo/.git/config') == ''
+        run: |
+          echo "Wiki repository not found. Please enable the wiki in your repository settings first."
+          echo "Go to https://github.com/${{ github.repository }}/settings/wiki and click 'Create the first page'"
+        continue-on-error: true
