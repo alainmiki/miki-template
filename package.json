@@ -16,19 +16,21 @@
     "engine",
     "express",
     "nodejs",
+    "bun",
     "esm"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "date-fns": "^3.6.0",
-    "he": "^1.2.0"
+    "fastify": "^5.12.3",
+    "he": "^1.2.0",
+    "koa": "^3.2.1"
   },
   "devDependencies": {
-    "express": "^5.2.1",
-    "eslint": "^8.50.0"
-  }
-  ,
+    "eslint": "^8.50.0",
+    "express": "^5.2.1"
+  },
   "scripts": {
     "test": "node -e \"const fs=require('fs');const path=require('path');function walk(d){const out=[];for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())out.push(...walk(p));else if(/\\\\.test\\\\.(cjs|mjs|js)$/.test(e.name))out.push(p);}return out;}const files=walk('tests');require('child_process').execSync('node --test '+files.join(' '),{stdio:'inherit'})\"",
     "lint": "eslint . -f unix",

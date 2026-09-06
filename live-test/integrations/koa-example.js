@@ -14,5 +14,17 @@ app.use(async (ctx) => {
   await ctx.render('home', { user: 'KoaUser', title: 'KoaCard' });
 });
 
-if (require.main === module) app.listen(3001, () => console.log('Koa example listening on 3001'));
-module.exports = app;
+function start(port = 3001, host = '127.0.0.1') {
+  return new Promise((resolve, reject) => {
+    try {
+      const srv = app.listen(port, host, () => {
+        console.log('Koa example listening on', port);
+        resolve(srv);
+      });
+    } catch (err) { reject(err); }
+  });
+}
+
+if (require.main === module) start().catch(err => { console.error(err); process.exit(1); });
+
+module.exports = { app, start };

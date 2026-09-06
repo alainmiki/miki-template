@@ -3,10 +3,23 @@ const path = require('path');
 const http = require('http');
 
 async function start(scriptPath) {
+  // Require the example module and call its exported start() which
+  // returns a Promise or a server instance.
+  const mod = require(scriptPath);
+  if (mod && typeof mod.start === 'function') {
+    const res = mod.start();
+    // Fastify returns a Promise resolving to server address; Koa/Express
+    // return a server instance synchronously — normalize both.
+    if (res && typeof res.then === 'function') {
+      await res;
+      return res;
+    }
+    return res;
+  }
+  // Fallback: spawn as a child process
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [scriptPath], { stdio: 'inherit' });
     child.on('error', reject);
-    // Give the server a moment to start
     setTimeout(() => resolve(child), 800);
   });
 }

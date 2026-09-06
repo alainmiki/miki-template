@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Home</title>
+  </head>
+  <body>
+    <h1>Welcome, {{ user }}</h1>
+
+    {% partialdef card %}
+    <div class="card">Card: {{ title }}</div>
+    {% endpartialdef %}
+
+    <div id="content">
+      {% partial card %}
+    </div>
+  </body>
+</html>
