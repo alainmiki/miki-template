@@ -70,6 +70,7 @@ nav:
   - Getting Started:
       - What is miki-template?: guide/what-is-miki-template.md
       - Why miki-template?: guide/why-miki-template.md
+      - Getting Started: guide/getting-started.md
       - Installation: guide/installation.md
       - Quick Start: guide/quick-start.md
   - Core Features:
@@ -99,6 +100,8 @@ nav:
       - Libraries: api/libraries.md
       - Cache: api/cache.md
       - Finder: api/finder.md
+      - Helpers: api/helpers.md
+      - Context Processors: api/context-processors.md
   - Integrations:
       - Integrations Overview: integrations/index.md
       - Express: integrations/express.md
