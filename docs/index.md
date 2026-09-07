@@ -1,14 +1,10 @@
-﻿<div class="md-hero">
-  <h1 class="md-hero__title">miki-template</h1>
-  <p class="md-hero__subtitle">Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.</p>
-  <div class="md-hero__buttons">
-    <a href="guide/quick-start.md" class="md-button md-button--primary">Get Started</a>
-    <a href="api/index.md" class="md-button">API Reference</a>
-    <a href="https://github.com/alainmiki/miki-template" class="md-button" target="_blank" rel="noopener">GitHub</a>
-  </div>
-</div>
+﻿# miki-template
 
-<div class="md-typeset">
+Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.
+
+[Get Started](guide/quick-start.md) | [API Reference](api/index.md) | [GitHub](https://github.com/alainmiki/miki-template)
+
+![miki-template banner](assets/banner.png)
 
 ## Why miki-template?
 
@@ -84,5 +80,3 @@ See the [Installation guide](guide/installation.md) for pnpm, yarn, and Bun inst
 ## License
 
 MIT
-
-</div>
