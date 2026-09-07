@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block announce %}
+<div class="md-announce" role="banner">
+  <div class="md-announce__inner">
+    <span>🚀 <strong>miki-template v2.0</strong> is now available with improved performance and new features!</span>
+    <a href="https://github.com/alainmiki/miki-template/releases" target="_blank" rel="noopener">View Release Notes</a>
+    <button class="md-announce__button" onclick="this.closest('.md-announce').remove()" aria-label="Dismiss announcement">
+      <span class="md-icon">&#10005;</span>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+<meta name="theme-color" content="#1a1a2e">
+<meta name="description" content="Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.">
+<meta property="og:title" content="miki-template - Django-style templating for Node.js">
+<meta property="og:description" content="Blazing fast partials, smart template discovery, and zero friction for HTMX. Bring Django's beloved template language to Node.js and Express.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://alainmiki.github.io/miki-template/">
+<meta property="og:image" content="https://alainmiki.github.io/miki-template/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="miki-template - Django-style templating for Node.js">
+<meta name="twitter:description" content="Blazing fast partials, smart template discovery, and zero friction for HTMX.">
+{% endblock %}

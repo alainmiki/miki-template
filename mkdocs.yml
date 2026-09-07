@@ -9,33 +9,59 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: indigo
-      accent: indigo
+      scheme: custom
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
     - navigation.tracking
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
-    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - navigation.footer
+    - navigation.prune
+    - navigation.indexes
     - toc.integrate
+    - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
+    - announce.dismiss
   icon:
     repo: fontawesome/brands/github
+    admonition:
+      note: fontawesome/solid/note-sticky
+      abstract: fontawesome/solid/book-open
+      info: fontawesome/solid/circle-info
+      tip: fontawesome/solid/lightbulb
+      success: fontawesome/solid/check-circle
+      question: fontawesome/solid/question-circle
+      warning: fontawesome/solid/triangle-exclamation
+      failure: fontawesome/solid/circle-xmark
+      danger: fontawesome/solid/skull
+      bug: fontawesome/solid/robot
+      example: fontawesome/solid/flask
+      quote: fontawesome/solid/quote-left
 
 nav:
   - Home: index.md
@@ -89,6 +115,7 @@ markdown_extensions:
   - meta
   - toc:
       permalink: true
+      title: On this page
   - pymdownx.arithmatex:
       generic: true
   - pymdownx.betterem:
@@ -100,26 +127,69 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.smartsymbols
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
+  - material.extensions.emoji:
+      options:
+        custom_icons:
+          - overrides/.icons
+  - material.extensions.tabbed
+  - material.extensions.anchor
+  - material.extensions.details
+  - material.extensions.superfences
+  - material.extensions.magic-link:
+      repo_url_shorthand: true
+      user: alainmiki
+      repo: miki-template
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/alainmiki/miki-template
+      name: miki-template on GitHub
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/miki-template
+      name: miki-template on npm
   version:
     provider: mike
+  homepage: https://alainmiki.github.io/miki-template/
+  generator: false
+  annotate:
+    json: [.s2s]
 
 plugins:
-  - search
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - tags
+  - meta
+  - offline:
+      enabled: !ENV [READTHEDOCS, false]
+  - social:
+      cards: true
+      cards_layout_options:
+        color: "#1a1a2e"
+        font_family: Roboto
+  - optimize:
+      enabled: !ENV [READTHEDOCS, false]
+      concurrency: 4
+      css:
+        transpile: true
+      js:
+        bundle: true
 
 extra_css:
   - stylesheets/extra.css
