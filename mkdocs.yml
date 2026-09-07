@@ -1,0 +1,130 @@
+site_name: miki-template
+site_url: https://alainmiki.github.io/miki-template/
+site_description: Django-style template engine for Node.js and Express
+site_author: Alain Miki
+
+repo_name: miki-template
+repo_url: https://github.com/alainmiki/miki-template
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - What is miki-template?: guide/what-is-miki-template.md
+      - Why miki-template?: guide/why-miki-template.md
+      - Installation: guide/installation.md
+      - Quick Start: guide/quick-start.md
+  - Core Features:
+      - Partial Templates: guide/partial-templates.md
+      - Smart Template Discovery: guide/template-discovery.md
+      - Template Inheritance: guide/template-inheritance.md
+      - Filters: guide/filters.md
+      - Tags: guide/tags.md
+      - Security: guide/security.md
+  - Advanced:
+      - Custom Tags: guide/custom-tags.md
+      - Custom Filters: guide/custom-filters.md
+      - Context Processors: guide/context-processors.md
+      - Async Rendering: guide/async-rendering.md
+      - Advanced Usage: guide/advanced-usage.md
+  - API Reference:
+      - API Overview: api/index.md
+      - render(): api/render.md
+      - compile(): api/compile.md
+      - asyncRender(): api/async-render.md
+      - renderPartial(): api/render-partial.md
+      - setupExpress(): api/setup-express.md
+      - Filters: api/filters.md
+      - Tags: api/tags.md
+      - Security: api/security.md
+      - i18n: api/i18n.md
+      - Libraries: api/libraries.md
+      - Cache: api/cache.md
+      - Finder: api/finder.md
+  - Integrations:
+      - Integrations Overview: integrations/index.md
+      - Express: integrations/express.md
+      - Koa: integrations/koa.md
+      - Fastify: integrations/fastify.md
+      - Hono: integrations/hono.md
+      - Elysia: integrations/elysia.md
+  - Performance: performance.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/alainmiki/miki-template
+  version:
+    provider: mike
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js

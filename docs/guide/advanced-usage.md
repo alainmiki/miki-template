@@ -303,4 +303,4 @@ The rendering context provides:
 ## Next Steps
 
 - [API Reference](../api/)
-- [Performance](./performance)
+- [Performance](../performance)

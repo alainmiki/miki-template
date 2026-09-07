@@ -34,4 +34,4 @@ console.log(miki.render('Hello {{ name }}!', { name: 'World' }));
 ## Next Steps
 
 - [Quick Start](./quick-start)
-- [Usage Guide](../usage)
+- [Usage Guide](./quick-start)
