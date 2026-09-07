@@ -88,5 +88,5 @@ render(templateStr, contextObj = {}, options = {})
 
 ## Related
 
-- [compile()](./compile)
-- [asyncRender()](./async-render)
+- [compile() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'compile.md.md' 
+- [asyncRender() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'async-render.md.md' 

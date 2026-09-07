@@ -33,5 +33,5 @@ npm run bench
 
 ## Next Steps
 
-- [Getting Started](../guide/getting-started)
-- [API Reference](../api/)
+- [Getting Started param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/getting-started.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/.md.md' 

@@ -212,6 +212,6 @@ Retrieve a registered filter by name.
 
 ## Next Steps
 
-- [Filters Guide](../guide/filters)
-- [Custom Filters](../guide/custom-filters)
-- [API Reference](../)
+- [Filters Guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/filters.md.md' 
+- [Custom Filters param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/custom-filters.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

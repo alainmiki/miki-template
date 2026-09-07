@@ -215,5 +215,5 @@ miki-template's partial rendering (`#partialName`) is purpose-built for HTMX and
 
 ## Next Steps
 
-- [Integrations Overview](../)
-- [API Reference: setupExpress](../api/setup-express)
+- [Integrations Overview param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 
+- [API Reference: setupExpress param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/setup-express.md.md' 

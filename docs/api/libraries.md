@@ -203,5 +203,7 @@ Provides `{% trans %}`, `{% blocktrans %}`, `{% language %}` tags and translatio
 
 ## Next Steps
 
-- [Advanced Usage: Libraries](../guide/advanced-usage#library-system)
-- [API Reference](../)
+- [Advanced Usage: Libraries param($m) if ($m.Groups[1].Value -notmatch '\.md
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 
+) { $m.Groups[1].Value + '.md' + '#' + $m.Groups[2].Value } else { $m.Value } 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

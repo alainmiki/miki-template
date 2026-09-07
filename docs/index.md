@@ -80,22 +80,22 @@ miki-template brings Django's beloved template language to Node.js and Express. 
 npm install miki-template
 ```
 
-See the [Installation guide](guide/installation) for pnpm, yarn, and Bun instructions.
+See the [Installation guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/installation.md'  for pnpm, yarn, and Bun instructions.
 
 ## Documentation
 
-- [What is miki-template?](guide/what-is-miki-template)
-- [Getting Started](guide/getting-started)
-- [Quick Start](guide/quick-start)
-- [Filters](guide/filters)
-- [Tags](guide/tags)
-- [Partial Templates](guide/partial-templates)
-- [Template Inheritance](guide/template-inheritance)
-- [Template Discovery](guide/template-discovery)
-- [Security](guide/security)
-- [Integrations](integrations/)
-- [API Reference](api/)
-- [Performance](performance)
+- [What is miki-template? param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/what-is-miki-template.md' 
+- [Getting Started param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/getting-started.md' 
+- [Quick Start param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/quick-start.md' 
+- [Filters param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/filters.md' 
+- [Tags param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/tags.md' 
+- [Partial Templates param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/partial-templates.md' 
+- [Template Inheritance param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/template-inheritance.md' 
+- [Template Discovery param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/template-discovery.md' 
+- [Security param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'guide/security.md' 
+- [Integrations param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'integrations/.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'api/.md' 
+- [Performance param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'performance.md' 
 
 ## License
 

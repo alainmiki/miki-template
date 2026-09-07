@@ -77,5 +77,5 @@ renderPartialFromSource(fileContent, partialName, contextObj, options, filePath?
 
 ## Related
 
-- [render()](./render)
-- [compile()](./compile)
+- [render() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'render.md.md' 
+- [compile() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'compile.md.md' 

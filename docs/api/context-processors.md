@@ -73,5 +73,5 @@ Clear all registered context processors. Useful in tests or when re-configuring.
 
 ## Next Steps
 
-- [Context Processors Guide](../guide/context-processors)
-- [API Reference](../)
+- [Context Processors Guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/context-processors.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

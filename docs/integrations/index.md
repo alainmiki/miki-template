@@ -4,13 +4,13 @@ miki-template works with all major Node.js web frameworks. Use `render()` for sy
 
 ## Supported Frameworks
 
-- [Express](./express) — One-line setup with `setupExpress()`
-- [Koa](./koa) — Context helper using `asyncRender()`
-- [Fastify](./fastify) — Inline `asyncRender()` calls
-- [Hono](./hono) — ESM-first, using `asyncRender()`
-- [Elysia](./elysia) — ESM-first, using `asyncRender()`
-- [NestJS](./nestjs) — Module/Provider pattern
-- [TSDX / TS-Economy (TSed)](./tsed) — TypeScript integration
+- [Express param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'express.md.md'  — One-line setup with `setupExpress()`
+- [Koa param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'koa.md.md'  — Context helper using `asyncRender()`
+- [Fastify param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'fastify.md.md'  — Inline `asyncRender()` calls
+- [Hono param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'hono.md.md'  — ESM-first, using `asyncRender()`
+- [Elysia param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'elysia.md.md'  — ESM-first, using `asyncRender()`
+- [NestJS param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'nestjs.md.md'  — Module/Provider pattern
+- [TSDX / TS-Economy (TSed) param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'tsed.md.md'  — TypeScript integration
 
 ## Quick Example
 
@@ -64,5 +64,5 @@ yarn add miki-template
 
 ## Next Steps
 
-- [Express Integration](./express)
-- [API Reference: render](../api/render)
+- [Express Integration param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'express.md.md' 
+- [API Reference: render param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/render.md.md' 

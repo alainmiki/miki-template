@@ -129,6 +129,6 @@ Returns a **Node** object with a `render(context)` method. The render method rec
 
 ## Next Steps
 
-- [Tags Guide](../guide/tags)
-- [Custom Tags](../guide/custom-tags)
-- [API Reference](../)
+- [Tags Guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/tags.md.md' 
+- [Custom Tags param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/custom-tags.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

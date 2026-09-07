@@ -215,8 +215,8 @@ Partials are reusable template fragments defined with `{% partialdef %}`.
 
 ## Next Steps
 
-- [Partial Templates](./partial-templates)
-- [Template Inheritance](./template-inheritance)
-- [Filters](./filters)
-- [Tags](./tags)
-- [API Reference](../api/)
+- [Partial Templates param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'partial-templates.md.md' 
+- [Template Inheritance param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'template-inheritance.md.md' 
+- [Filters param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'filters.md.md' 
+- [Tags param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'tags.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/.md.md' 

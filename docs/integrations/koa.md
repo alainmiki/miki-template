@@ -84,5 +84,5 @@ Use miki-template with Koa by attaching an async render helper to the context.
 
 ## Next Steps
 
-- [Integrations Overview](../)
-- [API Reference: asyncRender](../api/async-render)
+- [Integrations Overview param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 
+- [API Reference: asyncRender param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/async-render.md.md' 

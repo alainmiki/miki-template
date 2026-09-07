@@ -124,5 +124,5 @@ An object with these render methods:
 
 ## Related
 
-- [render()](./render)
-- [asyncRender()](./async-render)
+- [render() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'render.md.md' 
+- [asyncRender() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'async-render.md.md' 

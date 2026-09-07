@@ -81,5 +81,5 @@ Using async features with `render()` throws: `Async node encountered during sync
 
 ## Related
 
-- [render()](./render)
-- [compile()](./compile)
+- [render() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'render.md.md' 
+- [compile() param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'compile.md.md' 

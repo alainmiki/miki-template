@@ -73,4 +73,4 @@ This is ideal for HTMX where you only need to update a portion of the page.
 
 ## Related
 
-- [Integrations: Express](../integrations/express)
+- [Integrations: Express param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../integrations/express.md.md' 

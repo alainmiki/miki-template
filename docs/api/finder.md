@@ -90,5 +90,5 @@ Get the current app template directory names.
 
 ## Next Steps
 
-- [Guide: Smart Template Discovery](../guide/template-discovery)
-- [API Reference](../)
+- [Guide: Smart Template Discovery param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/template-discovery.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

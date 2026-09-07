@@ -83,5 +83,7 @@ The first argument is the TTL in seconds. The second is a cache key. Additional 
 
 ## Next Steps
 
-- [Advanced Usage: Caching](../guide/advanced-usage#caching)
-- [API Reference](../)
+- [Advanced Usage: Caching param($m) if ($m.Groups[1].Value -notmatch '\.md
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 
+) { $m.Groups[1].Value + '.md' + '#' + $m.Groups[2].Value } else { $m.Value } 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

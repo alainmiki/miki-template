@@ -141,5 +141,5 @@ The `extends` and `include` tags validate that resolved template paths stay with
 
 ## Next Steps
 
-- [Security Guide](../guide/security)
-- [API Reference](../)
+- [Security Guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/security.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

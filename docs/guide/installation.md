@@ -87,9 +87,9 @@ This is by design — miki-template escapes all variables by default to prevent 
 {{ htmlContent|safe }}
 ```
 
-See [Security](./security) for details.
+See [Security param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'security.md.md'  for details.
 
 ## Next Steps
 
-- [Quick Start](./quick-start)
-- [What is miki-template?](./what-is-miki-template)
+- [Quick Start param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'quick-start.md.md' 
+- [What is miki-template? param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'what-is-miki-template.md.md' 

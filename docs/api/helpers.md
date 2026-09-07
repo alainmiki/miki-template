@@ -49,5 +49,5 @@ miki-template includes built-in helpers for common formatting tasks:
 
 ## Next Steps
 
-- [Custom Tags](../guide/custom-tags)
-- [API Reference](../)
+- [Custom Tags param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../guide/custom-tags.md.md' 
+- [API Reference param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 

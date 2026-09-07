@@ -94,9 +94,9 @@ The real power of miki-template comes with `setupExpress()` — a single functio
 
 ## Next Steps
 
-- [What is miki-template?](./what-is-miki-template)
-- [Why miki-template?](./why-miki-template)
-- [Installation Guide](./installation)
-- [Quick Start](./quick-start)
-- [Template Syntax & Tags](./tags)
-- [Filters](./filters)
+- [What is miki-template? param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'what-is-miki-template.md.md' 
+- [Why miki-template? param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'why-miki-template.md.md' 
+- [Installation Guide param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'installation.md.md' 
+- [Quick Start param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'quick-start.md.md' 
+- [Template Syntax & Tags param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'tags.md.md' 
+- [Filters param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', 'filters.md.md' 
