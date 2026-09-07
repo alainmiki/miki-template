@@ -74,5 +74,7 @@ renderCard(@Req() req: Request, @Res() res: Response) {
 
 ## Next Steps
 
-- [Integrations Overview param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../.md' 
-- [API Reference: setupExpress param($m) $m.Value -replace '([a-z][a-z0-9/-]*)(?<!\.md)', '../api/setup-express.md.md' 
+- [Integrations Overview](../index.md)
+- [API Reference: setupExpress param($m) $m.Value -replace '([a-z][a-z0-9-]+)\.md
+, '../.md' -replace '([a-z][a-z0-9-]+)
+, '../.md' 
