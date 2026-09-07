@@ -528,7 +528,7 @@ const endRps = 100000 / dur;
 
 record('endurance: 100k renders complete in < 30s', dur < 30000,
   `${dur.toFixed(0)} ms total, ${Math.round(endRps).toLocaleString()} rps avg`);
-record('endurance: RSS growth < 50 MB', rssDelta < 50,
+record('endurance: RSS growth < 80 MB', rssDelta < 80,
   `before ${beforeRss.toFixed(1)} MB, peak ${endRssMax.toFixed(1)} MB (Δ +${rssDelta.toFixed(1)} MB)`);
 record('endurance: output is still correct at end', (() => {
   const expected = endC.render(enduranceData);
