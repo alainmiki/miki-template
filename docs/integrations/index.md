@@ -24,6 +24,22 @@ app.get('/', (req, res) => res.render('home', { user: req.user }));
 app.listen(3000);
 ```
 
+## Notes
+
+- For CommonJS: `const miki = require('miki-template');`
+- For ESM / Bun: `import miki from 'miki-template';` or `import * as miki from 'miki-template';`
+- When rendering files, pass `options.views` or set framework view roots so the engine can locate templates.
+
+## Setup (install)
+
+```bash
+# npm
+npm install miki-template
+
+# bun
+bun add miki-template
+```
+
 ## Next Steps
 
 - [Express Integration](./express)

@@ -30,3 +30,10 @@
 - [registerTranslation()](./i18n)
 - [setLanguage()](./i18n)
 - [getAvailableLanguages()](./i18n)
+
+## Libraries
+
+- [registerLibrary()](./libraries)
+- [activateLibrary()](./libraries)
+- [unregisterLibrary()](./libraries)
+- [getLibraryNames()](./libraries)

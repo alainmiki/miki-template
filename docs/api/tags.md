@@ -56,6 +56,20 @@ registerTag('hello', (tagContent, parser) => {
 ### Template Tags
 - `templatetag token`
 
+### Inheritance
+- `extends "parent.html"`
+- `block name / endblock`
+- `include "file.html"`
+
+### Partials
+- `partialdef name / endpartialdef`
+- `partial name with k=v`
+
+### i18n
+- `trans "key"`
+- `blocktrans / endblocktrans`
+- `language "xx" / endlanguage`
+
 ## Next Steps
 
 - [Tags Guide](../guide/tags)

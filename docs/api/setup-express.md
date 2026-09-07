@@ -20,7 +20,8 @@ setupExpress(app, options = {})
 
 - Calls `app.engine()` with the miki engine.
 - Sets `app.set('view engine', extension)`.
-- Sets `app.set('views', views)`.
+- Sets `app.set('views', views)` if provided.
+- Expands views to include nested template directories.
 - Patches `res.render` to support `view#partial` syntax.
 
 ## Example

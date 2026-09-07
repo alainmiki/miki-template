@@ -4,6 +4,8 @@ Render a named partial from a template file or source string.
 
 ## renderPartialFromFile
 
+Render a named partial from a template file.
+
 ```javascript
 renderPartialFromFile(fileName, partialName, contextObj, options)
 ```
@@ -26,6 +28,8 @@ const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: 
 ```
 
 ## renderPartialFromSource
+
+Render a named partial from a template source string.
 
 ```javascript
 renderPartialFromSource(fileContent, partialName, contextObj, options, filePath?)

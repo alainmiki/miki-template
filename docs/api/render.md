@@ -37,6 +37,16 @@ const html = render('Hello {{ name }}!', { name: 'World' });
 const html = render('home#card', { title: 'Hello' }, { views: './views' });
 ```
 
+### Render with options
+
+```javascript
+const html = render(template, context, {
+  views: ['./views', './app/templates'],
+  staticUrl: '/static',
+  urlHelper: (name, ...args) => '/' + name + '/' + args.join('/')
+});
+```
+
 ## Related
 
 - [compile()](./compile)

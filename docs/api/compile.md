@@ -32,10 +32,25 @@ const html = compiled.render({ title: 'Hello' });
 // Output: <h1>Hello</h1>
 ```
 
+### Render with options
+
+```javascript
+const compiled = compile(template, { views: './templates' });
+const html = compiled.renderWith({ title: 'Hello' }, { views: './other-views' });
+```
+
 ### Render a Block
 
 ```javascript
-const html = compiled.renderBlock('content', { title: 'Hello' });
+const compiled = compile(childTemplate, { views: './templates' });
+const html = compiled.renderBlock('content', context);
+```
+
+### Render a Partial
+
+```javascript
+const compiled = compile(template, { views: './templates' });
+const html = compiled.renderPartial('card', { title: 'Hello' });
 ```
 
 ## Related

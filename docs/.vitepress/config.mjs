@@ -62,7 +62,12 @@ export default defineConfig({
         { text: 'renderPartial()', link: '/api/render-partial' },
         { text: 'setupExpress()', link: '/api/setup-express' },
         { text: 'Filters', link: '/api/filters' },
-        { text: 'Tags', link: '/api/tags' }
+        { text: 'Tags', link: '/api/tags' },
+        { text: 'Security', link: '/api/security' },
+        { text: 'i18n', link: '/api/i18n' },
+        { text: 'Libraries', link: '/api/libraries' },
+        { text: 'Cache', link: '/api/cache' },
+        { text: 'Finder', link: '/api/finder' }
       ],
       '/integrations/': [
         { text: 'Integrations', link: '/integrations/' },
