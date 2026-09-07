@@ -1,142 +1,271 @@
 # Custom Tags
 
-Extend miki-template with your own tags. Tags are parsed at compile time and rendered at runtime.
+Create your own template tags by registering a parser function. miki-template's tag API mirrors Django's — a tag is a parser that returns a Node object with a `render(context)` method.
+
+## Table of Contents
+
+- [Register a Simple Tag](#register-a-simple-tag)
+- [Async Custom Tags](#async-custom-tags)
+- [Parsing Complex Tags](#parsing-complex-tags)
+- [Accessing the Parser](#accessing-the-parser)
+- [Tag Registration Best Practices](#tag-registration-best-practices)
+
+---
 
 ## Register a Simple Tag
 
-```javascript
-const { registerTag } = require('miki-template');
+=== "CommonJS"
 
-registerTag('hello', (tagContent, parser) => {
-  return {
-    render: (context) => 'Hello World!'
-  };
-});
-```
+    ```javascript
+    const { registerTag } = require('miki-template');
 
-Use it in templates:
+    registerTag('hello', (tagContent, parser) => {
+      return {
+        render: (context) => 'Hello World!'
+      };
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerTag } from 'miki-template';
+
+    registerTag('hello', (tagContent, parser) => {
+      return {
+        render: (context) => 'Hello World!'
+      };
+    });
+    ```
+
+Usage in templates:
 
 ```html
 {% hello %}
 ```
 
-## Block Tags
-
-Tags can consume block content using `parser.parse()`:
+### Passing Arguments
 
 ```javascript
-const { registerTag } = require('miki-template');
-
-registerTag('mytag', (tagContent, parser) => {
-  const body = parser.parse(['endmytag']);
-  const next = parser.peek();
-  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endmytag') {
-    parser.advance();
-  }
+registerTag('greet', (tagContent, parser) => {
+  // tagContent is the full text after the tag name: "user.name"
+  const varName = tagContent.trim();
   return {
     render: (context) => {
-      const inner = body.map(node => node.render(context)).join('');
-      return `<div>${inner}</div>`;
+      const value = context.get(varName);
+      return `Hello, ${value}!`;
     }
   };
 });
 ```
 
-Usage:
-
 ```html
-{% mytag %}
-  <p>This is inside the block</p>
-{% endmytag %}
+{% greet user.name %}
 ```
 
-## Context Access
+## Returning a Node Class
 
-Tags receive a `context` object with all template variables:
+For more complex tags, return a Node class instance:
 
-```javascript
-registerTag('show', (tagContent, parser) => {
-  return {
-    render: (context) => {
-      const user = context.get('user');
-      return `<span>${user.name}</span>`;
+=== "CommonJS"
+
+    ```javascript
+    const { registerTag } = require('miki-template');
+
+    class GreetNode {
+      constructor(varName) {
+        this.varName = varName;
+      }
+      render(context) {
+        const value = context.get(this.varName);
+        return `Hello, ${value || 'Guest'}!`;
+      }
     }
-  };
-});
-```
 
-### Context API
+    registerTag('greet', (tagContent, parser) => {
+      const varName = tagContent.trim();
+      return new GreetNode(varName);
+    });
+    ```
 
-| Method | Description |
-|--------|-------------|
-| `context.get('var')` | Get a variable value |
-| `context.push(scope)` | Push a new scope onto the stack |
-| `context.pop()` | Pop the top scope |
-| `context.registerPartial(name, node)` | Register a partial definition |
-| `context.getPartial(name)` | Get a registered partial |
+=== "ES Modules"
 
-## Tag Parser Arguments
+    ```javascript
+    import { registerTag } from 'miki-template';
 
-The tag parser function receives:
+    class GreetNode {
+      constructor(varName) {
+        this.varName = varName;
+      }
+      render(context) {
+        const value = context.get(this.varName);
+        return `Hello, ${value || 'Guest'}!`;
+      }
+    }
 
-| Argument | Type | Description |
-|----------|------|-------------|
-| `tagContent` | `string` | The full tag content, e.g. `"url 'route.name' arg1 arg2"` |
-| `parser` | `object` | The parser instance with `parse()`, `peek()`, `advance()`, `blocks` |
+    registerTag('greet', (tagContent, parser) => {
+      const varName = tagContent.trim();
+      return new GreetNode(varName);
+    });
+    ```
 
-### parser API
+## Async Custom Tags
 
-| Method | Description |
-|--------|-------------|
-| `parser.parse(untilTags)` | Parse until one of the untilTags is found |
-| `parser.peek()` | Peek at the next token |
-| `parser.advance()` | Advance to the next token |
-| `parser.blocks` | Object tracking block stacks for inheritance |
+If your `render()` method returns a Promise, the template must be rendered with `asyncRender()`:
 
-## Async Tags
+=== "CommonJS"
 
-Tags can return Promises for async rendering:
+    ```javascript
+    const { registerTag, asyncRender } = require('miki-template');
 
-```javascript
-registerTag('fetch', async (tagContent, parser) => {
-  const url = tagContent.trim();
-  const res = await fetch(url);
-  const data = await res.json();
-  return {
-    render: (context) => JSON.stringify(data)
-  };
-});
-```
+    registerTag('fetch_greeting', (tagContent, parser) => {
+      const urlVar = tagContent.trim();
+      return {
+        async render(context) {
+          const url = context.get(urlVar);
+          const res = await fetch(url);
+          const data = await res.json();
+          return data.message;
+        }
+      };
+    });
 
-## Tag with Arguments
+    // Must use asyncRender
+    const html = await asyncRender('{% fetch_greeting api_url %}', { api_url: 'https://...' });
+    ```
 
-Tags can accept arguments:
+=== "ES Modules"
 
-```javascript
-registerTag('repeat', (tagContent, parser) => {
-  const parts = tagContent.trim().split(/\s+/);
-  const text = parts[0] || '';
-  const count = parseInt(parts[1], 10) || 1;
-  return {
-    render: (context) => text.repeat(count)
-  };
-});
-```
+    ```javascript
+    import { registerTag, asyncRender } from 'miki-template';
 
-Usage:
+    registerTag('fetch_greeting', (tagContent, parser) => {
+      const urlVar = tagContent.trim();
+      return {
+        async render(context) {
+          const url = context.get(urlVar);
+          const res = await fetch(url);
+          const data = await res.json();
+          return data.message;
+        }
+      };
+    });
+
+    const html = await asyncRender('{% fetch_greeting api_url %}', { api_url: 'https://...' });
+    ```
+
+## Parsing Complex Tags
+
+Use the `parser` object to consume tokens and build multi-part tags:
+
+=== "CommonJS"
+
+    ```javascript
+    const { registerTag } = require('miki-template');
+
+    registerTag('panel', (tagContent, parser) => {
+      const classes = tagContent.trim() || '';
+      const nodelist = parser.parse(['endpanel']);
+      parser.skipTag(); // consume endpanel
+
+      return {
+        render: (context) => {
+          const body = nodelist.map(n => n.render(context)).join('');
+          return `<div class="panel ${classes}">${body}</div>`;
+        }
+      };
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerTag } from 'miki-template';
+
+    registerTag('panel', (tagContent, parser) => {
+      const classes = tagContent.trim() || '';
+      const nodelist = parser.parse(['endpanel']);
+      parser.skipTag();
+
+      return {
+        render: (context) => {
+          const body = nodelist.map(n => n.render(context)).join('');
+          return `<div class="panel ${classes}">${body}</div>`;
+        }
+      };
+    });
+    ```
+
+Usage with nested content:
 
 ```html
-{% repeat "Hello " 3 %}
+{% panel "card" %}
+  <h2>{{ title }}</h2>
+  <p>{{ description }}</p>
+{% endpanel %}
 ```
+
+### Real-World Example: Cache Tag
+
+=== "CommonJS"
+
+    ```javascript
+    const { registerTag } = require('miki-template');
+
+    registerTag('cache_block', (tagContent, parser) => {
+      const [key, ...rest] = tagContent.trim().split(/\s+/);
+      const nodelist = parser.parse(['endcache_block']);
+      parser.skipTag();
+
+      return {
+        render: (context) => {
+          const cacheKey = key;
+          const cache = context.get('cache') || global.__cache__;
+          if (!cache) return nodelist.map(n => n.render(context)).join('');
+          if (cache.has(cacheKey)) return cache.get(cacheKey);
+          const output = nodelist.map(n => n.render(context)).join('');
+          cache.set(cacheKey, output, rest[0] || 300);
+          return output;
+        }
+      };
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerTag } from 'miki-template';
+
+    registerTag('cache_block', (tagContent, parser) => {
+      const [key, ...rest] = tagContent.trim().split(/\s+/);
+      const nodelist = parser.parse(['endcache_block']);
+      parser.skipTag();
+
+      return {
+        render: (context) => {
+          const cacheKey = key;
+          const cache = context.get('cache') || global.__cache__;
+          if (!cache) return nodelist.map(n => n.render(context)).join('');
+          if (cache.has(cacheKey)) return cache.get(cacheKey);
+          const output = nodelist.map(n => n.render(context)).join('');
+          cache.set(cacheKey, output, rest[0] || 300);
+          return output;
+        }
+      };
+    });
+    ```
 
 ## Tag Registration Best Practices
 
-1. **Always return an object with a `render` method** - The render method receives a `context` and must return a string or Promise.
-2. **Handle errors gracefully** - Throw descriptive errors for invalid usage.
-3. **Don't modify the parser state** unless necessary - Let the engine manage parsing.
-4. **Use `context.get()` for variable lookup** - Never access `context.scopes` directly.
+1. **Return objects with `render(context)`** — the render signature must accept a context object.
+2. **Use `parser.parse([...terminators])`** for tags with bodies — this lets the parser consume nested content correctly.
+3. **Always call `parser.skipTag()`** after `parser.parse` to consume the end tag.
+4. **Handle whitespace** — `tagContent.trim()` for single-argument tags.
+5. **Async tags need asyncRender** — return a Promise from `render()` and use `asyncRender()` to render.
+6. **Access context values** — use `context.get('key')` or `context.resolve('expr')`.
 
 ## Next Steps
 
+- [Built-in Tags Reference](../api/tags)
 - [Custom Filters](./custom-filters)
-- [Advanced Usage](./advanced-usage)
+- [Guide: Tags](./tags)

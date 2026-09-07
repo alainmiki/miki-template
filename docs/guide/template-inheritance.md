@@ -2,6 +2,18 @@
 
 miki-template supports Django-style template inheritance via `{% extends %}` and `{% block %}`. This lets you build layout hierarchies where child templates override parent blocks.
 
+## Table of Contents
+
+- [Basic Inheritance](#basic-inheritance)
+- [block.super](#blocksuper)
+- [Multi-Level Inheritance](#multi-level-inheritance)
+- [Rendering a Single Block](#rendering-a-single-block)
+- [block Default Behavior](#block-default-behavior)
+- [Path Traversal Protection](#path-traversal-protection)
+- [Smart Template Discovery for Inheritance](#smart-template-discovery-for-inheritance)
+
+---
+
 ## Basic Inheritance
 
 ### base.html
@@ -35,16 +47,49 @@ miki-template supports Django-style template inheritance via `{% extends %}` and
 {% endblock %}
 ```
 
+**Key behaviors:**
+
+- The child template's text outside `{% block %}` tags is **ignored** — only the blocks are used to override the parent.
+- Any blocks not overridden in the child use the parent's default content.
+- The parent is located using the `views` option (or Express's `views` directory).
+
 ## block.super
 
-Inside a block, `{{ block.super }}` renders the parent block's content:
+Inside a block, `{{ block.super }}` renders the parent template's version of that block. This is useful for augmentation rather than replacement.
+
+=== "Example"
+
+    ```html
+    {% extends "base.html" %}
+
+    {% block content %}
+      <h1>My Content</h1>
+      {{ block.super }}
+    {% endblock %}
+    ```
+
+If `base.html`'s content block is `<p>Original</p>`, the output is:
 
 ```html
-{% extends "base.html" %}
+<h1>My Content</h1>
+<p>Original</p>
+```
 
-{% block content %}
-  <h1>My Content</h1>
+**Real-world sidebar that adds to the parent:**
+
+```html
+<!-- base.html -->
+{% block sidebar %}
+  <ul class="nav">
+    <li><a href="/">Home</a></li>
+  </ul>
+{% endblock %}
+
+<!-- admin.html -->
+{% extends "base.html" %}
+{% block sidebar %}
   {{ block.super }}
+  <li><a href="/admin">Admin Panel</a></li>
 {% endblock %}
 ```
 
@@ -58,11 +103,12 @@ base.html
         └── grandchild.html
 ```
 
-Each level can override blocks from its parent, and `block.super` traverses the chain correctly.
+Each level can override blocks from its parent, and `{{ block.super }}` traverses the chain correctly.
 
 ### Three-level example
 
 **base.html:**
+
 ```html
 <html>
 <body>
@@ -72,6 +118,7 @@ Each level can override blocks from its parent, and `block.super` traverses the 
 ```
 
 **child.html:**
+
 ```html
 {% extends "base.html" %}
 
@@ -82,6 +129,7 @@ Each level can override blocks from its parent, and `block.super` traverses the 
 ```
 
 **grandchild.html:**
+
 ```html
 {% extends "child.html" %}
 
@@ -92,6 +140,7 @@ Each level can override blocks from its parent, and `block.super` traverses the 
 ```
 
 Rendering `grandchild.html` produces:
+
 ```html
 <html>
 <body>
@@ -104,57 +153,52 @@ Rendering `grandchild.html` produces:
 
 ## Rendering a Single Block
 
-Compile a template and render only one block:
+Compile a template and render only one block — useful for AJAX or HTMX responses where you only need a portion of the page:
 
-```javascript
-const { compile } = require('miki-template');
+=== "CommonJS"
 
-const compiled = compile(childTemplate, { views: './templates' });
-const html = compiled.renderBlock('content', context);
-```
+    ```javascript
+    const { compile } = require('miki-template');
 
-This is useful for AJAX or HTMX responses where you only need a portion of the page.
+    const compiled = compile(childTemplateStr, { views: './templates' });
+    const partialHtml = compiled.renderBlock('content', context);
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile(childTemplateStr, { views: './templates' });
+    const partialHtml = compiled.renderBlock('content', context);
+    ```
 
 ### renderBlock behavior
 
 - If the block is not found, throws `Block 'blockName' not found in template`.
 - If the block has no overrides, renders the default body.
-- If the block has overrides, renders the child-most block first, then traverses up for `block.super`.
+- If the block has overrides, renders the child-most block first, then traverses up for `{{ block.super }}`.
 
-## Path Traversal Protection
-
-`{% extends %}` and `{% include %}` paths are validated to prevent directory traversal attacks:
+**Real-world HTMX use case:**
 
 ```html
-{% extends "../../etc/passwd" %}  {# REJECTED #}
-{% include "../../secrets" %}      {# REJECTED #}
+<!-- layout.html -->
+{% block main %}
+  <div id="main-content">
+    <!-- default content -->
+  </div>
+{% endblock %}
 ```
 
-The engine checks that resolved paths stay within the allowed views directories.
-
-## Smart Template Discovery for Inheritance
-
-When using `setupExpress()`, the engine automatically searches for parent templates in:
-- The configured `views` directory
-- Nested `templates/` directories inside the views root
-- Subdirectories of the views root
-
-This means you can organize templates like:
-
-```text
-project/
-├── views/
-│   ├── base.html
-│   └── home.html
-├── app/
-│   └── templates/
-│       └── admin/
-│           └── dashboard.html
+```javascript
+// Return only the main block for an AJAX update
+app.get('/ajax/content', (req, res) => {
+  const compiled = miki.compile(template, { views: './views' });
+  res.send(compiled.renderBlock('main', { user: req.user }));
+});
 ```
 
-And `{% extends "base.html" %}` will be found regardless of where the child template lives.
-
-## Block Default Behavior
+## block Default Behavior
 
 If a child template does not override a block, the parent's default content is rendered:
 
@@ -175,7 +219,55 @@ If a child template does not override a block, the parent's default content is r
 <!-- sidebar block is not overridden, so "Default sidebar" is used -->
 ```
 
+## Dynamic extends
+
+You can use expressions in `extends` for device-specific or conditional layouts:
+
+```html
+{% extends device_type|default:"base.html" %}
+```
+
+```html
+{% extends user.theme|default:"default.html" %}
+```
+
+## Path Traversal Protection
+
+`{% extends %}` and `{% include %}` paths are validated to prevent directory traversal attacks:
+
+```html
+{% extends "../../etc/passwd" %}  {# REJECTED #}
+{% include "../../secrets" %}      {# REJECTED #}
+```
+
+The engine checks that resolved paths stay within the allowed views directories. An `Error` with message starting `path traversal` is thrown if a path escapes the views root.
+
+## Smart Template Discovery for Inheritance
+
+When using `setupExpress()`, the engine automatically searches for parent templates in:
+
+- The configured `views` directory
+- Nested `templates/` directories inside the views root
+- Subdirectories of the views root
+- App-style `app/templates/...`, `packages/*/templates/...`, etc.
+
+This means you can organize templates like:
+
+```text
+project/
+├── views/
+│   ├── base.html
+│   └── home.html
+├── app/
+│   └── templates/
+│       └── admin/
+│           └── dashboard.html
+```
+
+And `{% extends "base.html" %}` will be found regardless of where the child template lives.
+
 ## Next Steps
 
 - [Partial Templates](./partial-templates)
-- [Tags: extends and block](../guide/tags)
+- [Tags: extends and block](./tags#inheritance-tags)
+- [Template Discovery](./template-discovery)

@@ -1,306 +1,397 @@
 # Advanced Usage
 
+This guide covers advanced miki-template features: caching, library system, i18n, and more.
+
+## Table of Contents
+
+- [Caching](#caching)
+- [Library System](#library-system)
+- [i18n / Internationalization](#i18n--internationalization)
+- [Template Discovery](#template-discovery)
+- [Partial Templates](#partial-templates)
+- [Extending the Engine](#extending-the-engine)
+
+---
+
 ## Caching
 
-miki-template caches compiled templates automatically. Clear the cache when needed:
+miki-template caches compiled templates for performance. The cache is an in-memory LRU with a 100-entry limit.
+
+### Clearing the Cache
+
+=== "CommonJS"
+
+    ```javascript
+    const { clearCache } = require('miki-template');
+
+    clearCache();
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { clearCache } from 'miki-template';
+
+    clearCache();
+    ```
+
+### When to Clear Cache
+
+- **Development** — when templates change frequently on disk
+- **Tests** — to ensure fresh compilation
+- **Runtime filter/tag registration** — when dynamically registering custom tags/filters
 
 ```javascript
+// Development middleware that clears cache on file changes
 const { clearCache } = require('miki-template');
 
-clearCache();
+if (process.env.NODE_ENV !== 'production') {
+  fs.watch('./views', () => {
+    clearCache();
+    console.log('Template cache cleared');
+  });
+}
 ```
 
-### How caching works
+### How Caching Works
 
 - Templates are cached by source string and compile options.
-- The cache is an in-memory LRU cache limited to 100 entries.
-- Cached templates are reused across renders, improving performance.
+- The cache key combines the template source and the options object (views, custom settings).
+- Cached templates are reused across renders, improving performance for repeated templates.
 
 ## Library System
 
-miki-template includes built-in libraries (`humanize`, `cache`, `lorem`) and supports custom libraries:
+Libraries are bundles of filters, tags, and helpers that can be loaded into templates. Built-in libraries (humanize, cache, lorem, markdown, i18n) are auto-activated.
 
-```javascript
-const { registerLibrary, activateLibrary } = require('miki-template');
+### Registering a Library
 
-const myLib = {
-  filters: {
-    shout: (val) => String(val).toUpperCase() + '!'
-  },
-  tags: {
-    hello: (tagContent, parser) => ({
-      render: (context) => 'Hello!'
-    })
-  },
-  helpers: {
-    bold: (inner, context) => `<b>${inner}</b>`
-  }
-};
+=== "CommonJS"
 
-registerLibrary('mylib', myLib);
-activateLibrary('mylib');
-```
+    ```javascript
+    const { registerLibrary } = require('miki-template');
 
-Use in templates:
+    registerLibrary('myutils', {
+      filters: {
+        shout: (val) => String(val).toUpperCase() + '!',
+        whisper: (val) => String(val).toLowerCase() + '...'
+      },
+      tags: {
+        timestamp: (tagContent, parser) => ({
+          render: () => new Date().toISOString()
+        })
+      },
+      helpers: {
+        formatPrice: (val) => `$${Number(val).toFixed(2)}`
+      }
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerLibrary } from 'miki-template';
+
+    registerLibrary('myutils', {
+      filters: {
+        shout: (val) => String(val).toUpperCase() + '!',
+        whisper: (val) => String(val).toLowerCase() + '...'
+      },
+      tags: {
+        timestamp: (tagContent, parser) => ({
+          render: () => new Date().toISOString()
+        })
+      },
+      helpers: {
+        formatPrice: (val) => `$${Number(val).toFixed(2)}`
+      }
+    });
+    ```
+
+### Loading Libraries in Templates
+
+Once registered, load the library with `{% load %}`:
 
 ```html
-{{ name|shout }}
-{% hello %}
-{% bold %}text{% endbold %}
+{% load myutils %}
+
+{{ price|formatPrice }}
+{{ message|shout }}
+{% timestamp %}
 ```
 
 ### Built-in Libraries
 
-#### humanize
+The following libraries are auto-activated (no `{% load %}` needed):
 
-Provides human-readable formatting filters:
+| Library | Features |
+|---------|----------|
+| `humanize` | Natural date formatting, number formatting |
+| `cache` | Cache control tags and filters |
+| `lorem` | Lorem ipsum placeholder text |
+| `markdown` | `{{ content|markdown }}` filter for Markdown→HTML |
+| `i18n` | `{% trans %}` and `{% blocktrans %}` for translations |
 
-| Filter | Description | Example |
-|--------|-------------|---------|
-| `intcomma` | Add comma separators | `{{ views \| intcomma }}` → `1,234` |
-| `intword` | Convert to human word | `{{ 1000000 \| intword }}` → `1.0 million` |
-| `apnumber` | Convert 0-19 to words | `{{ 3 \| apnumber }}` → `three` |
-| `ordinal` | Add ordinal suffix | `{{ 1 \| ordinal }}` → `1st` |
-| `naturalday` | Convert date to relative day | `{{ date \| naturalday }}` → `today` |
+### Deactivating and Re-registering
 
-Usage:
+=== "CommonJS"
+
+    ```javascript
+    const { unregisterLibrary, activateLibrary } = require('miki-template');
+
+    // Remove a library
+    unregisterLibrary('lorem');
+
+    // Re-activate
+    activateLibrary('lorem');
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { unregisterLibrary, activateLibrary } from 'miki-template';
+
+    unregisterLibrary('lorem');
+    activateLibrary('lorem');
+    ```
+
+## i18n / Internationalization
+
+miki-template includes a built-in i18n system supporting `{% trans %}` and `{% blocktrans %}` tags.
+
+### Registering Translations
+
+=== "CommonJS"
+
+    ```javascript
+    const miki = require('miki-template');
+
+    miki.setLanguage('fr');
+    miki.registerTranslation('fr', {
+      'Hello': 'Bonjour',
+      'Goodbye': 'Au revoir',
+      'Welcome, {name}!': 'Bienvenue, {name} !'
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { setLanguage, registerTranslation } from 'miki-template';
+
+    setLanguage('fr');
+    registerTranslation('fr', {
+      'Hello': 'Bonjour',
+      'Goodbye': 'Au revoir',
+      'Welcome, {name}!': 'Bienvenue, {name} !'
+    });
+    ```
+
+### Setting Fallback Language
+
+=== "CommonJS"
+
+    ```javascript
+    const { setLanguage, setFallbackLanguage } = require('miki-template');
+
+    setLanguage('fr');
+    setFallbackLanguage('en');
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { setLanguage, setFallbackLanguage } from 'miki-template';
+
+    setLanguage('fr');
+    setFallbackLanguage('en');
+    ```
+
+### Template Usage
 
 ```html
-{% load humanize %}
-{{ views|intcomma }}
-{{ count|ordinal }}
+{% trans "Hello" %}
+{% blocktrans %}Welcome, {{ name }}!{% endblocktrans %}
 ```
 
-#### cache
+### Managing Languages
 
-Provides a `{% cache %}` tag for caching template fragments:
+=== "CommonJS"
+
+    ```javascript
+    const {
+      registerTranslation,
+      unregisterTranslation,
+      setLanguage,
+      getLanguage,
+      setFallbackLanguage,
+      getFallbackLanguage,
+      getAvailableLanguages
+    } = require('miki-template');
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import {
+      registerTranslation,
+      unregisterTranslation,
+      setLanguage,
+      getLanguage,
+      setFallbackLanguage,
+      getFallbackLanguage,
+      getAvailableLanguages
+    } from 'miki-template';
+    ```
+
+## Template Discovery
+
+The `findTemplateInViews()` function intelligently locates templates in nested directories.
+
+=== "CommonJS"
+
+    ```javascript
+    const { findTemplateInViews, setAppTemplateDirNames } = require('miki-template');
+
+    // Customize which directory names are treated as app template roots
+    setAppTemplateDirNames(['templates', 'views', 'pages']);
+
+    // Search for a template by name
+    const found = findTemplateInViews('home', ['./views', './app/templates']);
+    console.log(found);
+    // → /absolute/path/to/app/templates/home.html
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { findTemplateInViews, setAppTemplateDirNames } from 'miki-template';
+
+    setAppTemplateDirNames(['templates', 'views', 'pages']);
+    const found = findTemplateInViews('home', ['./views', './app/templates']);
+    console.log(found);
+    ```
+
+## Partial Templates
+
+Partials let you define reusable template fragments using `{% partialdef %}` and render them on demand.
+
+### Defining and Rendering Partials
 
 ```html
-{% cache 3600 sidebar %}
-  <div class="sidebar">
-    {% for item in sidebar_items %}
-      <p>{{ item }}</p>
-    {% endfor %}
+{% partialdef card %}
+  <div class="card">
+    <h3>{{ user.name }}</h3>
+    <p>{{ user.email }}</p>
   </div>
-{% endcache %}
+{% endpartialdef %}
 ```
 
-The first argument is the timeout in seconds. Optional additional arguments form a cache key:
+Render a partial:
+
+=== "CommonJS"
+
+    ```javascript
+    const { render, compile } = require('miki-template');
+
+    // Using render() with file partials:
+    const html = render('home#card', { user: userData }, { views: './views' });
+
+    // Using compiled.renderPartial():
+    const compiled = compile(templateString);
+    const partialHtml = compiled.renderPartial('card', { user: userData });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { render, compile } from 'miki-template';
+
+    const html = render('home#card', { user: userData }, { views: './views' });
+
+    const compiled = compile(templateString);
+    const partialHtml = compiled.renderPartial('card', { user: userData });
+    ```
+
+### Partial with Context
 
 ```html
-{% cache 3600 user_id user.id %}
+{% partialdef greeting %}
+  Hello, {{ name }}! You have {{ count }} messages.
+{% endpartialdef %}
+
+{% partial greeting with name="Alice" count=3 %}
 ```
 
-#### lorem
-
-Provides placeholder text generation:
-
-```html
-{% load lorem %}
-
-{% lorem %}           {# one block of Lorem ipsum #}
-{% lorem 3 p %}       {# 3 paragraphs #}
-{% lorem 5 w %}       {# 5 words #}
-{% lorem 2 w random %} {# 2 random words #}
-```
-
-## i18n
-
-miki-template supports internationalization:
-
-```javascript
-const { registerTranslation, setLanguage } = require('miki-template');
-
-registerTranslation('en', {
-  hello: 'Hello',
-  goodbye: 'Goodbye'
-});
-
-registerTranslation('fr', {
-  hello: 'Bonjour',
-  goodbye: 'Au revoir'
-});
-
-setLanguage('en');
-```
-
-Use in templates:
-
-```html
-{% trans "hello" %}
-```
-
-### blocktrans
-
-Translate blocks of text with variable interpolation:
-
-```html
-{% blocktrans with name=user.name %}
-  Hello, {{ name }}!
-{% endblocktrans %}
-```
-
-### Pluralization
-
-```html
-{% blocktrans count items|length %}
-  {{ count }} item
-{% plural %}
-  {{ count }} items
-{% endblocktrans %}
-```
-
-### Language Switching
-
-```html
-{% language "fr" %}
-  {% trans "hello" %}
-{% endlanguage %}
-```
-
-## Block Rendering
-
-Render a single block from a compiled template:
-
-```javascript
-const { compile } = require('miki-template');
-
-const compiled = compile(templateString, { views: './templates' });
-const html = compiled.renderBlock('content', context);
-```
-
-## Partial API
-
-Render partials programmatically:
-
-```javascript
-const { renderPartialFromSource, renderPartialFromFile } = require('miki-template');
-
-// From source string
-const html = renderPartialFromSource(source, 'partialName', context);
-
-// From file
-const html2 = renderPartialFromFile('home.html', 'card', context, { views: './views' });
-```
-
-## Library API
-
-### registerLibrary(name, definition)
-
-Register a library:
-
-```javascript
-const { registerLibrary } = require('miki-template');
-
-registerLibrary('mylib', {
-  filters: { ... },
-  tags: { ... },
-  helpers: { ... }
-});
-```
-
-### activateLibrary(name)
-
-Activate a registered library:
-
-```javascript
-const { activateLibrary } = require('miki-template');
-
-activateLibrary('mylib');
-```
-
-### unregisterLibrary(name)
-
-Unregister a library:
-
-```javascript
-const { unregisterLibrary } = require('miki-template');
-
-// Unregister specific library
-unregisterLibrary('mylib');
-
-// Unregister all libraries
-unregisterLibrary();
-```
-
-### hasLibrary(name)
-
-Check if a library is registered:
-
-```javascript
-const { hasLibrary } = require('miki-template');
-
-if (hasLibrary('humanize')) {
-  // ...
-}
-```
-
-### getLibraryNames()
-
-List all registered library names:
-
-```javascript
-const { getLibraryNames } = require('miki-template');
-
-console.log(getLibraryNames());
-// ['humanize', 'cache', 'lorem']
-```
-
-## Compiled Template API
-
-When you call `compile()`, you get an object with these methods:
-
-| Method | Description |
-|--------|-------------|
-| `render(contextObj)` | Synchronous render |
-| `renderWith(contextObj, callOptions)` | Render with options override |
-| `asyncRender(contextObj)` | Async render |
-| `asyncRenderWith(contextObj, callOptions)` | Async render with options override |
-| `renderBlock(blockName, contextObj)` | Render a single block |
-| `renderPartial(partialName, contextObj)` | Render a named partial |
-
-## Template Finder API
-
-### findTemplateInViews(templateName, viewsDirs)
-
-Find a template file by name:
-
-```javascript
-const { findTemplateInViews } = require('miki-template');
-
-const found = findTemplateInViews('home', ['./views', './app/templates']);
-console.log(found);
-// Output: /absolute/path/to/home.html
-```
-
-### setAppTemplateDirNames(names)
-
-Configure which directory names are treated as app-style template directories:
-
-```javascript
-const { setAppTemplateDirNames } = require('miki-template');
-
-setAppTemplateDirNames(['templates', 'views', 'pages']);
-```
-
-## Context Object
-
-The rendering context provides:
-
-| Property/Method | Description |
-|-----------------|-------------|
-| `context.get('var')` | Get a variable value |
-| `context.push(scope)` | Push a new scope |
-| `context.pop()` | Pop the top scope |
-| `context.registerPartial(name, node)` | Register a partial |
-| `context.getPartial(name)` | Get a registered partial |
-| `context.autoescape` | Current autoescape setting |
-| `context.blocks` | Block definitions for inheritance |
-| `context.cycleStates` | Cycle tag state |
-| `context.parentTemplate` | Parent template name for extends |
-| `context.partialDefs` | Partial definitions map |
+## Extending the Engine
+
+### Registering Custom Tags
+
+=== "CommonJS"
+
+    ```javascript
+    const { registerTag } = require('miki-template');
+
+    registerTag('markdown', (tagContent, parser) => {
+      const nodelist = parser.parse(['endmarkdown']);
+      parser.skipTag();
+      const { marked } = require('marked');
+
+      return {
+        render: (context) => {
+          const body = nodelist.map(n => n.render(context)).join('');
+          return markSafe(marked(body));
+        }
+      };
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerTag, markSafe } from 'miki-template';
+    import { marked } from 'marked';
+
+    registerTag('markdown', (tagContent, parser) => {
+      const nodelist = parser.parse(['endmarkdown']);
+      parser.skipTag();
+
+      return {
+        render: (context) => {
+          const body = nodelist.map(n => n.render(context)).join('');
+          return markSafe(marked(body));
+        }
+      };
+    });
+    ```
+
+### Registering Custom Helpers
+
+=== "CommonJS"
+
+    ```javascript
+    const { registerHelper } = require('miki-template');
+
+    registerHelper('truncate_words', (str, count) => {
+      const words = String(str).split(/\s+/);
+      return words.slice(0, count).join(' ') + (words.length > count ? '...' : '');
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerHelper } from 'miki-template';
+
+    registerHelper('truncate_words', (str, count) => {
+      const words = String(str).split(/\s+/);
+      return words.slice(0, count).join(' ') + (words.length > count ? '...' : '');
+    });
+    ```
 
 ## Next Steps
 
-- [API Reference](../api/)
-- [Performance](../performance)
+- [Custom Tags](./custom-tags)
+- [Custom Filters](./custom-filters)
+- [API Reference: Libraries](../api/libraries)
+- [API Reference: Cache](../api/cache)
+- [API Reference: i18n](../api/i18n)

@@ -2,63 +2,115 @@
 
 Tags control template logic and structure. They use `{% %}` syntax.
 
+## Table of Contents
+
+- [Control Flow](#control-flow)
+- [Variable Assignment](#variable-assignment)
+- [Change Detection](#change-detection)
+- [Date and Time](#date-and-time)
+- [Utility Tags](#utility-tags)
+- [Security Tags](#security-tags)
+- [Comments and Raw Output](#comments-and-raw-output)
+- [Autoescape](#autoescape)
+- [Library Loading](#library-loading)
+- [Template Tags](#template-tags)
+- [Inheritance Tags](#inheritance-tags)
+- [Partial Tags](#partial-tags)
+- [i18n Tags](#i18n-tags)
+
+---
+
 ## Control Flow
 
 ### if / elif / else / endif
 
-```html
-{% if user.role == 'admin' %}
-  <p>Admin panel</p>
-{% elif user.is_staff %}
-  <p>Staff dashboard</p>
-{% else %}
-  <p>Guest view</p>
-{% endif %}
-```
+Conditional rendering with a wide range of operators.
 
-Supported operators: `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`, `and`, `or`, `not`.
+=== "Basic if"
 
-You can combine operators with parentheses for grouping:
+    ```html
+    {% if user.is_authenticated %}
+      <p>Welcome back, {{ user.name }}!</p>
+    {% else %}
+      <p>Please <a href="/login">log in</a>.</p>
+    {% endif %}
+    ```
 
-```html
-{% if (user.role == 'admin' or user.is_staff) and user.is_active %}
-  <p>Active staff</p>
-{% endif %}
-```
+=== "Multiple conditions with elif"
 
-Operator precedence (highest to lowest): comparison → `and` → `or`
+    ```html
+    {% if user.role == 'admin' %}
+      <p>Admin panel</p>
+    {% elif user.is_staff %}
+      <p>Staff dashboard</p>
+    {% else %}
+      <p>Guest view</p>
+    {% endif %}
+    ```
 
-```html
-{% if user.age >= 18 and user.is_verified %}
-  <p>Eligible to vote.</p>
-{% endif %}
+=== "Combined conditions with parentheses"
 
-{% if item not in cart_items %}
-  <button>Add to cart</button>
-{% endif %}
-```
+    ```html
+    {% if (user.role == 'admin' or user.is_staff) and user.is_active %}
+      <p>Active staff member</p>
+    {% endif %}
+
+    {% if item not in cart_items %}
+      <button>Add to cart</button>
+    {% endif %}
+    ```
+
+**Supported operators:** `==`, `!=`, `<`, `<=`, `>`, `>=`, `in`, `not in`, `and`, `or`, `not`
+
+**Operator precedence** (highest to lowest): comparison → `and` → `or`
 
 ### for / empty / endfor
 
-```html
-{% for item in items %}
-  <li>{{ item }}</li>
-{% empty %}
-  <li>No items found</li>
-{% endfor %}
-```
+Loop over arrays and objects. Injects `forloop` meta tracking.
 
-The loop supports filters on the iterable:
+=== "Basic loop"
 
-```html
-{% for group in items|regroup:"category" %}
-  <h3>{{ group.grouper }}</h3>
-{% endfor %}
-```
+    ```html
+    <ul>
+    {% for item in items %}
+      <li>{{ forloop.counter }}: {{ item }}</li>
+    {% empty %}
+      <li>No items found</li>
+    {% endfor %}
+    </ul>
+    ```
+
+=== "Loop with filters"
+
+    ```html
+    {% for group in items|regroup:"category" %}
+      <h3>{{ group.grouper }}</h3>
+      {% for item in group.list %}- {{ item.name }}
+      {% endfor %}
+    {% endfor %}
+    ```
+
+=== "Dictionary iteration"
+
+    ```html
+    {% for key, value in config %}
+      <dt>{{ key }}</dt>
+      <dd>{{ value }}</dd>
+    {% endfor %}
+    ```
+
+=== "Nested loops"
+
+    ```html
+    {% for department in departments %}
+      <h2>{{ department.name }}</h2>
+      {% for employee in department.employees %}
+        <span>#{{ forloop.parentloop.counter }}.{{ forloop.counter }} {{ employee.name }}</span>
+      {% endfor %}
+    {% endfor %}
+    ```
 
 #### forloop Metadata
-
-Inside a `{% for %}` loop, use `forloop`:
 
 | Variable | Description |
 |----------|-------------|
@@ -66,203 +118,283 @@ Inside a `{% for %}` loop, use `forloop`:
 | `forloop.counter0` | 0-based index |
 | `forloop.revcounter` | Reverse 1-based index |
 | `forloop.revcounter0` | Reverse 0-based index |
-| `forloop.first` | True on first iteration |
-| `forloop.last` | True on last iteration |
+| `forloop.first` | `true` on first iteration |
+| `forloop.last` | `true` on last iteration |
 | `forloop.parentloop` | Parent loop context (nested loops) |
 
-#### Dictionary iteration
+**Real-world table with alternating row classes:**
 
 ```html
-{% for key, value in dict %}
-  <p>{{ key }}: {{ value }}</p>
+<table>
+{% for row in rows %}
+  <tr class="{% cycle 'row-odd' 'row-even' %}">
+    <td>{{ row.name }}</td>
+    <td>{{ row.value }}</td>
+  </tr>
 {% endfor %}
-```
-
-#### Nested loops
-
-```html
-{% for outer in outers %}
-  {% for inner in outer.items %}
-    {{ forloop.parentloop.counter }}.{{ forloop.counter }}: {{ inner }}
-  {% endfor %}
-{% endfor %}
+</table>
 ```
 
 ### with / endwith
 
-Scope a variable alias or assignment:
+Scope localized variables.
 
-```html
-{% with user.profile.address as addr %}
-  <p>{{ addr.city }}, {{ addr.zip }}</p>
-{% endwith %}
-```
+=== "Alias a variable"
 
-Multiple assignments:
+    ```html
+    {% with user.profile.address as addr %}
+      <p>{{ addr.city }}, {{ addr.zip }}</p>
+    {% endwith %}
+    ```
 
-```html
-{% with greeting="Hello", who="World" %}
-  <p>{{ greeting }} {{ who }}</p>
-{% endwith %}
-```
+=== "Multiple assignments"
 
-Combined alias:
+    ```html
+    {% with greeting="Hello", who="World" %}
+      <p>{{ greeting }} {{ who }}</p>
+    {% endwith %}
+    ```
 
-```html
-{% with greeting="Hello", who="World" as msg %}
-  <p>{{ msg }}</p>
-{% endwith %}
-```
+=== "Combined alias"
+
+    ```html
+    {% with a=5, b=10 as total %}
+      <p>Total: {{ total }}</p>
+    {% endwith %}
+    ```
 
 ### cycle
 
-Cycle through values on each iteration:
+Cycle through values sequentially.
 
-```html
-{% for row in rows %}
-  <tr class="{% cycle 'row-odd' 'row-even' %}">...</tr>
-{% endfor %}
-```
+=== "Alternating CSS classes"
 
-With `as` to store without output:
+    ```html
+    {% for row in rows %}
+      <tr class="{% cycle 'row-odd' 'row-even' %}">...</tr>
+    {% endfor %}
+    ```
 
-```html
-{% cycle 'row-odd' 'row-even' as row_class %}
-<tr class="{{ row_class }}">
-```
+=== "Store without output (as)"
 
-Named cycle for resumable state:
+    ```html
+    {% cycle 'row-odd' 'row-even' as row_class %}
+    <tr class="{{ row_class }}">
+    ```
 
-```html
-{% for item in items %}
-  {% cycle 'a' 'b' 'c' as marker silent %}
-  {% if marker == 'b' %}
-    <strong>{{ item }}</strong>
-  {% else %}
-    {{ item }}
-  {% endif %}
-{% endfor %}
-```
+=== "Named cycle for resumable state"
+
+    ```html
+    {% for item in items %}
+      {% cycle 'a' 'b' 'c' as marker silent %}
+      {% if marker == 'b' %}
+        <strong>{{ item }}</strong>
+      {% else %}
+        {{ item }}
+      {% endif %}
+    {% endfor %}
+    ```
 
 ### firstof
 
-Return the first truthy value:
+Return the first truthy value.
 
 ```html
-{% firstof var1 var2 var3 "fallback" %}
+{% firstof user.display_name user.username "Anonymous" %}
 ```
+
+---
 
 ## Variable Assignment
 
 ### set
 
-Assign a value to a variable:
+Assign a value to a variable.
 
-```html
-{% set total = price * quantity %}
-{% set greeting %}Hello {{ name }}{% endset %}
-```
+=== "Inline assignment"
+
+    ```html
+    {% set total = price * quantity %}
+    <p>Total: ${{ total|floatformat:2 }}</p>
+    ```
+
+=== "Block form (captures rendered output)"
+
+    ```html
+    {% set greeting %}
+      Hello {{ user.name|title }}, welcome to {{ site.name }}!
+    {% endset %}
+
+    <h1>{{ greeting|safe }}</h1>
+    ```
+
+=== "Multiple variables"
+
+    ```html
+    {% set tax_rate = 0.08, tax = subtotal|mult:tax_rate %}
+    ```
 
 Variables set with `{% set %}` persist in the current scope and can be used after the tag.
+
+---
 
 ## Change Detection
 
 ### ifchanged / endifchanged
 
-Render body only when value changes:
+Render the body only when a value changes.
 
-```html
-{% for item in items %}
-  {% ifchanged item.category %}
-    <h2>{{ item.category }}</h2>
-  {% endifchanged %}
-  <p>{{ item.name }}</p>
-{% endfor %}
-```
+=== "Basic (no argument)"
 
-With `else`:
+    ```html
+    {% for item in changelog %}
+      {% ifchanged item.timestamp %}
+        <h3>{{ item.timestamp|date:"Y-m-d" }}</h3>
+      {% endifchanged %}
+      <p>{{ item.change }}</p>
+    {% endfor %}
+    ```
 
-```html
-{% for item in items %}
-  {% ifchanged item.category %}
-    <h2>{{ item.category }}</h2>
-  {% else %}
-    <p>Same category</p>
-  {% endifchanged %}
-{% endfor %}
-```
+=== "With else"
+
+    ```html
+    {% for item in items %}
+      {% ifchanged item.category %}
+        <h2>{{ item.category }}</h2>
+      {% else %}
+        <p>Same category as above</p>
+      {% endifchanged %}
+    {% endfor %}
+    ```
+
+---
 
 ## Date and Time
 
 ### now
 
-Output the current date/time:
+Output the current date/time.
 
 ```html
-{% now "Y-m-d H:i:s" %}
-{% now "F j, Y" %}
+<p>Current time: {% now "Y-m-d H:i:s" %}</p>
+<p>Pretty date: {% now "F j, Y" %}</p>
 ```
 
-Uses the same format codes as the `date` filter.
+Uses the same format codes as the `date` filter (Django-style tokens like `Y`, `m`, `d`, `H`, `i`, `s`, `F`).
+
+**Real-world copyright footer:**
+
+```html
+<footer>
+  &copy; {{ "now"|date:"Y" }} {{ site.name }}. All rights reserved.
+</footer>
+```
+
+---
 
 ## Utility Tags
 
 ### static
 
-Generate a static file URL:
+Generate a static file URL.
 
 ```html
-{% static "css/style.css" %}
+<link rel="stylesheet" href="{% static "css/main.css" %}">
+<script src="{% static "js/app.js" %}"></script>
+<img src="{% static "images/logo.svg" }}" alt="{{ site.name }}">
 ```
 
-Configure the prefix:
+Configure the prefix at compile time:
 
-```javascript
-compile(template, { staticUrl: '/assets/' });
-```
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+    const template = compile(source, { staticUrl: '/assets/' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+    const template = compile(source, { staticUrl: '/assets/' });
+    ```
 
 ### url
 
-Build a URL from a route name:
+Build a URL from a route name.
 
-```html
-{% url 'user.profile' user.id %}
-{% url 'posts.show' post.id tab='comments' %}
-```
+=== "Basic"
 
-Deep routing with dots:
+    ```html
+    <a href="{% url 'user.profile' user.id %}">Profile</a>
+    ```
 
-```html
-{% url 'user.profile.posts.show' user.id post.id %}
-```
+=== "With keyword arguments"
 
-Configure:
+    ```html
+    {% url 'posts.show' post.id tab='comments' %}
+    ```
 
-```javascript
-compile(template, {
-  urlHelper: (name, ...args) => {
-    // return resolved URL string
-  }
-});
-```
+=== "Deep routing with dots"
+
+    ```html
+    {% url 'user.profile.posts.show' user.id post.id %}
+    ```
+
+Configure with a custom resolver:
+
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+    const template = compile(source, {
+      urlHelper: (routeName, ...args) => {
+        // Convert "user.profile" + [42] → "/user/profile/42"
+        return '/' + routeName.split('.').join('/') + '/' + args.join('/');
+      }
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+    const template = compile(source, {
+      urlHelper: (routeName, ...args) => {
+        return '/' + routeName.split('.').join('/') + '/' + args.join('/');
+      }
+    });
+    ```
 
 ### regroup
 
-Group a list by a common attribute:
+Group a list by a common attribute.
 
 ```html
-{% regroup users by department as departments %}
+{% regroup people by gender as departments %}
 {% for dept in departments %}
   <h3>{{ dept.grouper }}</h3>
-  {% for user in dept.list %}
-    <p>{{ user.name }}</p>
+  {% for person in dept.list %}
+    <p>{{ person.name }}</p>
+  {% endfor %}
+{% endfor %}
+```
+
+You can also use `regroup` as a filter inside a `{% for %}` loop:
+
+```html
+{% for group in items|regroup:"category" %}
+  <h3>{{ group.grouper }}</h3>
+  {% for item in group.list %}
+    <p>{{ item.name }}</p>
   {% endfor %}
 {% endfor %}
 ```
 
 ### spaceless
 
-Remove whitespace between HTML tags:
+Remove whitespace between HTML tags.
 
 ```html
 {% spaceless %}
@@ -276,16 +408,20 @@ Output: `<div><span>  hello  </span></div>`
 
 ### widthratio
 
-Calculate a ratio for bar widths or similar:
+Calculate ratios for progress bars or scaling.
 
 ```html
-{% widthratio 25 100 150 %}
+<!-- Calculate 25 out of 100 scaled to max-width 150 -->
+{% widthratio score 100 150 %}
 <!-- → 37 (floor of 25/100*150) -->
+
+<!-- Progress bar width -->
+<div class="bar" style="width: {% widthratio value max_value 100 %}px;"></div>
 ```
 
 ### debug
 
-Dump the current template context:
+Dump the current template context for debugging.
 
 ```html
 {% debug %}
@@ -293,238 +429,333 @@ Dump the current template context:
 
 Outputs a `<pre>` block with all context variables.
 
+---
+
 ## Security Tags
 
 ### csrf_token
 
-Output a hidden CSRF token input:
+Output a hidden CSRF token input.
 
 ```html
 <form method="post">
   {% csrf_token %}
-  <button>Submit</button>
+  <button type="submit">Submit</button>
 </form>
 ```
 
-Provide `csrf_token` in context:
+The token value is HTML-escaped to prevent attribute injection. Requires `csrf_token` to be present in the template context.
 
-```javascript
-res.render('form', { csrf_token: req.csrfToken() });
-```
+=== "CommonJS (Express middleware)"
+
+    ```javascript
+    app.use((req, res, next) => {
+      res.locals.csrf_token = req.csrfToken();
+      next();
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    app.use((req, res, next) => {
+      res.locals.csrf_token = req.csrfToken();
+      next();
+    });
+    ```
 
 ### csp_nonce_attr
 
-Output a `nonce` attribute when `csp_nonce` is in context:
+Output a `nonce` attribute when `csp_nonce` is in the context.
 
 ```html
-<script {% csp_nonce_attr %} src="app.js"></script>
+<script {% csp_nonce_attr %} src="/js/app.js"></script>
 ```
 
-Provide `csp_nonce` in context:
+If `csp_nonce` is present in context, the output is:
 
-```javascript
-res.render('page', { csp_nonce: req.nonce });
+```html
+<script nonce="abc123" src="/js/app.js"></script>
 ```
+
+If `csp_nonce` is not present, the tag outputs nothing.
+
+---
 
 ## Comments and Raw Output
 
 ### comment / endcomment
 
-Block comments ignored during parsing:
+Block comments ignored during parsing.
 
 ```html
 {% comment %}
   This is a comment.
+  It can span multiple lines.
 {% endcomment %}
 ```
 
 ### verbatim / endverbatim
 
-Treat content as raw text:
+Treat content as raw text — template syntax is not parsed.
 
 ```html
 {% verbatim %}
-  {{ this_will_not_be_parsed }}
+  This will NOT be parsed: {{ user.name }}
+  And this won't either: {% if x %}
 {% endverbatim %}
 ```
 
+You can also name a verbatim block:
+
+```html
+{% verbatim myscript %}
+  {{ angularExpression }}
+{% endverbatim %}
+```
+
+---
+
 ## Autoescape
 
-Control escaping for a block:
+Control HTML escaping for a block.
 
 ```html
 {% autoescape on %}
-  {{ html }}  {# escaped #}
+  {{ user_input }}  {# escaped → &lt;script&gt;... #}
 {% endautoescape %}
 
 {% autoescape off %}
-  {{ html }}  {# not escaped #}
+  {{ trusted_html }}  {# not escaped → raw HTML #}
 {% endautoescape %}
 ```
+
+---
 
 ## Library Loading
 
 ### load
 
-Activate a template library:
+Activate a template library. Built-in libraries (`humanize`, `cache`, `lorem`) are auto-activated — you only need `{% load %}` for custom libraries you've registered.
 
 ```html
-{% load lorem %}
 {% load humanize %}
-{% load i18n %}
-{% load cache %}
+{{ views|intcomma }}
+{{ count|ordinal }}
 ```
 
-Built-in libraries:
-- `i18n` — `trans`, `blocktrans`, `language`
+=== "CommonJS (registering a library)"
+
+    ```javascript
+    const { registerLibrary } = require('miki-template');
+
+    registerLibrary('myutils', {
+      filters: {
+        shout: (val) => String(val).toUpperCase() + '!'
+      }
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { registerLibrary } from 'miki-template';
+
+    registerLibrary('myutils', {
+      filters: {
+        shout: (val) => String(val).toUpperCase() + '!'
+      }
+    });
+    ```
+
+Then use in templates:
+
+```html
+{% load myutils %}
+{{ name|shout }}
+```
+
+**Built-in libraries:**
+
+- `i18n` — `{% trans %}`, `{% blocktrans %}`, `{% language %}`
 - `humanize` — `intcomma`, `intword`, `apnumber`, `ordinal`, `naturalday`
 - `cache` — `{% cache timeout key %}...{% endcache %}`
-- `lorem` — `lorem` filter and tag for placeholder text
+- `lorem` — `{% lorem %}` tag and `lorem` filter
+
+---
 
 ## Template Tags
 
 ### templatetag
 
-Output a literal template tag token:
+Output literal template tag tokens. Useful when generating documentation or when the template syntax conflicts with another templating layer.
 
 ```html
 {% templatetag openblock %} if user.is_admin {% templatetag closeblock %}
+<!-- Renders: {% if user.is_admin %} -->
+
+{% templatetag openvariable %} name {% templatetag closevariable %}
+<!-- Renders: {{ name }} -->
 ```
 
-Available tokens: `openblock`, `closeblock`, `openvariable`, `closevariable`, `openbrace`, `closebrace`, `opencomment`, `closecomment`.
+Available tokens:
+
+| Token | Output |
+|-------|--------|
+| `openblock` | `{%` |
+| `closeblock` | `%}` |
+| `openvariable` | `{{` |
+| `closevariable` | `}}` |
+| `openbrace` | `{` |
+| `closebrace` | `}` |
+| `opencomment` | `{#` |
+| `closecomment` | `#}` |
+
+---
 
 ## Inheritance Tags
 
 ### extends
 
-Inherit from a parent template:
+Inherit from a parent template.
 
 ```html
 {% extends "base.html" %}
 ```
 
-Can use expressions for dynamic parent:
+Can use expressions for dynamic parent selection:
 
 ```html
-{% extends device|default:"base.html" %}
+{% extends device|default:"desktop/base.html" %}
 ```
 
-**Security:** Path traversal is blocked.
+**Security:** Path traversal is blocked — `{% extends "../../etc/passwd" %}` is rejected.
 
 ### block / endblock
 
-Define a block that can be overridden:
+Define a block that can be overridden by child templates.
 
 ```html
+<!-- base.html -->
+<html>
+  <body>
+    {% block content %}Default content{% endblock %}
+  </body>
+</html>
+```
+
+```html
+<!-- child.html -->
+{% extends "base.html" %}
 {% block content %}
-  <p>Default content</p>
+  <h1>Child content</h1>
+  {{ block.super }}
 {% endblock %}
 ```
 
 ### block.super
 
-A special variable, not a tag. When used inside a `{% block %}`, it renders the parent template's version of that block:
+A special variable (not a tag). When used inside a `{% block %}`, it renders the parent template's version of that block.
 
-```html
-{% block content %}
-  {{ block.super }}
-  <p>Additional content from child</p>
-{% endblock %}
-```
+See [Template Inheritance](template-inheritance.md) for a detailed guide.
 
 ### include
 
-Include another template:
+Include another template's content inline.
 
 ```html
 {% include "header.html" %}
 {% include "header.html" with title="Hello" %}
 {% include "header.html#partial_name" %}
+{% include "header.html" with title="Hello" %}
 ```
 
 **Security:** Path traversal is blocked.
+
+---
 
 ## Partial Tags
 
 ### partialdef / endpartialdef
 
-Define a reusable partial:
+Define a reusable partial block.
 
 ```html
 {% partialdef card %}
   <div class="card">
-    <h3>{{ title }}</h3>
-    <p>{{ description }}</p>
+    <h3>{{ title|default:"Untitled" }}</h3>
+    <p>{{ body|truncatewords:30 }}</p>
+    {% if featured %}<em>Featured</em>{% endif %}
   </div>
 {% endpartialdef %}
 ```
 
-Inline partial:
-
-```html
-{% partialdef notice %}
-  <div class="alert">{{ message }}</div>
-{% endpartialdef %}
-```
-
-Options:
+**Options:**
 
 | Option | Description |
 |--------|-------------|
-| `inline` | Renders the definition inline at its location during parse. |
+| `inline` | Renders the definition inline at its location during parse (the body appears in output AND registers for later use). |
 
-Programmatic access:
-
-```javascript
-const compiled = compile(template);
-compiled.renderPartial('card', { title: 'Hi', description: 'There' });
+```html
+{% partialdef greeting inline %}
+  Hello {{ name }}!
+{% endpartialdef %}
+<!-- Above line ALSO outputs "Hello World!" when rendered -->
 ```
+
+**Programmatic access:**
+
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+    const compiled = compile(template);
+    compiled.renderPartial('card', { title: 'Hi', body: 'There' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+    const compiled = compile(template);
+    compiled.renderPartial('card', { title: 'Hi', body: 'There' });
+    ```
 
 ### partial
 
-Render a named partial:
+Render a named partial.
 
 ```html
 {% partial card %}
-{% partial card with title="Custom" %}
-```
-
-Supports passing context variables:
-
-```html
+{% partial card with title="Custom" body="World" %}
 {% partial greeting with name=user.name %}
 ```
+
+See [Partial Templates](partial-templates.md) for a detailed guide.
+
+---
 
 ## i18n Tags
 
 ### trans
 
-Translate a string:
+Translate a string.
 
 ```html
 {% trans "Hello, world!" %}
 {% trans "Hello, %s!" name=user.name %}
-```
-
-With context:
-
-```html
 {% trans context "verb" "He runs" %}
 ```
 
 ### blocktrans / endblocktrans
 
-Translate a block of text:
+Translate a block of text with variable interpolation and pluralization.
 
 ```html
 {% blocktrans with name=user.name %}
   Hello, {{ name }}!
 {% endblocktrans %}
-```
 
-With pluralization:
-
-```html
 {% blocktrans count items|length %}
   {{ count }} item
 {% plural %}
@@ -534,15 +765,19 @@ With pluralization:
 
 ### language / endlanguage
 
-Switch language temporarily:
+Switch language temporarily for a block.
 
 ```html
 {% language "fr" %}
-  {% trans "Hello" %}
+  {% trans "Hello" %} → renders in French
 {% endlanguage %}
 ```
+
+---
 
 ## Next Steps
 
 - [Filters](./filters)
 - [Template Inheritance](./template-inheritance)
+- [Partial Templates](./partial-templates)
+- [Custom Tags](./custom-tags)

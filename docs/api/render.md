@@ -14,7 +14,7 @@ render(templateStr, contextObj = {}, options = {})
 |-----------|------|-------------|
 | `templateStr` | `string` | Template string or file path with `#partial` suffix |
 | `contextObj` | `object` | Variables to inject into the template |
-| `options` | `object` | Options including `views` directories |
+| `options` | `object` | Options including `views` directories and custom settings |
 
 ## Returns
 
@@ -24,28 +24,67 @@ render(templateStr, contextObj = {}, options = {})
 
 ### Render a template string
 
-```javascript
-const { render } = require('miki-template');
+=== "CommonJS"
 
-const html = render('Hello {{ name }}!', { name: 'World' });
-// Output: Hello World!
-```
+    ```javascript
+    const { render } = require('miki-template');
+
+    const html = render('Hello {{ name }}!', { name: 'World' });
+    // Output: Hello World!
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { render } from 'miki-template';
+
+    const html = render('Hello {{ name }}!', { name: 'World' });
+    // Output: Hello World!
+    ```
 
 ### Render a partial from file
 
-```javascript
-const html = render('home#card', { title: 'Hello' }, { views: './views' });
-```
+=== "CommonJS"
+
+    ```javascript
+    const { render } = require('miki-template');
+
+    const html = render('home#card', { title: 'Hello' }, { views: './views' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { render } from 'miki-template';
+
+    const html = render('home#card', { title: 'Hello' }, { views: './views' });
+    ```
 
 ### Render with options
 
-```javascript
-const html = render(template, context, {
-  views: ['./views', './app/templates'],
-  staticUrl: '/static',
-  urlHelper: (name, ...args) => '/' + name + '/' + args.join('/')
-});
-```
+=== "CommonJS"
+
+    ```javascript
+    const { render } = require('miki-template');
+
+    const html = render(template, context, {
+      views: ['./views', './app/templates'],
+      staticUrl: '/static',
+      urlHelper: (name, ...args) => '/' + name + '/' + args.join('/')
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { render } from 'miki-template';
+
+    const html = render(template, context, {
+      views: ['./views', './app/templates'],
+      staticUrl: '/static',
+      urlHelper: (name, ...args) => '/' + name + '/' + args.join('/')
+    });
+    ```
 
 ## Related
 

@@ -1,5 +1,3 @@
-# miki-template
-
 <div class="md-hero">
   <h1 class="md-hero__title">miki-template</h1>
   <p class="md-hero__subtitle">Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.</p>
@@ -8,6 +6,20 @@
     <a href="api/" class="md-button">API Reference</a>
     <a href="https://github.com/alainmiki/miki-template" class="md-button" target="_blank" rel="noopener">
       <span class="md-icon">&#128190;</span> GitHub
+    </a>
+  </div>
+  <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; align-items: center;">
+    <img src="assets/banner.png" alt="miki-template banner" style="max-width: 100%; height: auto; border-radius: 0.5rem; box-shadow: 0 4px 12px var(--md-shadow-color); max-height: 200px;">
+  </div>
+  <div style="margin-top: 1rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; align-items: center;">
+    <a href="https://www.npmjs.com/package/miki-template" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/npm/v/miki-template.svg" alt="npm version" style="height: 20px;">
+    </a>
+    <a href="https://www.npmjs.com/package/miki-template" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/npm/dm/miki-template.svg" alt="npm downloads" style="height: 20px;">
+    </a>
+    <a href="https://github.com/alainmiki/miki-template" target="_blank" rel="noopener">
+      <img src="https://img.shields.io/github/actions/workflow/status/alainmiki/miki-template/ci.yml?branch=main" alt="CI status" style="height: 20px;">
     </a>
   </div>
 </div>
@@ -21,63 +33,69 @@ miki-template brings Django's beloved template language to Node.js and Express. 
 - **Partial-powered templating**: `{% partialdef %}` blocks render by name anywhere — `res.render('home#card')`, `renderPartialFromSource(...)`, or `compiled.renderBlock('block')`. Built for HTMX-style partial responses.
 - **Smart template discovery**: Stop hardcoding view paths. The engine searches `templates/`, nested app directories, and custom folder names automatically — just like Django.
 - **One-line Express integration**: `miki.setupExpress(app, { extension: 'html', views: dir })` wires everything up. No boilerplate, no extra middleware.
-- **Full Django syntax parity**: Variables, dotted lookups, filters (`|`), block tags (`{% %}``, template inheritance with `extends` and `block.super`.
-- **Blazing fast**: Compiled AST engine dominates on realistic pages — ~150× faster than pug, handlebars, and ejs on large templates.
+- **Full Django syntax parity**: Variables, dotted lookups, filters (`|`), block tags (`{% %}`), template inheritance with `extends` and `block.super`.
+- **Blazing fast**: Compiled AST rendering dominates on realistic pages — ~150× faster than pug, handlebars, and ejs on large templates.
+- **ESM & CommonJS**: Works seamlessly with both `import` and `require` syntax.
+- **Security by default**: Auto-escaping, `SafeString`, CSRF and CSP tags.
 
 ## Quick example
 
-```javascript
-const express = require('express');
-const miki = require('miki-template');
+=== "CommonJS"
 
-const app = express();
-miki.setupExpress(app, { extension: 'html', views: './views' });
+    ```javascript
+    const express = require('express');
+    const miki = require('miki-template');
 
-app.get('/', (req, res) => res.render('home', { user: req.user }));
-app.get('/partials/:name', (req, res) =>
-  res.render(`home#${req.params.name}`, { user: req.user })
-);
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
 
-app.listen(3000);
-```
+    app.get('/', (req, res) => res.render('home', { user: req.user }));
+    app.get('/partials/:name', (req, res) =>
+      res.render(`home#${req.params.name}`, { user: req.user })
+    );
 
-## Features at a glance
+    app.listen(3000);
+    ```
 
-| Feature | Description |
-|---------|-------------|
-| **Partial Templates** | Define and render template fragments by name |
-| **Smart Discovery** | Auto-finds templates across your project |
-| **Express Integration** | One-line setup with full middleware support |
-| **Django Syntax** | Familiar `{% tag %}` and `{{ var }}` syntax |
-| **Filters & Tags** | Extensible filter and custom tag system |
-| **Async Rendering** | Full async/await support for modern Node.js |
-| **Security** | Auto-escaping and sandboxed execution |
-| **i18n** | Built-in internationalization support |
+=== "ES Modules"
 
-## Documentation
+    ```javascript
+    import express from 'express';
+    import miki from 'miki-template';
 
-<div class="md-grid" markdown>
-<div class="md-typeset__scrollwrap">
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
 
-| Section | Description |
-|---------|-------------|
-| [Getting Started](guide/getting-started) | What is miki-template and why use it |
-| [Installation](guide/installation) | How to install and configure |
-| [Quick Start](guide/quick-start) | Get up and running in minutes |
-| [Core Features](guide/partial-templates) | Partial templates, discovery, inheritance, filters, tags |
-| [Advanced Usage](guide/advanced-usage) | Custom tags, filters, context processors, async |
-| [API Reference](api/) | Complete API documentation |
-| [Integrations](integrations/) | Express, Koa, Fastify, Hono, Elysia |
-| [Performance](performance) | Benchmark results and optimization tips |
+    app.get('/', (req, res) => res.render('home', { user: req.user }));
+    app.get('/partials/:name', (req, res) =>
+      res.render(`home#${req.params.name}`, { user: req.user })
+    );
 
-</div>
-</div>
+    app.listen(3000);
+    ```
 
 ## Installation
 
 ```bash
 npm install miki-template
 ```
+
+See the [Installation guide](guide/installation) for pnpm, yarn, and Bun instructions.
+
+## Documentation
+
+- [What is miki-template?](guide/what-is-miki-template)
+- [Getting Started](guide/getting-started)
+- [Quick Start](guide/quick-start)
+- [Filters](guide/filters)
+- [Tags](guide/tags)
+- [Partial Templates](guide/partial-templates)
+- [Template Inheritance](guide/template-inheritance)
+- [Template Discovery](guide/template-discovery)
+- [Security](guide/security)
+- [Integrations](integrations/)
+- [API Reference](api/)
+- [Performance](performance)
 
 ## License
 

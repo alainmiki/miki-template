@@ -2,6 +2,19 @@
 
 Partial templates let you define reusable UI chunks once and render them anywhere. This is especially powerful with HTMX, Turbo, or any AJAX-style partial response pattern.
 
+## Table of Contents
+
+- [Defining Partials](#defining-partials)
+- [Rendering Partials by Name](#rendering-partials-by-name)
+- [Nested Partials](#nested-partials)
+- [Partials with Context](#partials-with-context)
+- [Partials with Include](#partials-with-include)
+- [Rendering Partials Programmatically](#rendering-partials-programmatically)
+- [Express Partial Rendering](#express-partial-rendering)
+- [Common Pitfalls](#common-pitfalls)
+
+---
+
 ## Defining Partials
 
 Use `{% partialdef %}` to define a named partial inside any template:
@@ -39,25 +52,88 @@ Use the `inline` option explicitly:
 {% partialdef greeting inline %}
   Hello {{ name }}!
 {% endpartialdef %}
+<!-- Above line ALSO outputs "Hello World!" when rendered -->
 ```
 
 ## Rendering Partials by Name
 
-Once defined, you can render a partial by name from your routes:
+Once defined, you can render a partial by name from your routes using the `view#partial` syntax:
 
-```javascript
-app.get('/card/:id', (req, res) =>
-  res.render(`home#card`, { title: 'Hello', body: '...', featured: true })
-);
-```
+=== "CommonJS"
+
+    ```javascript
+    const express = require('express');
+    const miki = require('miki-template');
+
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
+
+    app.get('/card/:id', (req, res) =>
+      res.render(`home#card`, { title: 'Hello', body: 'World...', featured: true })
+    );
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import express from 'express';
+    import miki from 'miki-template';
+
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
+
+    app.get('/card/:id', (req, res) =>
+      res.render(`home#card`, { title: 'Hello', body: 'World...', featured: true })
+    );
+    ```
 
 The syntax is `viewName#partialName`. The engine resolves the file, extracts the named partial, and renders only that block.
+
+**Real-world HTMX example:**
+
+```html
+<!-- views/products.html -->
+{% partialdef product_card %}
+  <div class="product-card" id="product-{{ product.id }}">
+    <img src="{{ product.image|static }}" alt="{{ product.name }}">
+    <h3>{{ product.name|capfirst }}</h3>
+    <p class="price">${{ product.price|floatformat:2 }}</p>
+    <button hx-post="/cart/add/{{ product.id }}" hx-swap="outerHTML">
+      Add to Cart
+    </button>
+  </div>
+{% endpartialdef %}
+
+{% for product in products %}
+  {% partial product_card with product=product %}
+{% endfor %}
+```
+
+```javascript
+// The entire page renders all cards
+app.get('/shop', (req, res) =>
+  res.render('products', { products: catalog })
+);
+
+// HTMX swaps just one card after an action
+app.post('/cart/add/:id', (req, res) =>
+  res.render('products#product_card', {
+    product: catalog.find(p => p.id == req.params.id)
+  })
+);
+```
 
 ## Nested Partials
 
 Partials can call other partials:
 
 ```html
+{% partialdef header %}
+  <div class="card-header">
+    <h3>{{ title }}</h3>
+  </div>
+{% endpartialdef %}
+
 {% partialdef card %}
   <div class="card">
     {% partial header with title=title %}
@@ -80,9 +156,9 @@ You can also pass context variables:
 {% partial card with title=entry.title body=entry.body %}
 ```
 
-## Partial with include
+## Partials with Include
 
-You can include a partial from another template file:
+You can include a partial from another template file using the `#partialName` syntax:
 
 ```html
 {% include "header.html#partial_name" %}
@@ -90,48 +166,111 @@ You can include a partial from another template file:
 
 This loads `header.html`, registers all its partials, and renders only the named one.
 
+**Real-world navigation include:**
+
+```html
+<!-- views/nav.html -->
+{% partialdef navigation %}
+  <nav>
+    {% for link in links %}
+      <a href="{{ link.url }}" class="{% if link.active %}current{% endif %}">{{ link.label }}</a>
+    {% endfor %}
+  </nav>
+{% endpartialdef %}
+```
+
+```html
+<!-- In any template -->
+{% include "nav.html#navigation" with links=nav_links %}
+```
+
 ## Rendering Partials Programmatically
 
 ### renderPartialFromSource
 
 Render a named partial from a template source string:
 
-```javascript
-const { renderPartialFromSource } = require('miki-template');
+=== "CommonJS"
 
-const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
-const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
-```
+    ```javascript
+    const { renderPartialFromSource } = require('miki-template');
+
+    const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
+    const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { renderPartialFromSource } from 'miki-template';
+
+    const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
+    const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
+    ```
 
 ### renderPartialFromFile
 
 Render a named partial from a template file:
 
-```javascript
-const { renderPartialFromFile } = require('miki-template');
+=== "CommonJS"
 
-const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
-```
+    ```javascript
+    const { renderPartialFromFile } = require('miki-template');
+
+    const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { renderPartialFromFile } from 'miki-template';
+
+    const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
+    ```
 
 ### compiled.renderPartial
 
 Render a partial from a compiled template:
 
-```javascript
-const { compile } = require('miki-template');
+=== "CommonJS"
 
-const compiled = compile('<h1>{{ title }}</h1>', { views: './templates' });
-const html = compiled.renderPartial('card', { title: 'Hello' });
-```
+    ```javascript
+    const { compile } = require('miki-template');
+
+    const compiled = compile('<h1>{{ title }}</h1>', { views: './templates' });
+    const html = compiled.renderPartial('card', { title: 'Hello' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile('<h1>{{ title }}</h1>', { views: './templates' });
+    const html = compiled.renderPartial('card', { title: 'Hello' });
+    ```
 
 ### compiled.renderBlock
 
-Render a single block from a compiled template:
+Render a single block from a compiled template — useful for AJAX responses:
 
-```javascript
-const compiled = compile(childTemplate, { views: './templates' });
-const html = compiled.renderBlock('content', context);
-```
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+
+    const compiled = compile(childTemplate, { views: './templates' });
+    const html = compiled.renderBlock('content', context);
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile(childTemplate, { views: './templates' });
+    const html = compiled.renderBlock('content', context);
+    ```
 
 ## Express Partial Rendering
 
@@ -139,21 +278,53 @@ const html = compiled.renderBlock('content', context);
 
 When using `setupExpress()`, you can render partials directly:
 
-```javascript
-app.get('/card/:id', (req, res) =>
-  res.render(`home#card`, { title: 'Hello', body: '...' })
-);
-```
+=== "CommonJS"
+
+    ```javascript
+    app.get('/card/:id', (req, res) =>
+      res.render(`home#card`, { title: 'Hello', body: '...' })
+    );
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    app.get('/card/:id', (req, res) =>
+      res.render(`home#card`, { title: 'Hello', body: '...' })
+    );
+    ```
 
 ### res.renderPartial middleware
 
-Add the partial renderer middleware:
+If you don't want to patch `res.render`, add the partial renderer middleware instead:
 
-```javascript
-app.use(miki.expressPartialRenderer());
+=== "CommonJS"
 
-app.get('/card', (req, res) => res.renderPartial('home#card', { user: req.user }));
-```
+    ```javascript
+    const express = require('express');
+    const miki = require('miki-template');
+
+    const app = express();
+    app.use(miki.expressPartialRenderer());
+
+    app.get('/card', (req, res) =>
+      res.renderPartial('home#card', { user: req.user })
+    );
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import express from 'express';
+    import miki from 'miki-template';
+
+    const app = express();
+    app.use(miki.expressPartialRenderer());
+
+    app.get('/card', (req, res) =>
+      res.renderPartial('home#card', { user: req.user })
+    );
+    ```
 
 ## Partial API Reference
 
@@ -185,10 +356,12 @@ Render a named partial from a template file.
 | Issue | Symptom | Fix |
 |-------|---------|-----|
 | Missing partial name | `{% partial %}` renders nothing | Ensure the name matches a defined `partialdef`. |
-| Variable not found | Appears empty | Variables are resolved in the current context; use `{% with %}` inside the partial if you need a local alias. |
-| Inline vs non-inline confusion | Duplicate output | Use `inline` only when you want immediate rendering. |
+| Variable not found | Appears empty | Variables are resolved in the current context; use `with` to pass explicit values. |
+| Inline vs non-inline confusion | Duplicate output | Use `inline` only when you want immediate rendering at the declaration site. |
+| Partial leaks across includes | Unexpected partials available | `include "file#partial"` isolates partials; `include "file"` (full) makes all partials available. |
 
 ## Next Steps
 
 - [Template Inheritance](./template-inheritance)
+- [Tags: partialdef and partial](./tags#partial-tags)
 - [API Reference: renderPartial](../api/render-partial)
