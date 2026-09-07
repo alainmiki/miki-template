@@ -75,14 +75,13 @@ miki-template is built for real-world apps. Its compiled-AST engine is especiall
 
 ## 📚 Documentation
 
-- [Installation](docs/installation.md)
-- [Usage Guide](docs/usage.md)
-- [Tags Reference](docs/tags.md)
-- [Filters Reference](docs/filters.md)
-- [Security](docs/security.md)
-- [API Reference](docs/api.md)
-- [Partial Definitions](docs/partialdef.md)
-- [Contributing](docs/advanced_usage.md)
+- **[Documentation](https://alainmiki.github.io/miki-template/)** — Full docs site
+- [Getting Started](https://alainmiki.github.io/miki-template/guide/getting-started)
+- [Installation](https://alainmiki.github.io/miki-template/guide/installation)
+- [Quick Start](https://alainmiki.github.io/miki-template/guide/quick-start)
+- [API Reference](https://alainmiki.github.io/miki-template/api/)
+- [Integrations](https://alainmiki.github.io/miki-template/integrations/)
+- [Performance](https://alainmiki.github.io/miki-template/performance)
 
 ---
 

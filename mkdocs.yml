@@ -164,6 +164,18 @@ extra:
     - icon: fontawesome/brands/npm
       link: https://www.npmjs.com/package/miki-template
       name: miki-template on npm
+    - icon: fontawesome/brands/youtube
+      link: https://youtube.com/@codewithmiki6849
+      name: Code with Miki on YouTube
+    - icon: fontawesome/brands/facebook
+      link: https://www.facebook.com/profile.php?id=100063798107667
+      name: Alain Miki on Facebook
+    - icon: fontawesome/brands/instagram
+      link: https://www.instagram.com/alainmiki
+      name: Alain Miki on Instagram
+    - icon: fontawesome/brands/facebook
+      link: https://www.facebook.com/codewithmiki
+      name: Code with Miki on Facebook
   version:
     provider: mike
   homepage: https://alainmiki.github.io/miki-template/
