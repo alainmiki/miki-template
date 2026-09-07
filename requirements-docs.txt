@@ -1,1 +1,2 @@
-mkdocs-material[imaging]
+mkdocs-material[imaging]<9.8
+mkdocs<2
