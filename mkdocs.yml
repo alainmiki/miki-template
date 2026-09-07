@@ -193,10 +193,6 @@ plugins:
   - optimize:
       enabled: !ENV [READTHEDOCS, false]
       concurrency: 4
-      css:
-        transpile: true
-      js:
-        bundle: true
 
 extra_css:
   - stylesheets/extra.css
