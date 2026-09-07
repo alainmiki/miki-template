@@ -1,36 +1,55 @@
-# Integrations
+# Integrations Overview
 
-miki-template works with all major Node.js web frameworks.
+miki-template works with all major Node.js web frameworks. Use `render()` for synchronous output or `asyncRender()` for templates with async filters/tags.
 
 ## Supported Frameworks
 
-- [Express](./express)
-- [Koa](./koa)
-- [Fastify](./fastify)
-- [Hono](./hono)
-- [Elysia](./elysia)
+- [Express](./express) — One-line setup with `setupExpress()`
+- [Koa](./koa) — Context helper using `asyncRender()`
+- [Fastify](./fastify) — Inline `asyncRender()` calls
+- [Hono](./hono) — ESM-first, using `asyncRender()`
+- [Elysia](./elysia) — ESM-first, using `asyncRender()`
+- [NestJS](./nestjs) — Module/Provider pattern
+- [TSDX / TS-Economy (TSed)](./tsed) — TypeScript integration
 
 ## Quick Example
 
-```javascript
-const express = require('express');
-const miki = require('miki-template');
+=== "CommonJS"
 
-const app = express();
-miki.setupExpress(app, { extension: 'html', views: './views' });
+    ```javascript
+    const express = require('express');
+    const miki = require('miki-template');
 
-app.get('/', (req, res) => res.render('home', { user: req.user }));
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
 
-app.listen(3000);
-```
+    app.get('/', (req, res) => res.render('home', { user: req.user }));
+
+    app.listen(3000);
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import express from 'express';
+    import miki from 'miki-template';
+
+    const app = express();
+    miki.setupExpress(app, { extension: 'html', views: './views' });
+
+    app.get('/', (req, res) => res.render('home', { user: req.user }));
+
+    app.listen(3000);
+    ```
 
 ## Notes
 
 - For CommonJS: `const miki = require('miki-template');`
 - For ESM / Bun: `import miki from 'miki-template';` or `import * as miki from 'miki-template';`
 - When rendering files, pass `options.views` or set framework view roots so the engine can locate templates.
+- Use `asyncRender()` if your templates use async filters, async tags, or `{% load %}` libraries with async components.
 
-## Setup (install)
+## Installation
 
 ```bash
 # npm
@@ -38,9 +57,12 @@ npm install miki-template
 
 # bun
 bun add miki-template
+
+# yarn
+yarn add miki-template
 ```
 
 ## Next Steps
 
 - [Express Integration](./express)
-- [Performance](./../performance)
+- [API Reference: render](../api/render)

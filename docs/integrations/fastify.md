@@ -1,45 +1,75 @@
 # Fastify
 
-Use miki-template with Fastify via the Fastify adapter.
+Use miki-template with Fastify by calling `asyncRender()` inline in your route handlers.
 
 ## Setup
 
-```javascript
-const fastify = require('fastify')();
-const path = require('path');
-const miki = require('miki-template');
+=== "CommonJS"
 
-fastify.get('/', async (request, reply) => {
-  const html = await miki.asyncRender('index', { user: request.user }, { views: path.resolve('./views') });
-  reply.type('text/html').send(html);
-});
+    ```javascript
+    const fastify = require('fastify')();
+    const path = require('path');
+    const miki = require('miki-template');
 
-fastify.listen({ port: 3000 });
-```
+    fastify.get('/', async (request, reply) => {
+      const html = await miki.asyncRender(
+        'index',
+        { user: request.user },
+        { views: path.resolve('./views') }
+      );
+      reply.type('text/html').send(html);
+    });
 
-## CommonJS
+    fastify.listen({ port: 3000 });
+    ```
 
-```javascript
-const fastify = require('fastify')();
-const path = require('path');
-const miki = require('miki-template');
+=== "ES Modules"
 
-fastify.get('/', async (request, reply) => {
-  const html = await miki.asyncRender('index', { user: request.user }, { views: path.resolve('./views') });
-  reply.type('text/html').send(html);
-});
+    ```javascript
+    import Fastify from 'fastify';
+    import miki from 'miki-template';
 
-fastify.listen({ port: 3000 });
-```
+    const fastify = Fastify();
+
+    fastify.get('/', async (request, reply) => {
+      const html = await miki.asyncRender(
+        'index',
+        { user: request.user },
+        { views: './views' }
+      );
+      reply.type('text/html').send(html);
+    });
+
+    fastify.listen({ port: 3000 });
+    ```
 
 ## Partial Rendering
 
-```javascript
-fastify.get('/partial/:name', async (request, reply) => {
-  const html = await miki.asyncRender(`home#${request.params.name}`, { user: request.user }, { views: path.resolve('./views') });
-  reply.type('text/html').send(html);
-});
-```
+=== "CommonJS"
+
+    ```javascript
+    fastify.get('/partial/:name', async (request, reply) => {
+      const html = await miki.asyncRender(
+        `home#${request.params.name}`,
+        { user: request.user },
+        { views: path.resolve('./views') }
+      );
+      reply.type('text/html').send(html);
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    fastify.get('/partial/:name', async (request, reply) => {
+      const html = await miki.asyncRender(
+        `home#${request.params.name}`,
+        { user: request.user },
+        { views: './views' }
+      );
+      reply.type('text/html').send(html);
+    });
+    ```
 
 ## Next Steps
 

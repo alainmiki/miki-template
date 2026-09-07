@@ -21,11 +21,21 @@ renderPartialFromFile(fileName, partialName, contextObj, options)
 
 ### Example
 
-```javascript
-const { renderPartialFromFile } = require('miki-template');
+=== "CommonJS"
 
-const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
-```
+    ```javascript
+    const { renderPartialFromFile } = require('miki-template');
+
+    const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { renderPartialFromFile } from 'miki-template';
+
+    const html = renderPartialFromFile('home', 'card', { title: 'Hello' }, { views: './views' });
+    ```
 
 ## renderPartialFromSource
 
@@ -47,12 +57,23 @@ renderPartialFromSource(fileContent, partialName, contextObj, options, filePath?
 
 ### Example
 
-```javascript
-const { renderPartialFromSource } = require('miki-template');
+=== "CommonJS"
 
-const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
-const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
-```
+    ```javascript
+    const { renderPartialFromSource } = require('miki-template');
+
+    const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
+    const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { renderPartialFromSource } from 'miki-template';
+
+    const source = `{% partialdef card %}<div>{{ title }}</div>{% endpartialdef %}`;
+    const html = renderPartialFromSource(source, 'card', { title: 'Hello' });
+    ```
 
 ## Related
 

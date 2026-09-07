@@ -109,6 +109,8 @@ nav:
       - Fastify: integrations/fastify.md
       - Hono: integrations/hono.md
       - Elysia: integrations/elysia.md
+      - NestJS: integrations/nestjs.md
+      - TSDX / TSed: integrations/tsed.md
   - Performance: performance.md
 
 markdown_extensions:

@@ -1,6 +1,6 @@
 # asyncRender()
 
-Async version of `render()`. Returns a Promise.
+Async version of `render()`. Returns a Promise. Use this when your templates contain async filters, async custom tags, or async library components.
 
 ## Signature
 
@@ -12,25 +12,72 @@ asyncRender(templateStr, contextObj = {}, options = {})
 
 `Promise<string>` — The rendered HTML.
 
+## When to Use
+
+Use `asyncRender()` when your templates contain:
+
+- Async filters (returning Promises)
+- Async custom tags (render return a Promise)
+- Async library helpers
+- `{% load %}` libraries with async components
+
+Using async features with `render()` throws: `Async node encountered during sync render. Use asyncRender() instead.`
+
 ## Examples
 
-```javascript
-const { asyncRender } = require('miki-template');
+### Basic async render
 
-const html = await asyncRender('Hello {{ name }}!', { name: 'World' });
-```
+=== "CommonJS"
+
+    ```javascript
+    const { asyncRender } = require('miki-template');
+
+    const html = await asyncRender('Hello {{ name }}!', { name: 'World' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { asyncRender } from 'miki-template';
+
+    const html = await asyncRender('Hello {{ name }}!', { name: 'World' });
+    ```
 
 ### With async tags/filters
 
-```javascript
-const html = await asyncRender(templateWithAsyncHelpers, context, options);
-```
+=== "CommonJS"
+
+    ```javascript
+    const { asyncRender } = require('miki-template');
+
+    const html = await asyncRender(templateWithAsyncHelpers, context, options);
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { asyncRender } from 'miki-template';
+
+    const html = await asyncRender(templateWithAsyncHelpers, context, options);
+    ```
 
 ### Async partial from file
 
-```javascript
-const html = await asyncRender('home#card', context, { views: './views' });
-```
+=== "CommonJS"
+
+    ```javascript
+    const { asyncRender } = require('miki-template');
+
+    const html = await asyncRender('home#card', context, { views: './views' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { asyncRender } from 'miki-template';
+
+    const html = await asyncRender('home#card', context, { views: './views' });
+    ```
 
 ## Related
 

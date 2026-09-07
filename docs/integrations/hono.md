@@ -1,47 +1,76 @@
 # Hono
 
-Use miki-template with Hono.
+Use miki-template with Hono (ESM-first framework) by calling `asyncRender()` in your handlers.
 
 ## Setup
 
-```javascript
-import { Hono } from 'hono';
-import miki from 'miki-template';
+=== "ES Modules"
 
-const app = new Hono();
+    ```javascript
+    import { Hono } from 'hono';
+    import miki from 'miki-template';
 
-app.get('/', async (c) => {
-  const html = await miki.asyncRender('index', { user: c.get('user') }, { views: './views' });
-  return c.html(html);
-});
+    const app = new Hono();
 
-export default app;
-```
+    app.get('/', async (c) => {
+      const html = await miki.asyncRender(
+        'index',
+        { user: c.get('user') },
+        { views: './views' }
+      );
+      return c.html(html);
+    });
 
-## CommonJS
+    export default app;
+    ```
 
-```javascript
-const { Hono } = require('hono');
-const miki = require('miki-template');
+=== "CommonJS"
 
-const app = new Hono();
+    ```javascript
+    const { Hono } = require('hono');
+    const miki = require('miki-template');
 
-app.get('/', async (c) => {
-  const html = await miki.asyncRender('index', { user: c.get('user') }, { views: './views' });
-  return c.html(html);
-});
+    const app = new Hono();
 
-export default app;
-```
+    app.get('/', async (c) => {
+      const html = await miki.asyncRender(
+        'index',
+        { user: c.get('user') },
+        { views: './views' }
+      );
+      return c.html(html);
+    });
+
+    module.exports = app;
+    ```
 
 ## Partial Rendering
 
-```javascript
-app.get('/partial/:name', async (c) => {
-  const html = await miki.asyncRender(`home#${c.req.param('name')}`, { user: c.get('user') }, { views: './views' });
-  return c.html(html);
-});
-```
+=== "ES Modules"
+
+    ```javascript
+    app.get('/partials/:name', async (c) => {
+      const html = await miki.asyncRender(
+        `home#${c.req.param('name')}`,
+        { user: c.get('user') },
+        { views: './views' }
+      );
+      return c.html(html);
+    });
+    ```
+
+=== "CommonJS"
+
+    ```javascript
+    app.get('/partials/:name', async (c) => {
+      const html = await miki.asyncRender(
+        `home#${c.req.param('name')}`,
+        { user: c.get('user') },
+        { views: './views' }
+      );
+      return c.html(html);
+    });
+    ```
 
 ## Next Steps
 

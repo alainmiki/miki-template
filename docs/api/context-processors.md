@@ -55,7 +55,7 @@ Clear all registered context processors. Useful in tests or when re-configuring.
 === "ES Modules"
 
     ```javascript
-    import { clearContextProcessors } from 'miki-template;
+    import { clearContextProcessors } from 'miki-template';
 
     clearContextProcessors();
     ```

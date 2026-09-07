@@ -8,50 +8,119 @@ Compile a template string into a reusable renderable object.
 compile(templateStr, options = {})
 ```
 
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `templateStr` | `string` | Template source string |
+| `options` | `object` | Options including `views` directories |
+
 ## Returns
 
-An object with render methods:
+An object with these render methods:
 
 | Method | Description |
 |--------|-------------|
 | `render(contextObj, callOptions)` | Synchronous render |
 | `renderWith(contextObj, callOptions)` | Render with options override |
-| `asyncRender(contextObj, callOptions)` | Async render |
+| `asyncRender(contextObj)` | Asynchronous render (supports async filters/tags) |
 | `asyncRenderWith(contextObj, callOptions)` | Async render with options override |
-| `renderBlock(blockName, contextObj)` | Render a single block |
-| `renderPartial(partialName, contextObj)` | Render a named partial |
+| `renderBlock(blockName, contextObj)` | Render a single `{% block %}` |
+| `renderPartial(partialName, contextObj)` | Render a named `{% partialdef %}` |
 
 ## Examples
 
-```javascript
-const { compile } = require('miki-template');
+### Basic compile
 
-const compiled = compile('<h1>{{ title }}</h1>');
+=== "CommonJS"
 
-const html = compiled.render({ title: 'Hello' });
-// Output: <h1>Hello</h1>
-```
+    ```javascript
+    const { compile } = require('miki-template');
 
-### Render with options
+    const compiled = compile('<h1>{{ title }}</h1>');
 
-```javascript
-const compiled = compile(template, { views: './templates' });
-const html = compiled.renderWith({ title: 'Hello' }, { views: './other-views' });
-```
+    const html = compiled.render({ title: 'Hello' });
+    // Output: <h1>Hello</h1>
+    ```
 
-### Render a Block
+=== "ES Modules"
 
-```javascript
-const compiled = compile(childTemplate, { views: './templates' });
-const html = compiled.renderBlock('content', context);
-```
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile('<h1>{{ title }}</h1>');
+
+    const html = compiled.render({ title: 'Hello' });
+    // Output: <h1>Hello</h1>
+    ```
+
+### Render with options override
+
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+
+    const compiled = compile(template, { views: './templates' });
+    const html = compiled.renderWith({ title: 'Hello' }, { views: './other-views' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile(template, { views: './templates' });
+    const html = compiled.renderWith({ title: 'Hello' }, { views: './other-views' });
+    ```
+
+### Render a Block (template inheritance)
+
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+
+    const compiled = compile(childTemplate, { views: './templates' });
+    const html = compiled.renderBlock('content', context);
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile(childTemplate, { views: './templates' });
+    const html = compiled.renderBlock('content', context);
+    ```
 
 ### Render a Partial
 
-```javascript
-const compiled = compile(template, { views: './templates' });
-const html = compiled.renderPartial('card', { title: 'Hello' });
-```
+=== "CommonJS"
+
+    ```javascript
+    const { compile } = require('miki-template');
+
+    const compiled = compile(`
+      {% partialdef card %}
+        <div class="card">{{ title }}</div>
+      {% endpartialdef %}
+    `);
+    const html = compiled.renderPartial('card', { title: 'Hello' });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    import { compile } from 'miki-template';
+
+    const compiled = compile(`
+      {% partialdef card %}
+        <div class="card">{{ title }}</div>
+      {% endpartialdef %}
+    `);
+    const html = compiled.renderPartial('card', { title: 'Hello' });
+    ```
 
 ## Related
 

@@ -1,81 +1,86 @@
 # Koa
 
-Use miki-template with Koa via the Koa adapter.
+Use miki-template with Koa by attaching an async render helper to the context.
 
 ## Setup
 
-```javascript
-const Koa = require('koa');
-const path = require('path');
-const miki = require('miki-template');
+=== "CommonJS"
 
-const app = new Koa();
+    ```javascript
+    const Koa = require('koa');
+    const path = require('path');
+    const miki = require('miki-template');
 
-// Simple render helper attached to context
-app.context.render = async function (view, locals = {}) {
-  const html = await miki.asyncRender(view, locals, { views: path.resolve('./views') });
-  this.type = 'text/html';
-  this.body = html;
-};
+    const app = new Koa();
 
-app.use(async (ctx) => {
-  await ctx.render('index', { user: ctx.state.user });
-});
+    app.context.render = async function (view, locals = {}) {
+      const html = await miki.asyncRender(view, locals, {
+        views: path.resolve('./views')
+      });
+      this.type = 'text/html';
+      this.body = html;
+    };
 
-app.listen(3000);
-```
+    app.use(async (ctx) => {
+      await ctx.render('index', { user: ctx.state.user });
+    });
 
-## CommonJS
+    app.listen(3000);
+    ```
 
-```javascript
-const Koa = require('koa');
-const path = require('path');
-const miki = require('miki-template');
+=== "ES Modules"
 
-const app = new Koa();
+    ```javascript
+    import { Koa } from 'koa';
+    import miki from 'miki-template';
+    import path from 'node:path';
 
-app.context.render = async function (view, locals = {}) {
-  const html = await miki.asyncRender(view, locals, { views: path.resolve('./views') });
-  this.type = 'text/html';
-  this.body = html;
-};
+    const app = new Koa();
 
-app.use(async (ctx) => {
-  await ctx.render('index', { user: ctx.state.user });
-});
+    app.context.render = async function (view, locals = {}) {
+      const html = await miki.asyncRender(view, locals, {
+        views: path.resolve('./views')
+      });
+      this.type = 'text/html';
+      this.body = html;
+    };
 
-app.listen(3000);
-```
+    app.use(async (ctx) => {
+      await ctx.render('index', { user: ctx.state.user });
+    });
 
-## ESM / Bun
-
-```javascript
-import { Koa } from 'koa';
-import miki from 'miki-template';
-import path from 'path';
-
-const app = new Koa();
-
-app.context.render = async function (view, locals = {}) {
-  const html = await miki.asyncRender(view, locals, { views: path.resolve('./views') });
-  this.type = 'text/html';
-  this.body = html;
-};
-
-app.use(async (ctx) => {
-  await ctx.render('index', { user: ctx.state.user });
-});
-
-export default app;
-```
+    export default app;
+    ```
 
 ## Partial Rendering
 
-```javascript
-app.get('/partial/:name', async (ctx) => {
-  await ctx.render(`home#${ctx.params.name}`, { user: ctx.state.user });
-});
-```
+=== "CommonJS"
+
+    ```javascript
+    app.use(async (ctx) => {
+      const html = await miki.asyncRender(
+        `home#${ctx.params.name}`,
+        { user: ctx.state.user },
+        { views: path.resolve('./views') }
+      );
+      ctx.type = 'text/html';
+      ctx.body = html;
+    });
+    ```
+
+=== "ES Modules"
+
+    ```javascript
+    app.use(async (ctx) => {
+      const html = await miki.asyncRender(
+        `home#${ctx.params.name}`,
+        { user: ctx.state.user },
+        { views: './views' }
+      );
+      ctx.type = 'text/html';
+      ctx.body = html;
+    });
+    ```
 
 ## Next Steps
 

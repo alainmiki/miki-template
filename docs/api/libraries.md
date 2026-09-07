@@ -83,7 +83,7 @@ Built-in libraries (`humanize`, `cache`, `lorem`, `markdown`, `i18n`) are auto-a
 === "ES Modules"
 
     ```javascript
-    import { unregisterLibrary } from 'miki-template;
+    import { unregisterLibrary } from 'miki-template';
 
     unregisterLibrary('mylib');
     ```

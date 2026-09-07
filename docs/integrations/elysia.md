@@ -1,47 +1,76 @@
 # Elysia
 
-Use miki-template with Elysia.
+Use miki-template with Elysia (Bun-native framework) by calling `asyncRender()` in your handlers.
 
 ## Setup
 
-```javascript
-import { Elysia } from 'elysia';
-import miki from 'miki-template';
+=== "ES Modules"
 
-const app = new Elysia();
+    ```javascript
+    import { Elysia } from 'elysia';
+    import miki from 'miki-template';
 
-app.get('/', async () => {
-  const html = await miki.asyncRender('index', {}, { views: './views' });
-  return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-});
+    const app = new Elysia();
 
-export default app;
-```
+    app.get('/', async () => {
+      const html = await miki.asyncRender('index', {}, { views: './views' });
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    });
 
-## CommonJS
+    export default app;
+    ```
 
-```javascript
-const { Elysia } = require('elysia');
-const miki = require('miki-template');
+=== "CommonJS"
 
-const app = new Elysia();
+    ```javascript
+    const { Elysia } = require('elysia');
+    const miki = require('miki-template');
 
-app.get('/', async () => {
-  const html = await miki.asyncRender('index', {}, { views: './views' });
-  return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-});
+    const app = new Elysia();
 
-export default app;
-```
+    app.get('/', async () => {
+      const html = await miki.asyncRender('index', {}, { views: './views' });
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    });
+
+    module.exports = app;
+    ```
 
 ## Partial Rendering
 
-```javascript
-app.get('/partial/:name', async (params) => {
-  const html = await miki.asyncRender(`home#${params.name}`, {}, { views: './views' });
-  return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-});
-```
+=== "ES Modules"
+
+    ```javascript
+    app.get('/partials/:name', async ({ params }) => {
+      const html = await miki.asyncRender(
+        `home#${params.name}`,
+        {},
+        { views: './views' }
+      );
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    });
+    ```
+
+=== "CommonJS"
+
+    ```javascript
+    app.get('/partials/:name', async ({ params }) => {
+      const html = await miki.asyncRender(
+        `home#${params.name}`,
+        {},
+        { views: './views' }
+      );
+      return new Response(html, {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    });
+    ```
 
 ## Next Steps
 
