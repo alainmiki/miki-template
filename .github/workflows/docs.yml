@@ -33,8 +33,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-docs.txt
 
-      - name: Build and deploy docs to GitHub Pages
-        run: mkdocs gh-deploy --force
+      - name: Build docs
+        run: mkdocs build
+
+      - name: Deploy docs to GitHub Pages
+        run: mkdocs gh-deploy --force --message "chore: deploy docs to GitHub Pages [skip ci]"
+
+      - name: Output Pages URL
+        run: echo "Docs deployed to https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
 
   sync-wiki:
     runs-on: ubuntu-latest
@@ -50,6 +56,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Create wiki clone directory
+        run: mkdir -p wiki-repo
+
       - name: Clone wiki repository
         run: |
           git clone https://github.com/${{ github.repository }}.wiki.git wiki-repo || true
@@ -57,11 +66,13 @@ jobs:
       - name: Sync docs to wiki
         if: hashFiles('wiki-repo/.git/config') != ''
         run: |
-          mkdir -p wiki-repo
           cd wiki-repo
           
-          # Copy all markdown docs to wiki root
-          cp ../docs/*.md .
+          # Copy all markdown docs preserving directory structure
+          cp -r ../docs/*.md .
+          cp -r ../docs/guide/*.md ./guide/ 2>/dev/null || true
+          cp -r ../docs/api/*.md ./api/ 2>/dev/null || true
+          cp -r ../docs/integrations/*.md ./integrations/ 2>/dev/null || true
           
           # Remove index.md if it exists (GitHub wiki uses README.md as home page)
           if [ -f index.md ]; then
@@ -72,18 +83,21 @@ jobs:
             fi
           fi
           
+          # Create Home.md from index.md if README.md doesn't exist
+          if [ ! -f README.md ] && [ ! -f Home.md ] && [ -f docs/index.md ]; then
+            cp docs/index.md Home.md
+          fi
+          
           # Commit and push if there are changes
           git add -A
           git diff --cached --quiet || {
             git commit -m "docs: sync documentation to wiki"
             git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git master
           }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wiki sync skipped
+      - name: Wiki initialization hint
         if: hashFiles('wiki-repo/.git/config') == ''
         run: |
-          echo "Wiki repository not found. Please enable the wiki in your repository settings first."
+          echo "::warning::Wiki repository not found. Enable the wiki in repository settings first."
           echo "Go to https://github.com/${{ github.repository }}/settings/wiki and click 'Create the first page'"
         continue-on-error: true
