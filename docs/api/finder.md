@@ -184,5 +184,5 @@ Get the current app template directory names.
 
 - [Guide: Smart Template Discovery](../guide/template-discovery.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

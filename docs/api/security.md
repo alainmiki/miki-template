@@ -286,5 +286,5 @@ The `extends` and `include` tags validate that resolved template paths stay with
 
 - [Security Guide](../guide/security.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

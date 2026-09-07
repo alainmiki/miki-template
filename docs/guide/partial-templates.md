@@ -728,7 +728,7 @@ Render a named partial from a template file.
 
 - [Template Inheritance](./template-inheritance.md)
 
-- [Tags: partialdef and partial](./tags#partial-tags.md)
+- [Tags: partialdef and partial](./tags.md#partial-tags)
 
 - [API Reference: renderPartial](../api/render-partial.md)
 

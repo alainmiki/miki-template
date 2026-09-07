@@ -408,7 +408,7 @@ Provides `{% trans %}`, `{% blocktrans %}`, `{% language %}` tags and translatio
 
 
 
-- [Advanced Usage: Libraries](../guide/advanced-usage#library-system.md)
+- [Advanced Usage: Libraries](../guide/advanced-usage.md#library-system)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

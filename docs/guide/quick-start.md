@@ -440,5 +440,5 @@ Partials are reusable template fragments defined with `{% partialdef %}`.
 
 - [Tags](./tags.md)
 
-- [API Reference](../api/)
+- [API Reference](../api/index.md)
 

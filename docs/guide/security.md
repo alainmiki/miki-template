@@ -684,7 +684,7 @@ Context processors run before every render and can inject global variables. Be c
 
 
 
-- [Integrations](../integrations/)
+- [Integrations](../integrations/index.md)
 
 - [API Reference: Security](../api/security.md)
 

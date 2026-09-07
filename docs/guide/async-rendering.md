@@ -608,9 +608,9 @@ Override compile-time options at render time:
 
 
 
-- [Custom Filters: Async Filters](./custom-filters#async-filters.md)
+- [Custom Filters: Async Filters](./custom-filters.md#async-filters)
 
-- [Custom Tags: Async Custom Tags](./custom-tags#async-custom-tags.md)
+- [Custom Tags: Async Custom Tags](./custom-tags.md#async-custom-tags)
 
 - [API Reference: asyncRender](../api/async-render.md)
 

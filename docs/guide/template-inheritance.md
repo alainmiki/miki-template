@@ -540,7 +540,7 @@ And `{% extends "base.html" %}` will be found regardless of where the child temp
 
 - [Partial Templates](./partial-templates.md)
 
-- [Tags: extends and block](./tags#inheritance-tags.md)
+- [Tags: extends and block](./tags.md#inheritance-tags)
 
 - [Template Discovery](./template-discovery.md)
 

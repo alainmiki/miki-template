@@ -264,5 +264,5 @@ Returns a **Node** object with a `render(context)` method. The render method rec
 
 - [Custom Tags](../guide/custom-tags.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

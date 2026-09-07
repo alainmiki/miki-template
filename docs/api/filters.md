@@ -430,5 +430,5 @@ Retrieve a registered filter by name.
 
 - [Custom Filters](../guide/custom-filters.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

@@ -102,5 +102,5 @@ miki-template includes built-in helpers for common formatting tasks:
 
 - [Custom Tags](../guide/custom-tags.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

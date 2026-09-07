@@ -150,5 +150,5 @@ Clear all registered context processors. Useful in tests or when re-configuring.
 
 - [Context Processors Guide](../guide/context-processors.md)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 

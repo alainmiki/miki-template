@@ -168,7 +168,7 @@ The first argument is the TTL in seconds. The second is a cache key. Additional 
 
 
 
-- [Advanced Usage: Caching](../guide/advanced-usage#caching.md)
+- [Advanced Usage: Caching](../guide/advanced-usage.md#caching)
 
-- [API Reference](../)
+- [API Reference](../index.md)
 
