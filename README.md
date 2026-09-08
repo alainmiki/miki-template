@@ -1,10 +1,15 @@
 # miki-template
+### 
 ![miki-template banner](assets/banner.png)
 ![npm version](https://img.shields.io/npm/v/miki-template.svg) ![CI](https://github.com/your-repo/miki-template/workflows/ci.yml/badge.svg)
 
 **Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.**
 
+
 Define reusable partials with `{% partialdef %}`, render any slice of a page with `render('home#card')`, and let the engine find templates across your whole project — `templates/`, `app/templates/`, or whatever structure you prefer. No more wrestling with view paths or boilerplate middleware.
+
+miki comes with more tags and filters that are not in django/jinja and miki templates supports all django tags and filters plus it own additional tags and filters.
+you can register your own custom filters and filters in miki templates.
 
 ---
 
@@ -61,11 +66,18 @@ miki-template is built for real-world apps. Its compiled-AST engine is especiall
 
 **Benchmark: renders per second (higher is better)**
 
-| Template   | miki-template | pug     | handlebars | ejs     |
-|------------|---------------|---------|------------|---------|
-| Small      | ~115k rps     | 1.7M rps| 417k rps   | 182k rps|
-| Medium     | ~454k rps     | 625k rps| 48k rps    | 29k rps |
-| Large      | **~476k rps** | 3.1k rps| 661 rps    | 290 rps |
+
+| Template | miki-template | pug | handlebars | ejs |
+
+|----------|--------------|-----|------------|-----|
+
+| Small | ~1.1mk rps | 1.1M rps | 300k rps | 113k rps |
+
+| Medium | ~40k rps | 27k rps | 4k rps | 2k rps |
+
+| Large | **~2530 rps** | 1886 rps | 493 rps | 1881 rps |
+
+
 
 > **TL;DR**: On medium templates miki-template is competitive with pug, and on large/realistic pages it **dominates by ~150×** versus pug, handlebars, and ejs. That’s where production apps live, and that’s where miki wins.
 
