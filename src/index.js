@@ -12,8 +12,6 @@ const { registerContextProcessor, applyContextProcessors, clearContextProcessors
 const { registerFilter, getFilter } = require('./filters');
 const { SafeString, markSafe, isSafe, escapeHtml } = require('./security');
 const { getCompiled, clearCache, getParentSource, hasParentSource } = require('./cache');
-const { renderBody, renderBodyAsync, renderBodyMaybeAsync } = require('./utils');
-const { generateCode, canCodegen, tagNodes, flattenNodes, evaluateFromTokens } = require('./codegen');
 const { registerHelper } = require('./tags/helpers');
 const { registerTag, getTagRegistry } = require('./tags/registry');
 
@@ -360,8 +358,8 @@ function compile(templateStr, options = {}) {
     }
     collectPartials(nodes);
 
-    const { renderBody, renderBodyAsync, renderBodyMaybeAsync } = require('./utils');
-    const { generateCode, canCodegen, tagNodes, flattenNodes, evaluateFromTokens } = require('./codegen');
+    const { renderBody } = require('./utils');
+    const { generateCode, canCodegen } = require('./codegen');
 
     const useCodegen = true;
     let compiledRender = null;

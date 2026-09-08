@@ -147,12 +147,10 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
 
   case 'VariableNode': {
     let expr;
-    let isLoopVar = false;
     if (node.isLiteral) {
       expr = js(node.literalValue);
     } else if (loopVarMap && loopVarMap[node.varPath]) {
       expr = loopVarMap[node.varPath];
-      isLoopVar = true;
     } else {
       expr = `_get(_ctx, ${js(node.varPath)})`;
     }
@@ -173,7 +171,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
       } else if (f.name === 'repeat' && arg !== 'void 0') {
         expr = `String(${expr} == null ? '' : ${expr}).repeat(${arg})`;
       } else {
-        const fnRef = f._fnRef ? `_f_${f.name}` : `_missingFilter`;
+        const fnRef = f._fnRef ? `_f_${f.name}` : '_missingFilter';
         if (f._fnRef) {
           expr = `${fnRef}(${expr}, ${arg}, _ctx)`;
         } else {
@@ -195,25 +193,25 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     const condJs = compileExprToJs(node.conditionStr, loopVarMap);
     stmts.push(pad(`if (${condJs}) {`, level));
     genNodes(node.body, stmts, level + 1, buf, loopVarMap);
-    stmts.push(pad(`}`, level));
+    stmts.push(pad('}', level));
     for (let i = 0; i < node.elifBranches.length; i++) {
       const b = node.elifBranches[i];
       const elifJs = compileExprToJs(b.conditionStr, loopVarMap);
       stmts.push(pad(`else if (${elifJs}) {`, level));
       genNodes(b.body, stmts, level + 1, buf, loopVarMap);
-      stmts.push(pad(`}`, level));
+      stmts.push(pad('}', level));
     }
     if (node.elseBody) {
-      stmts.push(pad(`else {`, level));
+      stmts.push(pad('else {', level));
       genNodes(node.elseBody, stmts, level + 1, buf, loopVarMap);
-      stmts.push(pad(`}`, level));
+      stmts.push(pad('}', level));
     }
     return;
   }
 
   case 'ForNode': {
     const s = '_' + level;
-    stmts.push(pad(`{`, level));
+    stmts.push(pad('{', level));
     const iterExpr = (loopVarMap && loopVarMap[node.iterablePath]) ? loopVarMap[node.iterablePath] : `_get(_ctx, ${js(node.iterablePath)})`;
     stmts.push(pad(`let _raw${s} = ${iterExpr};`, level + 1));
     for (let i = 0; i < node.filters.length; i++) {
@@ -223,7 +221,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
         if (f.arg.type === 'literal') arg = js(f.arg.value);
         else arg = (loopVarMap && loopVarMap[f.arg.value]) ? loopVarMap[f.arg.value] : `_get(_ctx, ${js(f.arg.value)})`;
       }
-      const fnRef = f._fnRef ? `_f_${f.name}` : `_missingFilter`;
+      const fnRef = f._fnRef ? `_f_${f.name}` : '_missingFilter';
       if (f._fnRef) {
         stmts.push(pad(`_raw${s} = ${fnRef}(_raw${s}, ${arg}, _ctx);`, level + 1));
       } else {
@@ -239,7 +237,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     stmts.push(pad(`const _len${s} = _raw${s}.length;`, level + 2));
     stmts.push(pad(`if (_len${s} === 0) {`, level + 2));
     if (node.emptyBody) genNodes(node.emptyBody, stmts, level + 3, buf, loopVarMap);
-    stmts.push(pad(`} else {`, level + 2));
+    stmts.push(pad('} else {', level + 2));
 
     if (needForloop) stmts.push(pad(`const _parentLoop${s} = _get(_ctx, 'forloop');`, level + 3));
     for (let i = 0; i < loopVars.length; i++) {
@@ -266,7 +264,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
 
     genNodes(node.body, stmts, level + 4, buf, newLoopVarMap);
 
-    stmts.push(pad(`}`, level + 3));
+    stmts.push(pad('}', level + 3));
 
     for (let i = 0; i < loopVars.length; i++) {
       const v = loopVars[i];
@@ -274,13 +272,13 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     }
     if (needForloop) stmts.push(pad(`_ctx._local.forloop = _saved_forloop${s};`, level + 3));
 
-    stmts.push(pad(`}`, level + 2));
+    stmts.push(pad('}', level + 2));
 
-    stmts.push(pad(`} else {`, level + 1));
+    stmts.push(pad('} else {', level + 1));
     stmts.push(pad(`const _items${s} = _normalizeFor(_raw${s});`, level + 2));
     stmts.push(pad(`if (_items${s}.length === 0) {`, level + 2));
     if (node.emptyBody) genNodes(node.emptyBody, stmts, level + 3, buf, loopVarMap);
-    stmts.push(pad(`} else {`, level + 2));
+    stmts.push(pad('} else {', level + 2));
     stmts.push(pad(`const _len${s} = _items${s}.length;`, level + 3));
     if (needForloop) stmts.push(pad(`const _parentLoop${s} = _get(_ctx, 'forloop');`, level + 3));
     for (let i = 0; i < loopVars.length; i++) {
@@ -302,7 +300,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     }
     genNodes(node.body, stmts, level + 4, buf, newLoopVarMap);
 
-    stmts.push(pad(`}`, level + 3));
+    stmts.push(pad('}', level + 3));
 
     for (let i = 0; i < loopVars.length; i++) {
       const v = loopVars[i];
@@ -310,15 +308,15 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     }
     if (needForloop) stmts.push(pad(`_ctx._local.forloop = _saved_forloop${s};`, level + 3));
 
-    stmts.push(pad(`}`, level + 2));
-    stmts.push(pad(`}`, level + 1));
-    stmts.push(pad(`}`, level));
+    stmts.push(pad('}', level + 2));
+    stmts.push(pad('}', level + 1));
+    stmts.push(pad('}', level));
     return;
   }
 
   case 'WithNode': {
-    stmts.push(pad(`{`, level));
-    stmts.push(pad(`const _scope = {};`, level + 1));
+    stmts.push(pad('{', level));
+    stmts.push(pad('const _scope = {};', level + 1));
     const savedKeys = [];
     for (let i = 0; i < node.mappings.length; i++) {
       const m = node.mappings[i];
@@ -340,7 +338,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     for (let i = 0; i < savedKeys.length; i++) {
       stmts.push(pad(`_ctx._local[${js(savedKeys[i])}] = _saved_${savedKeys[i]};`, level + 1));
     }
-    stmts.push(pad(`}`, level));
+    stmts.push(pad('}', level));
     return;
   }
 
@@ -348,11 +346,11 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     return;
 
   case 'AutoescapeNode': {
-    stmts.push(pad(`{`, level));
+    stmts.push(pad('{', level));
     stmts.push(pad(`const _ae = a; a = ${node.setting === 'on' ? 'true' : 'false'};`, level + 1));
     genNodes(node.body, stmts, level + 1, buf, loopVarMap);
-    stmts.push(pad(`a = _ae;`, level + 1));
-    stmts.push(pad(`}`, level));
+    stmts.push(pad('a = _ae;', level + 1));
+    stmts.push(pad('}', level));
     return;
   }
 
@@ -367,9 +365,9 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
   case 'PartialDefNode': {
     stmts.push(pad(`_registerPartial(_ctx, ${js(node.name)}, _partials[${node._partialId}]);`, level));
     if (node.inline) {
-      stmts.push(pad(`{`, level));
+      stmts.push(pad('{', level));
       genNodes(node.body, stmts, level + 1, buf, loopVarMap);
-      stmts.push(pad(`}`, level));
+      stmts.push(pad('}', level));
     }
     return;
   }
@@ -392,8 +390,8 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     return;
 
   case 'SpacelessNode': {
-    stmts.push(pad(`{`, level));
-    stmts.push(pad(`let _spaceBuf = '';`, level + 1));
+    stmts.push(pad('{', level));
+    stmts.push(pad('let _spaceBuf = \'\';', level + 1));
     genNodes(node.body, stmts, level + 1, '_spaceBuf', loopVarMap);
     stmts.push(pad(`${buf} += _spaceBuf.replace(/>\\s+</g, '><'); }`, level));
     return;
@@ -442,29 +440,29 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     return;
 
   case 'SetNode': {
-    const valExpr = node.valueExpr !== undefined ? `_resolveVal(${js(node.valueExpr)}, _ctx)` : "''";
+    const valExpr = node.valueExpr !== undefined ? `_resolveVal(${js(node.valueExpr)}, _ctx)` : '\'\'';
     stmts.push(pad(`_ctx._local[${js(node.nameExpr)}] = ${valExpr};`, level));
     if (node.body && node.body.length) genNodes(node.body, stmts, level, buf, loopVarMap);
     return;
   }
 
   case 'IfChangedNode': {
-    stmts.push(pad(`{`, level));
-    stmts.push(pad(`if (!_ctx.ifChangedState) _ctx.ifChangedState = new Map();`, level + 1));
+    stmts.push(pad('{', level));
+    stmts.push(pad('if (!_ctx.ifChangedState) _ctx.ifChangedState = new Map();', level + 1));
     stmts.push(pad(`const _cur = _resolveVal(${js(node.conditionStr)}, _ctx);`, level + 1));
     stmts.push(pad(`const _last = _ctx.ifChangedState.get(${js(node.conditionStr)});`, level + 1));
-    stmts.push(pad(`if (_last === undefined || _cur !== _last) {`, level + 1));
+    stmts.push(pad('if (_last === undefined || _cur !== _last) {', level + 1));
     stmts.push(pad(`_ctx.ifChangedState.set(${js(node.conditionStr)}, _cur);`, level + 2));
-    stmts.push(pad(`let _subBuf = '';`, level + 2));
+    stmts.push(pad('let _subBuf = \'\';', level + 2));
     genNodes(node.body, stmts, level + 3, '_subBuf', loopVarMap);
     stmts.push(pad(`${buf} += _subBuf; }`, level + 2));
     if (node.elseBody) {
-      stmts.push(pad(`else {`, level + 1));
-      stmts.push(pad(`let _subBuf2 = '';`, level + 2));
+      stmts.push(pad('else {', level + 1));
+      stmts.push(pad('let _subBuf2 = \'\';', level + 2));
       genNodes(node.elseBody, stmts, level + 3, '_subBuf2', loopVarMap);
       stmts.push(pad(`${buf} += _subBuf2; }`, level + 2));
     }
-    stmts.push(pad(`}`, level + 1));
+    stmts.push(pad('}', level + 1));
     return;
   }
 
@@ -622,12 +620,12 @@ function buildCode(nodes) {
   const filterDecls = filterNames.map(n => `const _f_${n} = _f['${n}'];`).join('\n');
 
   const stmts = [];
-  stmts.push("'use strict';");
-  stmts.push("let out = '';");
-  stmts.push("let a = _ctx.autoescape;");
+  stmts.push('\'use strict\';');
+  stmts.push('let out = \'\';');
+  stmts.push('let a = _ctx.autoescape;');
   if (filterDecls) stmts.push(filterDecls);
   genNodes(nodes, stmts, 1, 'out', {});
-  stmts.push("return out;");
+  stmts.push('return out;');
 
   const body = stmts.join('\n');
 
@@ -646,7 +644,7 @@ function buildCode(nodes) {
   return new Function(src)();
 }
 
-const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' };
 const HAS_ESCAPE_RE = /[&<>"']/;
 const ESCAPE_RE = /[&<>"']/g;
 
