@@ -1,6 +1,10 @@
 ﻿# miki-template
 
 Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.
+miki comes with more tags and filters that are not in django/jinja and miki templates supports all django tags and filters plus it own additional tags and filters.
+you can register your own custom filters and filters in miki templates.
+
+miki is secure and production ready with active maintainer and performance improvements.
 
 [Get Started](guide/quick-start.md) | [API Reference](api/index.md) | [GitHub](https://github.com/alainmiki/miki-template)
 

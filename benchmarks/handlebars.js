@@ -2,14 +2,9 @@ const Handlebars = require('handlebars');
 const { performance } = require('perf_hooks');
 
 const SMALL = `{{#each items}}{{this}}:{{this.length}}\n{{/each}}`;
-const MEDIUM = `{{#each (range 0 50)}}{{#if (isEven this)}}Even: {{this}}\n{{else}}Odd: {{this}}\n{{/if}}{{/each}}`;
-const LARGE = `{{#each (range 0 500)}}{{#each (range 0 5)}}{{this}}:{{../this}} {{repeat "x" 10}}\n{{/each}}{{/each}}`;
+const MEDIUM = `{{#each big_items}}{{#if (isEven this)}}Even: {{this}}\n{{else}}Odd: {{this}}\n{{/if}}{{/each}}`;
+const LARGE = `{{#each big_items}}{{#each ../small_items}}{{this}}:{{../this}} {{repeat "x" 10}}\n{{/each}}{{/each}}`;
 
-Handlebars.registerHelper('range', function(start, end) {
-  const arr = [];
-  for (let i = start; i < end; i++) arr.push(i);
-  return arr;
-});
 Handlebars.registerHelper('isEven', function(n) {
   return n % 2 === 0;
 });
@@ -18,7 +13,9 @@ Handlebars.registerHelper('repeat', function(str, n) {
 });
 
 const data = {
-  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon']
+  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon'],
+  big_items: Array.from({ length: 500 }, (_, i) => i),
+  small_items: Array.from({ length: 5 }, (_, j) => j)
 };
 
 function bench(name, tpl, data, iterations = 5000) {

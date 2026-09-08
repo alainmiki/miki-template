@@ -12,6 +12,8 @@ const { registerContextProcessor, applyContextProcessors, clearContextProcessors
 const { registerFilter, getFilter } = require('./filters');
 const { SafeString, markSafe, isSafe, escapeHtml } = require('./security');
 const { getCompiled, clearCache, getParentSource, hasParentSource } = require('./cache');
+const { renderBody, renderBodyAsync, renderBodyMaybeAsync } = require('./utils');
+const { generateCode, canCodegen, tagNodes, flattenNodes, evaluateFromTokens } = require('./codegen');
 const { registerHelper } = require('./tags/helpers');
 const { registerTag, getTagRegistry } = require('./tags/registry');
 
@@ -219,12 +221,15 @@ function readParentSource(parentName, viewsDirs) {
 
 async function renderASTAsync(nodes, context) {
   context.parentTemplate = null;
-  const parts = [];
-  for (const node of nodes) {
-    const result = node.render(context);
-    parts.push(result instanceof Promise ? await result : result);
+  let output = '';
+  for (let i = 0, len = nodes.length; i < len; i++) {
+    const result = nodes[i].render(context);
+    if (result instanceof Promise) {
+      output += await result;
+    } else {
+      output += result;
+    }
   }
-  let output = parts.join('');
 
   if (context.parentTemplate) {
     const parentName = context.parentTemplate;
@@ -279,13 +284,14 @@ async function renderASTAsync(nodes, context) {
  */
 function renderAST(nodes, context) {
   context.parentTemplate = null;
-  const output = nodes.map(node => {
-    const result = node.render(context);
+  let output = '';
+  for (let i = 0, len = nodes.length; i < len; i++) {
+    const result = nodes[i].render(context);
     if (result instanceof Promise) {
       throw new Error('Async node encountered during sync render. Use asyncRender() instead.');
     }
-    return result;
-  }).join('');
+    output += result;
+  }
 
   if (context.parentTemplate) {
     const parentName = context.parentTemplate;
@@ -354,78 +360,79 @@ function compile(templateStr, options = {}) {
     }
     collectPartials(nodes);
 
-    return {
-      render: (contextObj = {}) => {
-        const processedContextObj = applyContextProcessors({ ...contextObj });
-        const context = new Context(processedContextObj, opts);
-        context.reset();
-        if (parser.blocks) {
-          for (const [name, blockList] of Object.entries(parser.blocks)) {
-            context.blocks[name] = [...blockList];
-          }
+    const { renderBody, renderBodyAsync, renderBodyMaybeAsync } = require('./utils');
+    const { generateCode, canCodegen, tagNodes, flattenNodes, evaluateFromTokens } = require('./codegen');
+
+    const useCodegen = true;
+    let compiledRender = null;
+    if (useCodegen && canCodegen(nodes)) {
+      compiledRender = generateCode(nodes);
+    }
+
+    function makeContext(contextObj, callOpts) {
+      const mergedOpts = callOpts ? { ...opts, ...callOpts } : opts;
+      const processedContextObj = applyContextProcessors({ ...contextObj });
+      const context = new Context(processedContextObj, mergedOpts);
+      context.reset();
+      if (parser.blocks) {
+        for (const [name, blockList] of Object.entries(parser.blocks)) {
+          context.blocks[name] = [...blockList];
         }
-        // Register partial definitions from compile-time
-        for (const [name, partial] of Object.entries(partialDefs)) {
-          context.registerPartial(name, partial);
+      }
+      for (const [name, partial] of Object.entries(partialDefs)) {
+        context.registerPartial(name, partial);
+      }
+      return context;
+    }
+
+    return {
+      _usesCodegen: !!compiledRender,
+      render: (contextObj = {}) => {
+        const context = makeContext(contextObj);
+        if (compiledRender) {
+          const res = compiledRender(context);
+          if (context.parentTemplate) {
+            return renderAST(nodes, context);
+          }
+          return res;
         }
         return renderAST(nodes, context);
       },
       renderWith: (contextObj = {}, callOptions = {}) => {
-        const processedContextObj = applyContextProcessors({ ...contextObj });
-        const mergedOpts = { ...opts, ...callOptions };
-        const context = new Context(processedContextObj, mergedOpts);
-        context.reset();
-        if (parser.blocks) {
-          for (const [name, blockList] of Object.entries(parser.blocks)) {
-            context.blocks[name] = [...blockList];
+        const context = makeContext(contextObj, callOptions);
+        if (compiledRender) {
+          const res = compiledRender(context);
+          if (context.parentTemplate) {
+            return renderAST(nodes, context);
           }
-        }
-        for (const [name, partial] of Object.entries(partialDefs)) {
-          context.registerPartial(name, partial);
+          return res;
         }
         return renderAST(nodes, context);
       },
       asyncRender: async (contextObj = {}) => {
-        const processedContextObj = applyContextProcessors({ ...contextObj });
-        const context = new Context(processedContextObj, opts);
-        context.blocks = {};
-        if (parser.blocks) {
-          for (const [name, blockList] of Object.entries(parser.blocks)) {
-            context.blocks[name] = [...blockList];
+        const context = makeContext(contextObj);
+        if (compiledRender) {
+          const res = compiledRender(context);
+          if (context.parentTemplate || res instanceof Promise || (typeof res === 'string' && res.includes('[object Promise]'))) {
+            return await renderASTAsync(nodes, context);
           }
-        }
-        for (const [name, partial] of Object.entries(partialDefs)) {
-          context.registerPartial(name, partial);
+          return res;
         }
         return await renderASTAsync(nodes, context);
       },
       asyncRenderWith: async (contextObj = {}, callOptions = {}) => {
-        const processedContextObj = applyContextProcessors({ ...contextObj });
-        const mergedOpts = { ...opts, ...callOptions };
-        const context = new Context(processedContextObj, mergedOpts);
-        context.blocks = {};
-        if (parser.blocks) {
-          for (const [name, blockList] of Object.entries(parser.blocks)) {
-            context.blocks[name] = [...blockList];
+        const context = makeContext(contextObj, callOptions);
+        if (compiledRender) {
+          const res = compiledRender(context);
+          if (context.parentTemplate || res instanceof Promise || (typeof res === 'string' && res.includes('[object Promise]'))) {
+            return await renderASTAsync(nodes, context);
           }
-        }
-        for (const [name, partial] of Object.entries(partialDefs)) {
-          context.registerPartial(name, partial);
+          return res;
         }
         return await renderASTAsync(nodes, context);
       },
       renderBlock: (blockName, contextObj = {}) => {
-        const processedContextObj = applyContextProcessors({ ...contextObj });
-        const context = new Context(processedContextObj, opts);
-        context.blocks = {};
-        if (parser.blocks) {
-          for (const [name, blockList] of Object.entries(parser.blocks)) {
-            context.blocks[name] = [...blockList];
-          }
-        }
-        for (const [name, partial] of Object.entries(partialDefs)) {
-          context.registerPartial(name, partial);
-        }
+        const context = makeContext(contextObj);
         renderAST(nodes, context);
         const blockStack = context.blocks[blockName];
         if (!blockStack || blockStack.length === 0) {
@@ -442,7 +449,7 @@ function compile(templateStr, options = {}) {
         }
         context.push({ block: { super: superVal } });
         context.blockRenderIndices[blockName] = 0;
-        const result = blockStack[0].body.map(n => n.render(context)).join('');
+        const result = renderBody(blockStack[0].body, context);
         context.pop();
         context.blockRenderIndices[blockName] = -1;
         return result;
@@ -457,7 +464,7 @@ function compile(templateStr, options = {}) {
         if (!partial) {
           throw new Error(`Partial '${partialName}' not found`);
         }
-        return partial.body.map(n => n.render(context)).join('');
+        return renderBody(partial.body, context);
       }
     };
   });

@@ -1,4 +1,4 @@
-﻿# Filters
+# Filters
 
 
 
@@ -181,6 +181,9 @@ Filters accept the following argument types:
 | `linebreaksbr` | Convert all newlines to `<br>` | `{{ text|linebreaksbr }}` |
 
 | `striptags` | Remove HTML tags | `{{ html|striptags }}` |
+| `repeat` | Repeat a string N times | `{{ "ha"|repeat:3 }}` |
+| `range` | Generate a range of integers | `{{ 5|range }}` |
+
 
 | `slugify` | URL-friendly slug | `{{ title|slugify }}` |
 
@@ -1269,6 +1272,33 @@ You can register your own filters. See the [Custom Filters guide](custom-filters
 
 
 ---
+
+# Filter Documentation
+
+## `repeat`
+
+**Signature:** `repeat(value, count)`
+
+- **Purpose:** Returns a new string consisting of `value` repeated `count` times.
+- **Parameters:**
+  - `value` – Any value that can be converted to a string (null/undefined become empty string).
+  - `count` – Number of repetitions, parsed as integer; non‑positive yields empty string.
+- **Implementation:** Uses native `String.prototype.repeat` for optimal V8 performance.
+- **Example:** `{{ "ab"|repeat:3 }}  => "ababab"`
+
+## `range`
+
+**Signature:** `range(end, start?)`
+
+- **Purpose:** Generates an array of integers from `start` (inclusive) to `end` (exclusive) with step 1.
+- **Parameters:**
+  - `end` – Upper bound (exclusive), parsed as integer.
+  - `start` – Optional lower bound, defaults to `0`.
+- **Implementation:** Simple for‑loop building a JavaScript array.
+- **Example:** `{% for i in 5|range %}{{ i }}{% endfor %}` outputs `0 1 2 3 4`.
+
+These filters are covered by unit tests in `tests/filters.test.js` and are documented here for developers and template authors.
+
 
 
 

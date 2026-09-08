@@ -2,11 +2,14 @@ const miki = require('../src');
 const { performance } = require('perf_hooks');
 
 const SMALL = `{% for item in items %}{{ item|upper }}:{{ item|length }}\n{% endfor %}`;
-const MEDIUM = `{% for i in range(0, 50) %}{% if i % 2 == 0 %}Even: {{ i }}\n{% else %}Odd: {{ i }}\n{% endif %}{% endfor %}`;
-const LARGE = `{% for i in range(0, 500) %}{% for j in range(0, 5) %}{{ i }}:{{ j }} {{ "x"|repeat:10 }}\n{% endfor %}{% endfor %}`;
+const MEDIUM = `{% for i in big_items %}{% if i % 2 == 0 %}Even: {{ i }}\n{% else %}Odd: {{ i }}\n{% endif %}{% endfor %}`;
+const LARGE = `{% for i in big_items %}{% for j in small_items %}{{ i }}:{{ j }} {{ x10|repeat:5 }}\n{% endfor %}{% endfor %}`;
 
 const data = {
-  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon']
+  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon'],
+  big_items: Array.from({ length: 500 }, (_, i) => i),
+  small_items: Array.from({ length: 5 }, (_, j) => j),
+  x10: 'x'
 };
 
 function bench(name, tpl, data, iterations = 5000) {

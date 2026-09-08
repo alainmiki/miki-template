@@ -2,11 +2,13 @@ const pug = require('pug');
 const { performance } = require('perf_hooks');
 
 const SMALL = `each item in items\n  = item.toUpperCase() + ':' + item.length\n`;
-const MEDIUM = `- for (let i = 0; i < 50; i++)\n  if i % 2 === 0\n    | Even: #{i}\n  else\n    | Odd: #{i}\n`;
-const LARGE = `- for (let i = 0; i < 500; i++)\n  - for (let j = 0; j < 5; j++)\n    | #{i}:#{j} #{'x'.repeat(10)}\n`;
+const MEDIUM = `each i in big_items\n  if i % 2 === 0\n    | Even: #{i}\n  else\n    | Odd: #{i}\n`;
+const LARGE = `each i in big_items\n  each j in small_items\n    | #{i}:#{j} #{'x'.repeat(10)}\n`;
 
 const data = {
-  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon']
+  items: ['alpha', 'beta', 'gamma', 'delta', 'epsilon'],
+  big_items: Array.from({ length: 500 }, (_, i) => i),
+  small_items: Array.from({ length: 5 }, (_, j) => j)
 };
 
 function bench(name, tpl, data, iterations = 5000) {

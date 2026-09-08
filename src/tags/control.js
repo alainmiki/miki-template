@@ -2,6 +2,7 @@
  * Control flow template tags: if, for, with, cycle, comment, with, firstof.
  */
 const { parseVariableExpression } = require('../parser');
+const { getFilter } = require('../filters');
 
 /**
  * Helper to parse a string into an array of tokens.
@@ -206,27 +207,28 @@ class ForNode {
     this.filters = filters;
     this.body = body;
     this.emptyBody = emptyBody;
+    this._filterFns = filters.map(f => {
+      const fn = getFilter(f.name);
+      return { fn, arg: f.arg };
+    });
   }
 
   render(context) {
     let rawItems = context.get(this.iterablePath);
 
-    // Apply any filters on the iterable path (e.g. items|regroup:"category")
-    const { getFilter } = require('../filters');
-    for (const filterInfo of this.filters) {
-      const filterFn = getFilter(filterInfo.name);
-      if (!filterFn) {
-        throw new Error(`Unknown filter: '${filterInfo.name}'`);
+    for (const { fn, arg } of this._filterFns) {
+      if (!fn) {
+        throw new Error(`Unknown filter: '${arg.name}'`);
       }
       let argVal = undefined;
-      if (filterInfo.arg) {
-        if (filterInfo.arg.type === 'literal') {
-          argVal = filterInfo.arg.value;
-        } else if (filterInfo.arg.type === 'variable') {
-          argVal = context.get(filterInfo.arg.value);
+      if (arg) {
+        if (arg.type === 'literal') {
+          argVal = arg.value;
+        } else if (arg.type === 'variable') {
+          argVal = context.get(arg.value);
         }
       }
-      rawItems = filterFn(rawItems, argVal);
+      rawItems = fn(rawItems, argVal);
     }
 
     let items = [];
@@ -706,6 +708,7 @@ module.exports = {
   PartialDefNode,
   PartialNode,
   evaluateCondition,
+  tokenizeExpr,
   parsers: {
     if: parseIf,
     for: parseFor,

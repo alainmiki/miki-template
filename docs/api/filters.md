@@ -1,4 +1,4 @@
-﻿# Filters API
+# Filters API
 
 
 
@@ -208,7 +208,10 @@ Retrieve a registered filter by name.
 
 | `wordcount` | Count words |
 
+| `repeat` | Repeat a string N times |
+| `range` | Generate a range of integers |
 | `striptags` | Remove HTML tags |
+
 
 | `slugify` | Convert to URL-friendly slug |
 

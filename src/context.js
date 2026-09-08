@@ -12,6 +12,18 @@ class Context {
     this.partialDefs = new Map(); // Store partial definitions
   }
 
+  get _local() {
+    return this.scopes[0] || {};
+  }
+
+  set _local(value) {
+    if (this.scopes.length === 0) {
+      this.scopes.unshift(value);
+    } else {
+      this.scopes[0] = value;
+    }
+  }
+
   /**
    * Reset cycle state and blocks for a fresh render.
    * Called at the start of each render pass.
@@ -49,14 +61,20 @@ class Context {
       return '';
     }
 
-    const parts = path.split('.');
-    const baseName = parts[0];
+    // Fast path for non-dotted single variable lookups
+    const isString = typeof path === 'string';
+    const hasDot = isString && path.includes('.');
+
+    const baseName = hasDot ? path.split('.')[0] : path;
 
     let current = undefined;
     let found = false;
 
     // Search scopes from top (most local) to bottom (most global)
-    for (const scope of this.scopes) {
+    const scopes = this.scopes;
+    const len = scopes.length;
+    for (let i = 0; i < len; i++) {
+      const scope = scopes[i];
       if (scope && typeof scope === 'object' && baseName in scope) {
         current = scope[baseName];
         found = true;
@@ -65,43 +83,37 @@ class Context {
     }
 
     if (!found) {
-      // Variable truly missing — return undefined so templates can
-      // distinguish "missing" from "explicitly null". The variable node
-      // and filters handle undefined gracefully.
       return undefined;
     }
 
-    // Traverse the rest of the dotted segments
-    for (let i = 1; i < parts.length; i++) {
-      if (current === undefined || current === null) {
-        return current === null ? null : undefined;
-      }
+    if (hasDot) {
+      const parts = path.split('.');
+      for (let i = 1; i < parts.length; i++) {
+        if (current === undefined || current === null) {
+          return current === null ? null : undefined;
+        }
 
-      const parent = current;
-      const part = parts[i];
+        const parent = current;
+        const part = parts[i];
 
-      // Resolve segment on the current value
-      if (typeof current === 'object' && part in current) {
-        current = current[part];
-      } else if (Array.isArray(current) && !isNaN(part)) {
-        // Handle array index resolution, e.g. items.0
-        current = current[parseInt(part, 10)];
-      } else {
-        return undefined;
-      }
+        if (typeof current === 'object' && part in current) {
+          current = current[part];
+        } else if (Array.isArray(current) && !isNaN(part)) {
+          current = current[parseInt(part, 10)];
+        } else {
+          return undefined;
+        }
 
-      // If the property value is a function, evaluate it (Django style)
-      if (typeof current === 'function') {
-        current = current.call(parent);
+        if (typeof current === 'function') {
+          current = current.call(parent);
+        }
       }
     }
 
-    // If the final resolved value is a function, call it with no arguments
     if (typeof current === 'function') {
       current = current.call(null);
     }
 
-    // Preserve null/undefined so filters like default_if_none can detect them.
     return current;
   }
 

@@ -1,17 +1,17 @@
 [
   {
     "name": "ejs:small",
-    "medianMs": 0.00549999999999784,
-    "rps": 181818
+    "medianMs": 0.005699999999990268,
+    "rps": 175439
   },
   {
     "name": "ejs:medium",
-    "medianMs": 0.033799999999985175,
-    "rps": 29586
+    "medianMs": 0.34400000000005093,
+    "rps": 2907
   },
   {
     "name": "ejs:large",
-    "medianMs": 3.5704000000000633,
-    "rps": 280
+    "medianMs": 4.177900000000136,
+    "rps": 239
   }
 ]

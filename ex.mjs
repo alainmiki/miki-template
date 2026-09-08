@@ -26,7 +26,7 @@ const dir=path.join(process.cwd(),"dir")
       {name:"miki", email:"jack@miki.com",address:"kumba"},
       {name:"luis",email:"luis@miki.com",address:"kumba"}
     ]
-    res.render("index#card",{name:"miki-template context", users:users, data:data})
+    res.render("index",{name:"miki-template context", users:users, data:data})
     // res.send(content)
   })
 

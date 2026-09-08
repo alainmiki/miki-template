@@ -971,5 +971,21 @@ registerFilter('uuid', () => {
   });
 });
 
+registerFilter('repeat', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const count = parseInt(arg, 10);
+  if (Number.isNaN(count) || count <= 0) return '';
+  return str.repeat(count);
+});
+
+registerFilter('range', (val, arg) => {
+  const end = parseInt(val, 10);
+  const start = arg !== undefined && arg !== null ? parseInt(arg, 10) : 0;
+  const step = 1;
+  const out = [];
+  for (let i = start; i < end; i += step) out.push(i);
+  return out;
+});
+
 module.exports = { registerFilter, getFilter };
 
