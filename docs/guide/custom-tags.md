@@ -16,8 +16,6 @@ Create your own template tags by registering a parser function. miki-template's 
 
 - [Parsing Complex Tags](#parsing-complex-tags)
 
-- [Accessing the Parser](#accessing-the-parser)
-
 - [Tag Registration Best Practices](#tag-registration-best-practices)
 
 

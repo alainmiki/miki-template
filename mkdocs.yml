@@ -180,12 +180,12 @@ plugins:
   - tags
   - meta
   - offline:
-      enabled: !ENV [READTHEDOCS, true]
+      enabled: !ENV [READTHEDOCS, false]
   - social:
       cards: true
       cards_layout_options:
         color: "#1a1a2e"
         font_family: Roboto
   - optimize:
-      enabled: !ENV [READTHEDOCS, true]
+      enabled: !ENV [READTHEDOCS, false]
       concurrency: 4

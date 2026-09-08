@@ -18,15 +18,15 @@ Filters transform variable output using the pipe (`|`) syntax. You can chain mul
 
 - [Text Filters](#text-filters)
 
-- [HTML / Security Filters](#html--security-filters)
+- [HTML / Security Filters](#html-security-filters)
 
-- [List / Array Filters](#list--array-filters)
+- [List / Array Filters](#list-array-filters)
 
 - [Default Value Filters](#default-value-filters)
 
 - [Date and Time Filters](#date-and-time-filters)
 
-- [Numeric / Math Filters](#numeric--math-filters)
+- [Numeric / Math Filters](#numeric-math-filters)
 
 - [Data Formatting Filters](#data-formatting-filters)
 
@@ -1197,7 +1197,7 @@ Usage:
 
 
 
-The `cache` library provides a `{% cache %}` tag, not a filter. See [Tags: cache](#cache-tag) for details.
+The `cache` library provides a `{% cache %}` tag, not a filter. See [Tags: Library Loading](tags.md#library-loading) for details.
 
 
 

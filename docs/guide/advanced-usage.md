@@ -14,7 +14,7 @@ This guide covers advanced miki-template features: caching, library system, i18n
 
 - [Library System](#library-system)
 
-- [i18n / Internationalization](#i18n--internationalization)
+- [i18n / Internationalization](#i18n-internationalization)
 
 - [Template Discovery](#template-discovery)
 
