@@ -1,6 +1,6 @@
-site_name: miki-template
+site_name: miki template
 site_url: https://alainmiki.github.io/miki-template/
-site_description: Django-style template engine for Node.js and Express
+site_description: Django-style template engine for Node.js and Express with full django-template parity
 site_author: Alain Miki
 
 repo_name: miki-template
@@ -15,15 +15,11 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: custom
-      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
-      scheme: custom
-      primary: custom
-      accent: custom
+      scheme: slate
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -174,7 +170,7 @@ extra:
   version:
     provider: mike
   homepage: https://alainmiki.github.io/miki-template/
-  generator: false
+  generator: true
   annotate:
     json: [.s2s]
 
@@ -184,12 +180,12 @@ plugins:
   - tags
   - meta
   - offline:
-      enabled: !ENV [READTHEDOCS, false]
+      enabled: !ENV [READTHEDOCS, true]
   - social:
       cards: true
       cards_layout_options:
         color: "#1a1a2e"
         font_family: Roboto
   - optimize:
-      enabled: !ENV [READTHEDOCS, false]
+      enabled: !ENV [READTHEDOCS, true]
       concurrency: 4

@@ -24,3 +24,12 @@
 <meta name="twitter:title" content="miki-template - Django-style templating for Node.js">
 <meta name="twitter:description" content="Blazing fast partials, smart template discovery, and zero friction for HTMX.">
 {% endblock %}
+
+{% block footer %}
+{{ super() }}
+<div class="md-footer__credits">
+  <span class="md-footer__credits-text">
+    Made by <a href="https://github.com/alainmiki">Alain Miki</a> — also check out <a href="https://github.com/alainmiki/mikiUI">mikiUI</a> and <a href="https://github.com/alainmiki/mikiORM">mikiORM</a>
+  </span>
+</div>
+{% endblock %}
