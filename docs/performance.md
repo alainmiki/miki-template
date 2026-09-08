@@ -18,7 +18,7 @@ Renders per second (higher is better):
 
 |----------|--------------|-----|------------|-----|
 
-| Small | ~1.1mk rps | 1.1M rps | 300k rps | 113k rps |
+| Small | ~1.1M rps | 1.1M rps | 300k rps | 113k rps |
 
 | Medium | ~40k rps | 27k rps | 4k rps | 2k rps |
 
