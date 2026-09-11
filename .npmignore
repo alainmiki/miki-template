@@ -1,0 +1,8 @@
+# Exclude non-runtime documentation and metadata from npm package
+README*
+CHANGELOG*
+LICENSE*
+LICENCE*
+NOTICE*
+# Exclude lockfiles
+package-lock.json
