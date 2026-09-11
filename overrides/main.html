@@ -5,7 +5,8 @@
   <div class="md-announce__inner">
     <span>🚀 <strong>miki-template v2.3.1</strong> is now available with improved performance and new features!</span>
     <a href="https://github.com/alainmiki/miki-template/releases" target="_blank" rel="noopener">View Release Notes</a>
-    <button class="md-announce__button" onclick="this.closest('.md-announce').remove()" aria-label="Dismiss announcement">
+    <button class="md-announce__button" onclick="this.closest('.md-announce').remove()"
+      aria-label="Dismiss announcement">
       <span class="md-icon">&#10005;</span>
     </button>
   </div>
@@ -14,9 +15,11 @@
 
 {% block extrahead %}
 <meta name="theme-color" content="#1a1a2e">
-<meta name="description" content="Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.">
+<meta name="description"
+  content="Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.">
 <meta property="og:title" content="miki-template - Django-style templating for Node.js">
-<meta property="og:description" content="Blazing fast partials, smart template discovery, and zero friction for HTMX. Bring Django's beloved template language to Node.js and Express.">
+<meta property="og:description"
+  content="Blazing fast partials, smart template discovery, and zero friction for HTMX. Bring Django's beloved template language to Node.js and Express.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://alainmiki.github.io/miki-template/">
 <meta property="og:image" content="https://alainmiki.github.io/miki-template/social-card.png">
@@ -26,12 +29,17 @@
 {% endblock %}
 
 {% block footer %}
-<div class="md-footer__credits" role="contentinfo" style="text-align: center;">
+<div class="md-footer__credits" role="contentinfo" style="text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); backdrop-filter:blur(10px) " >
   <span class="md-footer__credits-text" style="font-size: larger;padding:12px  0;">
-    Made by <a href="https://github.com/alainmiki">Alain Miki</a> — also check out <a href="https://github.com/alainmiki/mikiUI">mikiUI</a> and <a href="https://github.com/alainmiki/mikiORM">mikiORM</a>
+    Made by <a
+      style="font-size: x-large; text-decoration: underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki">Alain Miki</a> — also check out <a
+      style="font-size: x-large; text-decoration:underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki/mikiUI">mikiUI</a> 
+      and <a
+      style="font-size: x-large; text-decoration:underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki/mikiORM">mikiORM</a>
   </span>
 </div>
 {{ super() }}
 {% endblock %}
-
-
