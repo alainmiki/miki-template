@@ -1,0 +1,2906 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Django-style template engine for Node.js and Express with full django-template parity">
+      
+      
+        <meta name="author" content="Alain Miki">
+      
+      
+        <link rel="canonical" href="https://alainmiki.github.io/miki-template/guide/filters/">
+      
+      
+        <link rel="prev" href="../template-inheritance/">
+      
+      
+        <link rel="next" href="../tags/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Filters - miki template</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+  
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+    
+      
+      
+    
+  
+  
+  <style>:root{--md-admonition-icon--note:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20448%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M64%20480c-35.3%200-64-28.7-64-64V96c0-35.3%2028.7-64%2064-64h320c35.3%200%2064%2028.7%2064%2064v213.5c0%2017-6.7%2033.3-18.7%2045.3L322.7%20461.3c-12%2012-28.3%2018.7-45.3%2018.7zm325.5-176H296c-13.3%200-24%2010.7-24%2024v93.5z%22/%3E%3C/svg%3E');--md-admonition-icon--abstract:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%20141.3v309.3l.5-.2A449%20449%200%200%201%20428.8%20416H448V96h-19.2c-42.2%200-84.1%208.4-123.1%2024.6-16.8%207-33.4%2013.9-49.7%2020.7m-25.1-79.8L256%2072l25.1-10.5C327.9%2042%20378.1%2032%20428.8%2032H464c26.5%200%2048%2021.5%2048%2048v352c0%2026.5-21.5%2048-48%2048h-35.2c-50.7%200-100.9%2010-147.7%2029.5l-12.8%205.3c-7.9%203.3-16.7%203.3-24.6%200l-12.8-5.3C184.1%20490%20133.9%20480%2083.2%20480H48c-26.5%200-48-21.5-48-48V80c0-26.5%2021.5-48%2048-48h35.2c50.7%200%20100.9%2010%20147.7%2029.5%22/%3E%3C/svg%3E');--md-admonition-icon--info:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%20512a256%20256%200%201%200%200-512%20256%20256%200%201%200%200%20512m-32-352a32%2032%200%201%201%2064%200%2032%2032%200%201%201-64%200m-8%2064h48c13.3%200%2024%2010.7%2024%2024v88h8c13.3%200%2024%2010.7%2024%2024s-10.7%2024-24%2024h-80c-13.3%200-24-10.7-24-24s10.7-24%2024-24h24v-64h-24c-13.3%200-24-10.7-24-24s10.7-24%2024-24%22/%3E%3C/svg%3E');--md-admonition-icon--tip:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20384%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M292.9%20384c7.3-22.3%2021.9-42.5%2038.4-59.9C364%20289.7%20384%20243.2%20384%20192%20384%2086%20298%200%20192%200S0%2086%200%20192c0%2051.2%2020%2097.7%2052.7%20132.1%2016.5%2017.4%2031.2%2037.6%2038.4%2059.9h201.7zm-4.9%2048H96v16c0%2044.2%2035.8%2080%2080%2080h32c44.2%200%2080-35.8%2080-80zM184%20112c-39.8%200-72%2032.2-72%2072%200%2013.3-10.7%2024-24%2024s-24-10.7-24-24c0-66.3%2053.7-120%20120-120%2013.3%200%2024%2010.7%2024%2024s-10.7%2024-24%2024%22/%3E%3C/svg%3E');--md-admonition-icon--success:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%20512a256%20256%200%201%201%200-512%20256%20256%200%201%201%200%20512m118-366.3c-10.7-7.8-25.7-5.4-33.5%205.3L221.1%20315.2%20169%20263.1c-9.4-9.4-24.6-9.4-33.9%200s-9.4%2024.6%200%2033.9l72%2072c5%205%2011.8%207.5%2018.8%207s13.4-4.1%2017.5-9.8l135.9-187c7.8-10.7%205.4-25.7-5.3-33.5%22/%3E%3C/svg%3E');--md-admonition-icon--question:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%20512a256%20256%200%201%200%200-512%20256%20256%200%201%200%200%20512m0-336c-17.7%200-32%2014.3-32%2032%200%2013.3-10.7%2024-24%2024s-24-10.7-24-24c0-44.2%2035.8-80%2080-80s80%2035.8%2080%2080c0%2047.2-36%2067.2-56%2074.5v3.8c0%2013.3-10.7%2024-24%2024s-24-10.7-24-24v-8.1c0-20.5%2014.8-35.2%2030.1-40.2%206.4-2.1%2013.2-5.5%2018.2-10.3%204.3-4.2%207.7-10%207.7-19.6%200-17.7-14.3-32-32-32zm-32%20192a32%2032%200%201%201%2064%200%2032%2032%200%201%201-64%200%22/%3E%3C/svg%3E');--md-admonition-icon--warning:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%200c14.7%200%2028.2%208.1%2035.2%2021l216%20400c6.7%2012.4%206.4%2027.4-.8%2039.5S486.1%20480%20472%20480H40c-14.1%200-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9%2020.5-21%2035.2-21m0%20352a32%2032%200%201%200%200%2064%2032%2032%200%201%200%200-64m0-192c-18.2%200-32.7%2015.5-31.4%2033.7l7.4%20104c.9%2012.5%2011.4%2022.3%2023.9%2022.3%2012.6%200%2023-9.7%2023.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z%22/%3E%3C/svg%3E');--md-admonition-icon--failure:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M256%20512a256%20256%200%201%200%200-512%20256%20256%200%201%200%200%20512m-89-345c9.4-9.4%2024.6-9.4%2033.9%200l55%2055%2055-55c9.4-9.4%2024.6-9.4%2033.9%200s9.4%2024.6%200%2033.9l-55%2055%2055%2055c9.4%209.4%209.4%2024.6%200%2033.9s-24.6%209.4-33.9%200l-55-55-55%2055c-9.4%209.4-24.6%209.4-33.9%200s-9.4-24.6%200-33.9l55-55-55-55c-9.4-9.4-9.4-24.6%200-33.9%22/%3E%3C/svg%3E');--md-admonition-icon--danger:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M416%20427.4c58.5-44%2096-111.6%2096-187.4C512%20107.5%20397.4%200%20256%200S0%20107.5%200%20240c0%2075.8%2037.5%20143.4%2096%20187.4V464c0%2026.5%2021.5%2048%2048%2048h32v-40c0-13.3%2010.7-24%2024-24s24%2010.7%2024%2024v40h64v-40c0-13.3%2010.7-24%2024-24s24%2010.7%2024%2024v40h32c26.5%200%2048-21.5%2048-48zM96%20256a64%2064%200%201%201%20128%200%2064%2064%200%201%201-128%200m256-64a64%2064%200%201%201%200%20128%2064%2064%200%201%201%200-128%22/%3E%3C/svg%3E');--md-admonition-icon--bug:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20640%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M352%200c0-17.7-14.3-32-32-32s-32%2014.3-32%2032v64h-96c-53%200-96%2043-96%2096v224c0%2053%2043%2096%2096%2096h256c53%200%2096-43%2096-96V160c0-53-43-96-96-96h-96zM160%20368c0-13.3%2010.7-24%2024-24h32c13.3%200%2024%2010.7%2024%2024s-10.7%2024-24%2024h-32c-13.3%200-24-10.7-24-24m120%200c0-13.3%2010.7-24%2024-24h32c13.3%200%2024%2010.7%2024%2024s-10.7%2024-24%2024h-32c-13.3%200-24-10.7-24-24m120%200c0-13.3%2010.7-24%2024-24h32c13.3%200%2024%2010.7%2024%2024s-10.7%2024-24%2024h-32c-13.3%200-24-10.7-24-24M224%20176a48%2048%200%201%201%200%2096%2048%2048%200%201%201%200-96m144%2048a48%2048%200%201%201%2096%200%2048%2048%200%201%201-96%200m-304%200c0-17.7-14.3-32-32-32S0%20206.3%200%20224v96c0%2017.7%2014.3%2032%2032%2032s32-14.3%2032-32zm544-32c-17.7%200-32%2014.3-32%2032v96c0%2017.7%2014.3%2032%2032%2032s32-14.3%2032-32v-96c0-17.7-14.3-32-32-32%22/%3E%3C/svg%3E');--md-admonition-icon--example:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20448%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M288%200H128c-17.7%200-32%2014.3-32%2032s14.3%2032%2032%2032v151.5L7.5%20426.3C2.6%20435%200%20444.7%200%20454.7%200%20486.4%2025.6%20512%2057.3%20512h333.4c31.6%200%2057.3-25.6%2057.3-57.3%200-10-2.6-19.8-7.5-28.4L320%20215.5V64c17.7%200%2032-14.3%2032-32S337.7%200%20320%200zm-96%20215.5V64h64v151.5c0%2011.1%202.9%2022.1%208.4%2031.8L306%20320H142l41.6-72.7c5.5-9.7%208.4-20.6%208.4-31.8%22/%3E%3C/svg%3E');--md-admonition-icon--quote:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20448%20512%22%3E%3C%21--%21%20Font%20Awesome%20Free%207.1.0%20by%20%40fontawesome%20-%20https%3A//fontawesome.com%20License%20-%20https%3A//fontawesome.com/license/free%20%28Icons%3A%20CC%20BY%204.0%2C%20Fonts%3A%20SIL%20OFL%201.1%2C%20Code%3A%20MIT%20License%29%20Copyright%202025%20Fonticons%2C%20Inc.--%3E%3Cpath%20d%3D%22M0%20216C0%20149.7%2053.7%2096%20120%2096h8c17.7%200%2032%2014.3%2032%2032s-14.3%2032-32%2032h-8c-30.9%200-56%2025.1-56%2056v8h64c35.3%200%2064%2028.7%2064%2064v64c0%2035.3-28.7%2064-64%2064H64c-35.3%200-64-28.7-64-64zm256%200c0-66.3%2053.7-120%20120-120h8c17.7%200%2032%2014.3%2032%2032s-14.3%2032-32%2032h-8c-30.9%200-56%2025.1-56%2056v8h64c35.3%200%2064%2028.7%2064%2064v64c0%2035.3-28.7%2064-64%2064h-64c-35.3%200-64-28.7-64-64z%22/%3E%3C/svg%3E');}</style>
+
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Inter";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+<meta name="theme-color" content="#1a1a2e">
+<meta name="description"
+  content="Django-style template magic for Node.js — blazing fast partials, smart template discovery, and zero friction for HTMX.">
+<meta property="og:title" content="miki-template - Django-style templating for Node.js">
+<meta property="og:description"
+  content="Blazing fast partials, smart template discovery, and zero friction for HTMX. Bring Django's beloved template language to Node.js and Express.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://alainmiki.github.io/miki-template/">
+<meta property="og:image" content="https://alainmiki.github.io/miki-template/social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="miki-template - Django-style templating for Node.js">
+<meta name="twitter:description" content="Blazing fast partials, smart template discovery, and zero friction for HTMX.">
+
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Filters - miki template" />
+<meta property="og:description" content="Django-style template engine for Node.js and Express with full django-template parity" />
+<meta property="og:image" content="https://alainmiki.github.io/miki-template/assets/images/social/guide/filters.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://alainmiki.github.io/miki-template/guide/filters/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Filters - miki template" />
+<meta property="twitter:description" content="Django-style template engine for Node.js and Express with full django-template parity" />
+<meta property="twitter:image" content="https://alainmiki.github.io/miki-template/assets/images/social/guide/filters.png" />
+</head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#filters" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+              <button class="md-banner__button md-icon" aria-label="Don't show this again">
+                
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            
+            
+<div class="md-announce" role="banner">
+  <div class="md-announce__inner">
+    <span>🚀 <strong>miki-template v2.3.1</strong> is now available with improved performance and new features!</span>
+    <a href="https://github.com/alainmiki/miki-template/releases" target="_blank" rel="noopener">View Release Notes</a>
+    <button class="md-announce__button" onclick="this.closest('.md-announce').remove()"
+      aria-label="Dismiss announcement">
+      <span class="md-icon">&#10005;</span>
+    </button>
+  </div>
+</div>
+
+          </div>
+          
+            <script>var el=document.querySelector("[data-md-component=announce]");if(el){var content=el.querySelector(".md-typeset");__md_hash(content.innerHTML)===__md_get("__announce")&&(el.hidden=!0)}</script>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://alainmiki.github.io/miki-template/" title="miki template" class="md-header__button md-logo" aria-label="miki template" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            miki template
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Filters
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/alainmiki/miki-template" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    miki-template
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../what-is-miki-template/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../partial-templates/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Core Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../custom-tags/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Advanced
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../integrations/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Integrations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../performance/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Performance
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://alainmiki.github.io/miki-template/" title="miki template" class="md-nav__button md-logo" aria-label="miki template" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    miki template
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/alainmiki/miki-template" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    miki-template
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../what-is-miki-template/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Features
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Features
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../partial-templates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Partial Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template-discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Smart Template Discovery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template-inheritance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Template Inheritance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Filters
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Filters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-chaining" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter Chaining
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filter Arguments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#text-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Text Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Text Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#truncatechars_html" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        truncatechars_html
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linebreaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        linebreaks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#slugify" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        slugify
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wordcount" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wordcount
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#html-security-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTML / Security Filters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#list-array-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List / Array Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="List / Array Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        slice
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#join" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        join
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-unique" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sort + unique
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        split
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#default-value-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Value Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Default Value Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-vs-default_if_none" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default vs default_if_none
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#date-and-time-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date and Time Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Date and Time Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#date-format-tokens-date-and-time-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date format tokens (date and time filters)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date_format-and-strftime-date-fns-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        date_format and strftime (date-fns tokens)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timesince-timeuntil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        timesince / timeuntil
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ago-until" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ago / until
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#numeric-math-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numeric / Math Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Numeric / Math Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#floatformat-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        floatformat behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-world-pricing-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-world pricing example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-formatting-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Formatting Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Formatting Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phone_number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        phone_number
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credit_card" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        credit_card
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ssn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        mask
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url-with-safe-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        url (with safe filter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#email" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        email
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whatsapp_link" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        whatsapp_link
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-safe-for-script-blocks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        json (safe for &lt;script&gt; blocks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stringformat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stringformat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cut" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cut
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pluralize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pluralize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yesno" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        yesno
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#encoding-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Encoding Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Encoding Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-world-embedding-a-csrf-token-in-a-header" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-world: embedding a CSRF token in a header
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-ago-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time-Ago Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Time-Ago Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ago-human-readable-time-since" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ago — human-readable "time since"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#until-human-readable-time-remaining" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        until — human-readable "time remaining"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-library-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in Library Filters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Built-in Library Filters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#humanize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        humanize
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        cache
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lorem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lorem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-custom-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing Custom Filters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../custom-tags/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../api/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../integrations/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../partial-templates/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Core Features
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="filters">Filters<a class="headerlink" href="#filters" title="Permanent link">&para;</a></h1>
+<p>Filters transform variable output using the pipe (<code>|</code>) syntax. You can chain multiple filters left-to-right, and many accept arguments after a colon (<code>:</code>).</p>
+<h2 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><a href="#basic-usage">Basic Usage</a></p>
+</li>
+<li>
+<p><a href="#filter-chaining">Filter Chaining</a></p>
+</li>
+<li>
+<p><a href="#filter-arguments">Filter Arguments</a></p>
+</li>
+<li>
+<p><a href="#text-filters">Text Filters</a></p>
+</li>
+<li>
+<p><a href="#html-security-filters">HTML / Security Filters</a></p>
+</li>
+<li>
+<p><a href="#list-array-filters">List / Array Filters</a></p>
+</li>
+<li>
+<p><a href="#default-value-filters">Default Value Filters</a></p>
+</li>
+<li>
+<p><a href="#date-and-time-filters">Date and Time Filters</a></p>
+</li>
+<li>
+<p><a href="#numeric-math-filters">Numeric / Math Filters</a></p>
+</li>
+<li>
+<p><a href="#data-formatting-filters">Data Formatting Filters</a></p>
+</li>
+<li>
+<p><a href="#encoding-filters">Encoding Filters</a></p>
+</li>
+<li>
+<p><a href="#time-ago-filters">Time-Ago Filters</a></p>
+</li>
+<li>
+<p><a href="#built-in-library-filters">Built-in Library Filters</a></p>
+</li>
+<li>
+<p><a href="#writing-custom-filters">Writing Custom Filters</a></p>
+</li>
+</ul>
+<hr />
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>{{ name|upper }}
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>{{ price|floatformat:2 }}
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>{{ body|truncatewords:30|escape }}
+</span></code></pre></div>
+<p>Each <code>|</code> applies a filter to the value on its left. Filters are evaluated left-to-right: the output of one filter becomes the input of the next.</p>
+<h2 id="filter-chaining">Filter Chaining<a class="headerlink" href="#filter-chaining" title="Permanent link">&para;</a></h2>
+<p>Filters apply left-to-right. The output of each filter becomes the input of the next:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{{ name|lower|capfirst }}
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cm">&lt;!-- "Miki" → "miki" → "Miki" --&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>{{ bio|striptags|truncatewords:20 }}
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="cm">&lt;!-- Strip HTML tags, then truncate to 20 words --&gt;</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>{{ text|escape|truncatechars:50|upper }}
+</span></code></pre></div>
+<p>You can chain any number of filters:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>{{ price|mult:1.2|add:2|floatformat:2|currency:"$" }}
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="cm">&lt;!-- price = 10 → 12.0 → 14.0 → "14.00" → "$14.00" --&gt;</span>
+</span></code></pre></div>
+<h2 id="filter-arguments">Filter Arguments<a class="headerlink" href="#filter-arguments" title="Permanent link">&para;</a></h2>
+<p>Filters accept the following argument types:</p>
+<p>| Syntax | Type | Example |</p>
+<p>|--------|------|---------|</p>
+<p>| Unquoted | Variable lookup | <code>value|filter:count</code> |</p>
+<p>| Double-quoted | String literal | <code>value|filter:"hello"</code> |</p>
+<p>| Single-quoted | String literal | <code>value|filter:'world'</code> |</p>
+<p>| Number | Integer/float literal | <code>value|truncatewords:10</code> |</p>
+<p>| Boolean | <code>true</code>/<code>false</code> | <code>value|yesno:"yes,no"</code> |</p>
+<p><strong>Real-world example — conditional greeting with fallback:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>{{ user.name|default:"Guest"|capfirst }}<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"badge {% if user.is_premium|yesno:"</span><span class="na">yes</span><span class="err">,</span><span class="na">no</span><span class="err">"</span> <span class="err">%}</span><span class="na">premium</span><span class="err">{%</span> <span class="na">else</span> <span class="err">%}</span><span class="na">free</span><span class="err">{%</span> <span class="na">endif</span> <span class="err">%}"</span><span class="p">&gt;</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  {{ user.plan|default:"Free" }}
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="text-filters">Text Filters<a class="headerlink" href="#text-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>upper</code> | Uppercase | <code>{{ "hello"|upper }}</code> |</p>
+<p>| <code>lower</code> | Lowercase | <code>{{ "HELLO"|lower }}</code> |</p>
+<p>| <code>title</code> | Title case | <code>{{ "miki coder"|title }}</code> |</p>
+<p>| <code>capfirst</code> | Capitalize first letter | <code>{{ "hello"|capfirst }}</code> |</p>
+<p>| <code>truncatewords:N</code> | Truncate to N words, appends <code>...</code> | <code>{{ body|truncatewords:30 }}</code> |</p>
+<p>| <code>truncatechars:N</code> | Truncate to N chars, appends <code>...</code> | <code>{{ title|truncatechars:50 }}</code> |</p>
+<p>| <code>truncatechars_html:N</code> | HTML-aware truncation to N chars, preserves tags | <code>{{ html|truncatechars_html:100 }}</code> |</p>
+<p>| <code>wordcount</code> | Count words | <code>{{ body|wordcount }}</code> |</p>
+<p>| <code>linebreaks</code> | Convert double newlines to <code>&lt;p&gt;</code> and single to <code>&lt;br&gt;</code> | <code>{{ text|linebreaks }}</code> |</p>
+<p>| <code>linebreaksbr</code> | Convert all newlines to <code>&lt;br&gt;</code> | <code>{{ text|linebreaksbr }}</code> |</p>
+<p>| <code>striptags</code> | Remove HTML tags | <code>{{ html|striptags }}</code> |
+| <code>repeat</code> | Repeat a string N times | <code>{{ "ha"|repeat:3 }}</code> |
+| <code>range</code> | Generate a range of integers | <code>{{ 5|range }}</code> |</p>
+<p>| <code>slugify</code> | URL-friendly slug | <code>{{ title|slugify }}</code> |</p>
+<p>| <code>length_is:N</code> | Test if length equals N | <code>{{ items|length_is:0 }}</code> |</p>
+<h3 id="truncatechars_html">truncatechars_html<a class="headerlink" href="#truncatechars_html" title="Permanent link">&para;</a></h3>
+<p>Like <code>truncatechars</code> but respects HTML tags — tags are preserved in full and only visible text counts toward the limit:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>{{ "<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Hello world<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>"|truncatechars_html:10 }}
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="cm">&lt;!-- → "&lt;p&gt;Hello worl...&lt;/p&gt;" --&gt;</span>
+</span></code></pre></div>
+<p><strong>Real-world blog excerpt:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">&lt;</span><span class="nt">article</span><span class="p">&gt;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  {{ post.body|truncatechars_html:200 }}
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="linebreaks">linebreaks<a class="headerlink" href="#linebreaks" title="Permanent link">&para;</a></h3>
+<p>Converts newlines into paragraphs (<code>&lt;p&gt;</code>) and standalone line breaks into <code>&lt;br&gt;</code>:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>{{ "Line one\n\nLine two\nLine three"|linebreaks }}
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="cm">&lt;!-- Output: &lt;p&gt;Line one&lt;/p&gt;&lt;p&gt;Line two&lt;br&gt;Line three&lt;/p&gt; --&gt;</span>
+</span></code></pre></div>
+<h3 id="slugify">slugify<a class="headerlink" href="#slugify" title="Permanent link">&para;</a></h3>
+<p>Converts text to a URL-safe slug (lowercase, hyphens, no special characters):</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"/posts/{{ post.title|slugify }}"</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="cm">&lt;!-- title: "Hello World: A New Beginning!" → href="/posts/hello-world-a-new-beginning" --&gt;</span>
+</span></code></pre></div>
+<h3 id="wordcount">wordcount<a class="headerlink" href="#wordcount" title="Permanent link">&para;</a></h3>
+<p>Use with <code>pluralize</code> for dynamic labels:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ post.body|wordcount }} {{ post.body|wordcount|pluralize:"word,words" }} read<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="html-security-filters">HTML / Security Filters<a class="headerlink" href="#html-security-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description |</p>
+<p>|--------|-------------|</p>
+<p>| <code>safe</code> | Mark string as safe (no escaping) |</p>
+<p>| <code>escape</code> | Force HTML escaping, even on SafeString |</p>
+<p><strong>Real-world CMS rendering:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="cm">&lt;!-- Body is trusted HTML from the CMS --&gt;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"content"</span><span class="p">&gt;</span>{{ post.body_html|safe }}<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="cm">&lt;!-- User comments are always escaped --&gt;</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"comment"</span><span class="p">&gt;</span>{{ comment.text|escape }}<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="list-array-filters">List / Array Filters<a class="headerlink" href="#list-array-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>length</code> | Length of list/string | <code>{{ items|length }}</code> |</p>
+<p>| <code>join:","</code> | Join with separator | <code>{{ tags|join:", " }}</code> |</p>
+<p>| <code>slice:"start:end"</code> | Slice list | <code>{{ items|slice:"0:5" }}</code> |</p>
+<p>| <code>dictsort:"key"</code> | Sort dict by key | <code>{{ dict|dictsort:"name" }}</code> |</p>
+<p>| <code>dictsortreversed:"key"</code> | Reverse sort dict | <code>{{ dict|dictsortreversed:"name" }}</code> |</p>
+<p>| <code>sort</code> | Sort array | <code>{{ items|sort }}</code> |</p>
+<p>| <code>unique</code> | Deduplicate array | <code>{{ tags|unique }}</code> |</p>
+<p>| <code>random</code> | Random item from array | <code>{{ items|random }}</code> |</p>
+<p>| <code>reverse</code> | Reverse array or string | <code>{{ items|reverse }}</code> |</p>
+<p>| <code>split:","</code> | Split string into array | <code>{{ csv|split:"," }}</code> |</p>
+<p>| <code>replace:"old,new"</code> | Replace substring | <code>{{ text|replace:"foo,bar" }}</code> |</p>
+<h3 id="slice">slice<a class="headerlink" href="#slice" title="Permanent link">&para;</a></h3>
+<p>Slices an array or string like Python (<code>[start:end]</code>). Supports negative indices:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="cm">&lt;!-- First 3 items --&gt;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>{{ items|slice:"0:3" }}
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="cm">&lt;!-- From index 2 onwards --&gt;</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>{{ items|slice:"2:" }}
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="cm">&lt;!-- Last 2 items --&gt;</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>{{ items|slice:"-2:" }}
+</span></code></pre></div>
+<h3 id="join">join<a class="headerlink" href="#join" title="Permanent link">&para;</a></h3>
+<p><strong>Real-world tag cloud:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"tag-cloud"</span><span class="p">&gt;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  {% for tag in post.tags|join:", " %}
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"tag"</span><span class="p">&gt;</span>{{ tag }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  {% endfor %}
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="cm">&lt;!-- But better as: --&gt;</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"tag-cloud"</span><span class="p">&gt;</span>{{ post.tags|join:", " }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="sort-unique">sort + unique<a class="headerlink" href="#sort-unique" title="Permanent link">&para;</a></h3>
+<p><strong>Real-world: deduplicated, sorted navigation:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="p">&lt;</span><span class="nt">ul</span><span class="p">&gt;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>  {% for category in categories|sort %}
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>    <span class="p">&lt;</span><span class="nt">li</span><span class="p">&gt;</span>{{ category|capfirst }}<span class="p">&lt;/</span><span class="nt">li</span><span class="p">&gt;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>  {% endfor %}
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="p">&lt;/</span><span class="nt">ul</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="split">split<a class="headerlink" href="#split" title="Permanent link">&para;</a></h3>
+<p><strong>Real-world: parsing comma-separated metadata:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="cm">&lt;!-- post.keywords = "nature,landscape,autumn" --&gt;</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"meta"</span><span class="p">&gt;</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>  {% for kw in post.keywords|split:"," %}
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"/tag/{{ kw|slugify }}"</span><span class="p">&gt;</span>{{ kw|capfirst }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>  {% endfor %}
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="default-value-filters">Default Value Filters<a class="headerlink" href="#default-value-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description |</p>
+<p>|--------|-------------|</p>
+<p>| <code>default:"fallback"</code> | Use fallback for empty string, null, or undefined |</p>
+<p>| <code>default_if_none:"fallback"</code> | Use fallback only for null/undefined |</p>
+<p>| <code>firstof:v1 v2 v3</code> | Return first truthy value |</p>
+<h3 id="default-vs-default_if_none">default vs default_if_none<a class="headerlink" href="#default-vs-default_if_none" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><code>default</code> uses the fallback for falsy values: <code>null</code>, <code>undefined</code>, <code>""</code>, <code>0</code>, <code>false</code></p>
+</li>
+<li>
+<p><code>default_if_none</code> only uses the fallback for <code>null</code> and <code>undefined</code></p>
+</li>
+</ul>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>{{ ""|default:"empty" }}           → "empty"
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>{{ ""|default_if_none:"N/A" }}     → "" (empty string is not none)
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>{{ 0|default:"zero" }}             → "zero"
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>{{ 0|default_if_none:"N/A" }}      → 0 (zero is not none)
+</span></code></pre></div>
+<p><strong>Real-world user profile:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="cm">&lt;!-- Show "No bio yet" only when bio is truly empty --&gt;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="p">&lt;</span><span class="nt">p</span> <span class="na">class</span><span class="o">=</span><span class="s">"bio"</span><span class="p">&gt;</span>{{ user.bio|default:"No bio yet." }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="cm">&lt;!-- Distinguish between "never set" and "explicitly empty" --&gt;</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>{% if user.display_name %}
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>  <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>{{ user.display_name|default_if_none:"Anonymous" }}<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>{% endif %}
+</span></code></pre></div>
+<hr />
+<h2 id="date-and-time-filters">Date and Time Filters<a class="headerlink" href="#date-and-time-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>date:"Y-m-d"</code> | Format date (Django-style tokens) | <code>{{ d|date:"Y-m-d" }}</code> |</p>
+<p>| <code>time:"H:i"</code> | Format time | <code>{{ d|time:"H:i" }}</code> |</p>
+<p>| <code>date_format:"yyyy-MM-dd"</code> | Format date (date-fns tokens) | <code>{{ d|date_format:"yyyy-MM-dd" }}</code> |</p>
+<p>| <code>strftime:"PPpp"</code> | Format date (date-fns tokens) | <code>{{ now|strftime:"PPpp" }}</code> |</p>
+<p>| <code>timesince</code> | Time since date | <code>{{ created|timesince }}</code> |</p>
+<p>| <code>timeuntil</code> | Time until date | <code>{{ start|timeuntil }}</code> |</p>
+<p>| <code>ago</code> | Time since date, human-readable | <code>{{ created|ago }}</code> |</p>
+<p>| <code>until</code> | Time until date, human-readable | <code>{{ start|until }}</code> |</p>
+<p>| <code>time_diff:other_date</code> | Difference between two dates | <code>{{ start|time_diff:end }}</code> |</p>
+<h3 id="date-format-tokens-date-and-time-filters">Date format tokens (<code>date</code> and <code>time</code> filters)<a class="headerlink" href="#date-format-tokens-date-and-time-filters" title="Permanent link">&para;</a></h3>
+<p>The <code>date</code> filter uses Django-style format tokens with longest-first matching:</p>
+<p>| Token | Output |</p>
+<p>|-------|--------|</p>
+<p>| <code>Y</code> | 4-digit year |</p>
+<p>| <code>y</code> | 2-digit year |</p>
+<p>| <code>m</code> | Month number (no pad) |</p>
+<p>| <code>n</code> | Month number (no pad) |</p>
+<p>| <code>d</code> | Day number (no pad) |</p>
+<p>| <code>j</code> | Day number (no pad) |</p>
+<p>| <code>H</code> | 24-hour hour (no pad) |</p>
+<p>| <code>G</code> | 24-hour hour (no pad) |</p>
+<p>| <code>i</code> | Minutes |</p>
+<p>| <code>s</code> | Seconds |</p>
+<p>| <code>F</code> | Long month name |</p>
+<p>| <code>D</code> | Short day name |</p>
+<p>| <code>M</code> | Long month name |</p>
+<h3 id="date_format-and-strftime-date-fns-tokens">date_format and strftime (date-fns tokens)<a class="headerlink" href="#date_format-and-strftime-date-fns-tokens" title="Permanent link">&para;</a></h3>
+<p>For ISO and date-fns patterns:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>{{ post.published_at|date_format:"yyyy-MM-dd" }}  → "2026-08-31"
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>{{ post.published_at|strftime:"PPpp" }}           → "Aug 31, 2026 at 10:30 PM"
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>{{ event.date|strftime:"EEEE, MMMM do yyyy, h:mm a" }} → "Sunday, August 31st 2026, 10:30 PM"
+</span></code></pre></div>
+<h3 id="timesince-timeuntil">timesince / timeuntil<a class="headerlink" href="#timesince-timeuntil" title="Permanent link">&para;</a></h3>
+<p>Returns a human-readable time difference:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>{{ post.created|timesince }}  → "2 hours"
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>{{ post.created|timesince:other_date }}  → "3 days" (relative to other_date)
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>{{ event.date|timeuntil }}  → "5 days"
+</span></code></pre></div>
+<h3 id="ago-until">ago / until<a class="headerlink" href="#ago-until" title="Permanent link">&para;</a></h3>
+<p>More human-readable relative time strings:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="cm">&lt;!-- "2 days ago", "just now", "3 months ago" --&gt;</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"timestamp"</span><span class="p">&gt;</span>{{ comment.created|ago }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="cm">&lt;!-- "2 days", "3 weeks", "1 month" --&gt;</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="p">&lt;</span><span class="nt">time</span> <span class="na">datetime</span><span class="o">=</span><span class="s">"{{ event.date|date:'c' }}"</span><span class="p">&gt;</span>{{ event.date|until }}<span class="p">&lt;/</span><span class="nt">time</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<p><strong>Real-world blog post metadata:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="p">&lt;</span><span class="nt">article</span> <span class="na">class</span><span class="o">=</span><span class="s">"post"</span><span class="p">&gt;</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>  <span class="p">&lt;</span><span class="nt">header</span><span class="p">&gt;</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    <span class="p">&lt;</span><span class="nt">h1</span><span class="p">&gt;</span>{{ post.title }}<span class="p">&lt;/</span><span class="nt">h1</span><span class="p">&gt;</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    <span class="p">&lt;</span><span class="nt">time</span> <span class="na">class</span><span class="o">=</span><span class="s">"posted-at"</span><span class="p">&gt;</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>      Published {{ post.published_at|date:"F j, Y" }} ({{ post.published_at|ago }})
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>    <span class="p">&lt;/</span><span class="nt">time</span><span class="p">&gt;</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>  <span class="p">&lt;/</span><span class="nt">header</span><span class="p">&gt;</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>  <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">"content"</span><span class="p">&gt;</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>    {{ post.body|linebreaks }}
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>  <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>
+</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="p">&lt;/</span><span class="nt">article</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="numeric-math-filters">Numeric / Math Filters<a class="headerlink" href="#numeric-math-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>add:N</code> | Add number | <code>{{ count\|add:1 }}</code> |</p>
+<p>| <code>sub:N</code> | Subtract number | <code>{{ total\|sub:tax }}</code> |</p>
+<p>| <code>mult:N</code> | Multiply number | <code>{{ price\|mult:1.2 }}</code> |</p>
+<p>| <code>divisibleby:N</code> | Test divisibility | <code>{{ i\|divisibleby:2 }}</code> |</p>
+<p>| <code>mod:N</code> | Modulo | <code>{{ i\|mod:3 }}</code> |</p>
+<p>| <code>floatformat:N</code> | Format float | <code>{{ price\|floatformat:2 }}</code> |</p>
+<p>| <code>square</code> | Square a number | <code>{{ n\|square }}</code> |</p>
+<p>| <code>sqrt</code> | Square root | <code>{{ n\|sqrt }}</code> |</p>
+<p>| <code>abs</code> | Absolute value | <code>{{ delta\|abs }}</code> |</p>
+<p>| <code>round:N</code> | Round to N decimals | <code>{{ price\|round:2 }}</code> |</p>
+<p>| <code>floor</code> | Floor | <code>{{ ratio\|floor }}</code> |</p>
+<p>| <code>ceil</code> | Ceiling | <code>{{ ratio\|ceil }}</code> |</p>
+<p>| <code>min:N</code> | Minimum of value and arg | <code>{{ temp\|min:0 }}</code> |</p>
+<p>| <code>max:N</code> | Maximum of value and arg | <code>{{ temp\|max:100 }}</code> |</p>
+<p>| <code>sum</code> | Sum array | <code>{{ numbers\|sum }}</code> |</p>
+<p>| <code>average</code> | Average array | <code>{{ scores\|average }}</code> |</p>
+<h3 id="floatformat-behavior">floatformat behavior<a class="headerlink" href="#floatformat-behavior" title="Permanent link">&para;</a></h3>
+<p>| arg | behavior |</p>
+<p>|-----|----------|</p>
+<p>| (none) | 1 decimal (<code>3.4</code>) |</p>
+<p>| <code>0</code> | 0 decimals (<code>3</code>) |</p>
+<p>| <code>1</code> | 1 decimal (<code>3.4</code>) |</p>
+<p>| <code>2</code> | 2 decimals (<code>3.40</code>) |</p>
+<p>| <code>-1</code> | all decimals, trimmed |</p>
+<h3 id="real-world-pricing-example">Real-world pricing example<a class="headerlink" href="#real-world-pricing-example" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="p">&lt;</span><span class="nt">td</span> <span class="na">class</span><span class="o">=</span><span class="s">"price"</span><span class="p">&gt;</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>  ${{ item.price|mult:item.qty|floatformat:2 }}
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="cm">&lt;!-- If not on sale, apply discount --&gt;</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>{% if not item.on_sale %}
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>  <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>{{ item.base_price|mult:0.9|floatformat:2 }}<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>{% endif %}
+</span></code></pre></div>
+<hr />
+<h2 id="data-formatting-filters">Data Formatting Filters<a class="headerlink" href="#data-formatting-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>currency:"$"</code> | Format as currency | <code>{{ price|currency:"$" }}</code> |</p>
+<p>| <code>phone_number</code> | Format as phone number | <code>{{ raw|phone_number }}</code> |</p>
+<p>| <code>email</code> | Format as mailto link | <code>{{ address|email }}</code> |</p>
+<p>| <code>url</code> | Format as URL | <code>{{ domain|url }}</code> |</p>
+<p>| <code>mask:"*"</code> | Mask string, show last 4 chars | <code>{{ card|mask }}</code> |</p>
+<p>| <code>whatsapp_link:"msg"</code> | Generate WhatsApp link | <code>{{ phone|whatsapp_link }}</code> |</p>
+<p>| <code>credit_card</code> | Format as credit card | <code>{{ raw|credit_card }}</code> |</p>
+<p>| <code>ssn</code> | Format as SSN | <code>{{ raw|ssn }}</code> |</p>
+<p>| <code>ip_address</code> | Format as IP address | <code>{{ raw|ip_address }}</code> |</p>
+<p>| <code>uuid</code> | Generate UUID (no input needed) | <code>{{ x|uuid }}</code> |</p>
+<p>| <code>filesizeformat</code> | Human-readable file size | <code>{{ bytes|filesizeformat }}</code> |</p>
+<p>| <code>yesno:"yes,no,maybe"</code> | Convert bool to string | <code>{{ active|yesno:"Active,Inactive" }}</code> |</p>
+<p>| <code>pluralize:"s"</code> | Pluralize based on count | <code>{{ count|pluralize }}</code> |</p>
+<p>| <code>urlencode</code> | URL encode | <code>{{ text|urlencode }}</code> |</p>
+<p>| <code>escapeuri</code> | URI encode | <code>{{ text|escapeuri }}</code> |</p>
+<p>| <code>stringformat:"%s"</code> | sprintf-style formatting | <code>{{ name|stringformat:"%s" }}</code> |</p>
+<p>| <code>cut:"text"</code> | Remove substring | <code>{{ text|cut:"foo" }}</code> |</p>
+<p>| <code>addslashes</code> | Escape quotes | <code>{{ text|addslashes }}</code> |</p>
+<p>| <code>removetags:"p,div"</code> | Remove specific tags | <code>{{ html|removetags:"p,div" }}</code> |</p>
+<p>| <code>trans</code> | Translate via i18n | <code>{{ "hello"|trans }}</code> |</p>
+<p>| <code>regroup:"attr"</code> | Group list by attribute | <code>{{ items|regroup:"category" }}</code> |</p>
+<p>| <code>json</code> | JSON-encode value | <code>{{ obj|json }}</code> |</p>
+<p>| <code>urlize</code> | Convert URLs to links | <code>{{ text|urlize }}</code> |</p>
+<h3 id="phone_number">phone_number<a class="headerlink" href="#phone_number" title="Permanent link">&para;</a></h3>
+<p>Formats a 10-digit US phone number as <code>(123) 456-7890</code>. Handles 11-digit numbers with leading <code>1</code> as <code>+1 (123) 456-7890</code>:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>{{ "1234567890"|phone_number }}       → "(123) 456-7890"
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>{{ "11234567890"|phone_number }}      → "+1 (123) 456-7890"
+</span></code></pre></div>
+<h3 id="credit_card">credit_card<a class="headerlink" href="#credit_card" title="Permanent link">&para;</a></h3>
+<p>Formats a credit card number with dashes every 4 digits:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>{{ "4111111111111111"|credit_card }}  → "4111-1111-1111-1111"
+</span></code></pre></div>
+<h3 id="ssn">ssn<a class="headerlink" href="#ssn" title="Permanent link">&para;</a></h3>
+<p>Formats a 9-digit Social Security Number:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>{{ "123456789"|ssn }}  → "123-45-6789"
+</span></code></pre></div>
+<h3 id="mask">mask<a class="headerlink" href="#mask" title="Permanent link">&para;</a></h3>
+<p>Masks all but the last 4 characters. Default mask character is <code>*</code>:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="cm">&lt;!-- Mask a phone number or credit card in display --&gt;</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"masked"</span><span class="p">&gt;</span>{{ user.phone|mask }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="cm">&lt;!-- Custom mask character --&gt;</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>{{ "1234567890"|mask:"#" }}  → "######7890"
+</span></code></pre></div>
+<h3 id="url-with-safe-filter">url (with safe filter)<a class="headerlink" href="#url-with-safe-filter" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"{{ post.share_url|url|safe }}"</span><span class="p">&gt;</span>{{ post.share_url|url }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="email">email<a class="headerlink" href="#email" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"{{ user.email|email }}"</span><span class="p">&gt;</span>{{ user.email }}<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="cm">&lt;!-- → &lt;a href="mailto:user@example.com"&gt;user@example.com&lt;/a&gt; --&gt;</span>
+</span></code></pre></div>
+<h3 id="whatsapp_link">whatsapp_link<a class="headerlink" href="#whatsapp_link" title="Permanent link">&para;</a></h3>
+<p>Generates a WhatsApp link with an optional pre-filled message:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"{{ phone|whatsapp_link:"</span><span class="na">Hello</span><span class="err">!</span> <span class="na">I</span><span class="err">'</span><span class="na">d</span> <span class="na">like</span> <span class="na">to</span> <span class="na">know</span> <span class="na">more</span><span class="err">."</span> <span class="err">}}"</span> <span class="na">target</span><span class="o">=</span><span class="s">"_blank"</span><span class="p">&gt;</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>  Chat on WhatsApp
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="json-safe-for-script-blocks">json (safe for <code>&lt;script&gt;</code> blocks)<a class="headerlink" href="#json-safe-for-script-blocks" title="Permanent link">&para;</a></h3>
+<p>Safely serializes data to JSON for client-side consumption:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">initialState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="nx">page_state</span><span class="o">|</span><span class="nx">json</span><span class="o">|</span><span class="nx">safe</span><span class="w"> </span><span class="p">}};</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<blockquote>
+<p>Note: <code>json</code> output is marked safe automatically. Use <code>|safe</code> in the template only to signal intent — the engine handles it correctly either way.</p>
+</blockquote>
+<h3 id="stringformat">stringformat<a class="headerlink" href="#stringformat" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>{{ 3.14159|stringformat:".2f" }}  → "3.14"
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>{{ count|stringformat:"04d" }}     → "0042"
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>{{ name|stringformat:"%s" }}        → "Alice"
+</span></code></pre></div>
+<h3 id="cut">cut<a class="headerlink" href="#cut" title="Permanent link">&para;</a></h3>
+<p>Removes all occurrences of a substring:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="cm">&lt;!-- Sanitize a URL by removing unwanted query params --&gt;</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>{{ request_uri|cut:"?debug=1" }}
+</span></code></pre></div>
+<h3 id="pluralize">pluralize<a class="headerlink" href="#pluralize" title="Permanent link">&para;</a></h3>
+<p><strong>Real-world item count:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ cart.items|length }} item{{ cart.items|length|pluralize }} in your cart<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="cm">&lt;!-- "1 item in your cart" / "3 items in your cart" --&gt;</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a><span class="cm">&lt;!-- Custom suffixes --&gt;</span>
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a>
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>{{ count|pluralize:"y,ies" }} comment{{ count|pluralize:"y,ies" }}<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="yesno">yesno<a class="headerlink" href="#yesno" title="Permanent link">&para;</a></h3>
+<p><strong>Real-world status badge:</strong></p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"status {{ user.is_active|yesno:"</span><span class="na">active</span><span class="err">,</span><span class="na">inactive</span><span class="err">"</span> <span class="err">}}"</span><span class="p">&gt;</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>  {{ user.is_active|yesno:"Active,Inactive" }}
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="encoding-filters">Encoding Filters<a class="headerlink" href="#encoding-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>base64_encode</code> | Base64 encode | <code>{{ text|base64_encode }}</code> |</p>
+<p>| <code>base64_decode</code> | Base64 decode | <code>{{ text|base64_decode }}</code> |</p>
+<h3 id="real-world-embedding-a-csrf-token-in-a-header">Real-world: embedding a CSRF token in a header<a class="headerlink" href="#real-world-embedding-a-csrf-token-in-a-header" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">"csrf-token"</span> <span class="na">content</span><span class="o">=</span><span class="s">"{{ csrf_token|base64_encode }}"</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="time-ago-filters">Time-Ago Filters<a class="headerlink" href="#time-ago-filters" title="Permanent link">&para;</a></h2>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>time_diff:other</code> | Human-readable time difference | <code>{{ start|time_diff:end }}</code> |</p>
+<p>| <code>ago</code> | Time since date | <code>{{ created|ago }}</code> |</p>
+<p>| <code>until</code> | Time until date | <code>{{ start|until }}</code> |</p>
+<h3 id="ago-human-readable-time-since">ago — human-readable "time since"<a class="headerlink" href="#ago-human-readable-time-since" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="cm">&lt;!-- "just now", "5 minutes ago", "2 hours ago", "3 days ago", "1 year ago" --&gt;</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"time-ago"</span><span class="p">&gt;</span>{{ post.created_at|ago }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<h3 id="until-human-readable-time-remaining">until — human-readable "time remaining"<a class="headerlink" href="#until-human-readable-time-remaining" title="Permanent link">&para;</a></h3>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="cm">&lt;!-- "2 days", "3 weeks", "1 month" --&gt;</span>
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="p">&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">"countdown"</span><span class="p">&gt;</span>{{ auction.ends_at|until }}<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="built-in-library-filters">Built-in Library Filters<a class="headerlink" href="#built-in-library-filters" title="Permanent link">&para;</a></h2>
+<h3 id="humanize">humanize<a class="headerlink" href="#humanize" title="Permanent link">&para;</a></h3>
+<p>Available after <code>{% load humanize %}</code>:</p>
+<p>| Filter | Description | Example |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>intcomma</code> | Add comma separators | <code>{{ views|intcomma }}</code> → <code>1,234</code> |</p>
+<p>| <code>intword</code> | Convert to human word | <code>{{ 1000000|intword }}</code> → <code>1.0 million</code> |</p>
+<p>| <code>apnumber</code> | Convert 0-19 to words | <code>{{ 3|apnumber }}</code> → <code>three</code> |</p>
+<p>| <code>ordinal</code> | Add ordinal suffix | <code>{{ 1|ordinal }}</code> → <code>1st</code> |</p>
+<p>| <code>naturalday</code> | Convert date to relative day | <code>{{ date|naturalday }}</code> → <code>today</code> |</p>
+<p>Usage:</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>{% load humanize %}
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>{{ post.view_count|intcomma }}
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>
+</span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>{{ comment_count|ordinal }}
+</span></code></pre></div>
+<h3 id="cache">cache<a class="headerlink" href="#cache" title="Permanent link">&para;</a></h3>
+<p>The <code>cache</code> library provides a <code>{% cache %}</code> tag, not a filter. See <a href="../tags/#library-loading">Tags: Library Loading</a> for details.</p>
+<h3 id="lorem">lorem<a class="headerlink" href="#lorem" title="Permanent link">&para;</a></h3>
+<p>The <code>lorem</code> library provides a <code>{% lorem %}</code> tag and a <code>lorem</code> filter. These are auto-activated (no <code>{% load %}</code> needed).</p>
+<div class="language-html highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="cm">&lt;!-- Generate placeholder text --&gt;</span>
+</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>
+</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>{{ 5|lorem }}
+</span></code></pre></div>
+<hr />
+<h2 id="writing-custom-filters">Writing Custom Filters<a class="headerlink" href="#writing-custom-filters" title="Permanent link">&para;</a></h2>
+<p>You can register your own filters. See the <a href="../custom-filters/">Custom Filters guide</a> for details.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CommonJS</label><label for="__tabbed_1_2">ES Modules</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">registerFilter</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">require</span><span class="p">(</span><span class="s1">'miki-template'</span><span class="p">);</span>
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>
+</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>
+</span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a>
+</span><span id="__span-38-5"><a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a><span class="nx">registerFilter</span><span class="p">(</span><span class="s1">'reverse'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">val</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-38-6"><a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a>
+</span><span id="__span-38-7"><a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="nx">val</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">''</span><span class="p">).</span><span class="nx">reverse</span><span class="p">().</span><span class="nx">join</span><span class="p">(</span><span class="s1">''</span><span class="p">);</span>
+</span><span id="__span-38-8"><a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a>
+</span><span id="__span-38-9"><a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a><span class="p">});</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-javascript highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">registerFilter</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'miki-template'</span><span class="p">;</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="nx">registerFilter</span><span class="p">(</span><span class="s1">'reverse'</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="nx">val</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>
+</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="nx">val</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="s1">''</span><span class="p">).</span><span class="nx">reverse</span><span class="p">().</span><span class="nx">join</span><span class="p">(</span><span class="s1">''</span><span class="p">);</span>
+</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>
+</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="p">});</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<hr />
+<h1 id="filter-documentation">Filter Documentation<a class="headerlink" href="#filter-documentation" title="Permanent link">&para;</a></h1>
+<h2 id="repeat"><code>repeat</code><a class="headerlink" href="#repeat" title="Permanent link">&para;</a></h2>
+<p><strong>Signature:</strong> <code>repeat(value, count)</code></p>
+<ul>
+<li><strong>Purpose:</strong> Returns a new string consisting of <code>value</code> repeated <code>count</code> times.</li>
+<li><strong>Parameters:</strong></li>
+<li><code>value</code> – Any value that can be converted to a string (null/undefined become empty string).</li>
+<li><code>count</code> – Number of repetitions, parsed as integer; non‑positive yields empty string.</li>
+<li><strong>Implementation:</strong> Uses native <code>String.prototype.repeat</code> for optimal V8 performance.</li>
+<li><strong>Example:</strong> <code>{{ "ab"|repeat:3 }}  =&gt; "ababab"</code></li>
+</ul>
+<h2 id="range"><code>range</code><a class="headerlink" href="#range" title="Permanent link">&para;</a></h2>
+<p><strong>Signature:</strong> <code>range(end, start?)</code></p>
+<ul>
+<li><strong>Purpose:</strong> Generates an array of integers from <code>start</code> (inclusive) to <code>end</code> (exclusive) with step 1.</li>
+<li><strong>Parameters:</strong></li>
+<li><code>end</code> – Upper bound (exclusive), parsed as integer.</li>
+<li><code>start</code> – Optional lower bound, defaults to <code>0</code>.</li>
+<li><strong>Implementation:</strong> Simple for‑loop building a JavaScript array.</li>
+<li><strong>Example:</strong> <code>{% for i in 5|range %}{{ i }}{% endfor %}</code> outputs <code>0 1 2 3 4</code>.</li>
+</ul>
+<h2 id="additional-django-filters">Additional Django Filters<a class="headerlink" href="#additional-django-filters" title="Permanent link">&para;</a></h2>
+<p>The following filters complete parity with the vscode-django-support extension:</p>
+<h3 id="string-formatting">String formatting<a class="headerlink" href="#string-formatting" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>center</code></td>
+<td><code>center(width)</code></td>
+<td><code>"hello"|center:"15"</code></td>
+<td><code>"     hello     "</code></td>
+</tr>
+<tr>
+<td><code>ljust</code></td>
+<td><code>ljust(width)</code></td>
+<td><code>"hi"|ljust:"10"</code></td>
+<td><code>"hi        "</code></td>
+</tr>
+<tr>
+<td><code>rjust</code></td>
+<td><code>rjust(width)</code></td>
+<td><code>"hi"|rjust:"10"</code></td>
+<td><code>"        hi"</code></td>
+</tr>
+<tr>
+<td><code>wordwrap</code></td>
+<td><code>wordwrap(width)</code></td>
+<td><code>"hello world"|wordwrap:"5"</code></td>
+<td>wrapped lines</td>
+</tr>
+<tr>
+<td><code>linenumbers</code></td>
+<td><code>linenumbers</code></td>
+<td><code>"a\nb"|linenumbers</code></td>
+<td><code>"1. a\n2. b"</code></td>
+</tr>
+<tr>
+<td><code>make_list</code></td>
+<td><code>make_list</code></td>
+<td><code>"hello"|make_list</code></td>
+<td><code>["h","e","l","l","o"]</code></td>
+</tr>
+<tr>
+<td><code>slugify</code></td>
+<td>already supported</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="html-escaping">HTML / escaping<a class="headerlink" href="#html-escaping" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>escapejs</code></td>
+<td><code>escapejs</code></td>
+<td><code>"&lt;b&gt;"|escapejs</code></td>
+<td><code>\x3Cb\x3E</code></td>
+</tr>
+<tr>
+<td><code>force_escape</code></td>
+<td><code>force_escape</code></td>
+<td><code>"&lt;b&gt;"|force_escape</code></td>
+<td><code>&amp;lt;b&amp;gt;</code></td>
+</tr>
+<tr>
+<td><code>fix_ampersands</code></td>
+<td><code>fix_ampersands</code></td>
+<td><code>"A &amp; B"|fix_ampersands</code></td>
+<td><code>A &amp;amp; B</code></td>
+</tr>
+<tr>
+<td><code>safeseq</code></td>
+<td><code>safeseq</code></td>
+<td><code>list|safeseq</code></td>
+<td>marks all items safe</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sequence-object">Sequence / object<a class="headerlink" href="#sequence-object" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>first</code></td>
+<td><code>first</code></td>
+<td><code>"abc"|first</code></td>
+<td><code>"a"</code></td>
+</tr>
+<tr>
+<td><code>last</code></td>
+<td><code>last</code></td>
+<td><code>"abc"|last</code></td>
+<td><code>"c"</code></td>
+</tr>
+<tr>
+<td><code>length_is</code></td>
+<td>already supported</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>random</code></td>
+<td>already supported</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>slice</code></td>
+<td>already supported</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="numbers-dates">Numbers / dates<a class="headerlink" href="#numbers-dates" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>apnumber</code></td>
+<td><code>apnumber</code></td>
+<td><code>"5"|apnumber</code></td>
+<td><code>"five"</code></td>
+</tr>
+<tr>
+<td><code>intcomma</code></td>
+<td><code>intcomma</code></td>
+<td><code>"1000"|intcomma</code></td>
+<td><code>"1,000"</code></td>
+</tr>
+<tr>
+<td><code>intword</code></td>
+<td><code>intword</code></td>
+<td><code>"1500000"|intword</code></td>
+<td><code>"1.5 million"</code></td>
+</tr>
+<tr>
+<td><code>ordinal</code></td>
+<td><code>ordinal</code></td>
+<td><code>"1"|ordinal</code></td>
+<td><code>"1st"</code></td>
+</tr>
+<tr>
+<td><code>naturalday</code></td>
+<td><code>naturalday</code></td>
+<td><code>"2026-01-01"|naturalday</code></td>
+<td><code>"today"</code> / <code>"yesterday"</code> / date</td>
+</tr>
+<tr>
+<td><code>get_digit</code></td>
+<td><code>get_digit(index)</code></td>
+<td><code>"12345"|get_digit:"2"</code></td>
+<td><code>"3"</code></td>
+</tr>
+<tr>
+<td><code>timeutil</code></td>
+<td><code>timeutil(date?)</code></td>
+<td>alias for <code>timeuntil</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lists-grouping">Lists / grouping<a class="headerlink" href="#lists-grouping" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unordered_list</code></td>
+<td><code>unordered_list</code></td>
+<td><code>items|unordered_list</code></td>
+<td><code>&lt;ul&gt;...&lt;/ul&gt;</code></td>
+</tr>
+<tr>
+<td><code>truncatewords_html</code></td>
+<td><code>truncatewords_html(count)</code></td>
+<td>HTML string</td>
+<td>truncated HTML</td>
+</tr>
+</tbody>
+</table>
+<h3 id="urls-encoding">URLs / encoding<a class="headerlink" href="#urls-encoding" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>urlizetrunc</code></td>
+<td><code>urlizetrunc(len)</code></td>
+<td>URL string</td>
+<td><code>&lt;a href="..."&gt;...&lt;/a&gt;</code></td>
+</tr>
+<tr>
+<td><code>iriencode</code></td>
+<td><code>iriencode</code></td>
+<td><code>"hello world"|iriencode</code></td>
+<td><code>"hello%20world"</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="misc">Misc<a class="headerlink" href="#misc" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Signature</th>
+<th>Example</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pprint</code></td>
+<td><code>pprint</code></td>
+<td><code>obj|pprint</code></td>
+<td>pretty-printed JSON</td>
+</tr>
+<tr>
+<td><code>phone2numeric</code></td>
+<td><code>phone2numeric</code></td>
+<td><code>"1-800-CALL"|phone2numeric</code></td>
+<td><code>"1-800-2255"</code></td>
+</tr>
+<tr>
+<td><code>STATIC_PREFIX</code></td>
+<td><code>STATIC_PREFIX</code></td>
+<td><code>"css/app.css"|STATIC_PREFIX</code></td>
+<td><code>"/static/css/app.css"</code></td>
+</tr>
+</tbody>
+</table>
+<p>These filters are covered by unit tests in <code>tests/filters.test.js</code> and are documented here for developers and template authors.</p>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p><a href="../custom-filters/">Custom Filters</a></p>
+</li>
+<li>
+<p><a href="../tags/">Tags</a></p>
+</li>
+<li>
+<p><a href="../../api/filters/">API Reference: Filters</a></p>
+</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+<div class="md-footer__credits" role="contentinfo" style="text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); backdrop-filter:blur(10px) " >
+  <span class="md-footer__credits-text" style="font-size: larger;padding:12px  0;">
+    Made by <a
+      style="font-size: x-large; text-decoration: underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki">Alain Miki</a> — also check out <a
+      style="font-size: x-large; text-decoration:underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki/mikiUI">mikiUI</a> 
+      and <a
+      style="font-size: x-large; text-decoration:underline; border-bottom: 2px solid; box-shadow: 0 2px 4px  rgba(0,0,0,0.1);"
+      href="https://github.com/alainmiki/mikiORM">mikiORM</a>
+  </span>
+</div>
+
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../template-inheritance/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Template Inheritance">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Template Inheritance
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../tags/" class="md-footer__link md-footer__link--next" aria-label="Next: Tags">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Tags
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/alainmiki/miki-template" target="_blank" rel="noopener" title="miki-template on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://www.npmjs.com/package/miki-template" target="_blank" rel="noopener" title="miki-template on npm" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M288 288h-32v-64h32zm288-128v192H288v32H160v-32H0V160zm-416 32H32v128h64v-96h32v96h32zm160 0H192v160h64v-32h64zm224 0H352v128h64v-96h32v96h32v-96h32v96h32z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://youtube.com/@codewithmiki6849" target="_blank" rel="noopener" title="Code with Miki on YouTube" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M549.7 124.1c-6.2-23.7-24.8-42.3-48.3-48.6C458.9 64 288.1 64 288.1 64S117.3 64 74.7 75.5c-23.5 6.3-42 24.9-48.3 48.6C15 167 15 256.4 15 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.3 448 288.1 448 288.1 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://www.facebook.com/profile.php?id=100063798107667" target="_blank" rel="noopener" title="Alain Miki on Facebook" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256c0 120 82.7 220.8 194.2 248.5V334.2h-52.8V256h52.8v-33.7c0-87.1 39.4-127.5 125-127.5 16.2 0 44.2 3.2 55.7 6.4V172c-6-.6-16.5-1-29.6-1-42 0-58.2 15.9-58.2 57.2V256h83.6l-14.4 78.2H287v175.9C413.8 494.8 512 386.9 512 256"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://www.instagram.com/alain_miki" target="_blank" rel="noopener" title="Alain Miki on Instagram" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M224.3 141a115 115 0 1 0-.6 230 115 115 0 1 0 .6-230m-.6 40.4a74.6 74.6 0 1 1 .6 149.2 74.6 74.6 0 1 1-.6-149.2m93.4-45.1a26.8 26.8 0 1 1 53.6 0 26.8 26.8 0 1 1-53.6 0m129.7 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8M399 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://www.facebook.com/codewithmiki" target="_blank" rel="noopener" title="Code with Miki on Facebook" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256c0 120 82.7 220.8 194.2 248.5V334.2h-52.8V256h52.8v-33.7c0-87.1 39.4-127.5 125-127.5 16.2 0 44.2 3.2 55.7 6.4V172c-6-.6-16.5-1-29.6-1-42 0-58.2 15.9-58.2 57.2V256h83.6l-14.4 78.2H287v175.9C413.8 494.8 512 386.9 512 256"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": {"json": [".s2s"]}, "base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.top", "navigation.footer", "navigation.prune", "navigation.indexes", "toc.integrate", "toc.follow", "search.suggest", "search.highlight", "content.code.copy", "announce.dismiss"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
