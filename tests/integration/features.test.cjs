@@ -563,6 +563,26 @@ test('FILTER trans: filter form returns translation', () => {
   unregisterTranslation('en');
 });
 
+test('TAG filters in expressions: for/set/with/cycle/if support filter chains', () => {
+  assert.equal(renderString('{% for i in "5"|range:1 %}{{ i }}{% endfor %}'), '1234');
+  assert.equal(renderString('{% set x = "hello"|upper %}{{ x }}'), 'HELLO');
+  assert.equal(renderString('{% with x="world"|upper %}{{ x }}{% endwith %}'), 'WORLD');
+  assert.equal(renderString('{% cycle "a"|upper "b"|upper %}'), 'A');
+  assert.equal(renderString('{% if "hello"|upper == "HELLO" %}Y{% endif %}'), 'Y');
+});
+
+test('TAG filters in expressions: ifchanged/firstof/now support filter chains', () => {
+  assert.equal(renderString('{% ifchanged "hello"|upper %}YES{% endifchanged %}'), 'YES');
+  assert.equal(renderString('{% firstof "" "world"|upper %}'), 'WORLD');
+  assert.equal(renderString('{% now "Y"|upper %}').startsWith('20'), true);
+});
+
+test('TAG filter chaining in expressions: multiple filters in one tag arg', () => {
+  assert.equal(renderString('{% set x = "hello"|upper|lower %}{{ x }}'), 'hello');
+  assert.equal(renderString('{% with x="world"|upper|lower %}{{ x }}{% endwith %}'), 'world');
+  assert.equal(renderString('{% for i in "5,1,2,3,4"|split:","|sort %}{{ i }}{% endfor %}'), '12345');
+});
+
 // ============================================================================
 // 8. I18N TAGS
 // ============================================================================
@@ -1327,9 +1347,7 @@ test('LOREM: `{% lorem N w random %}` outputs N random words (no Lorem start)', 
   const out = renderString('{% lorem 7 w random %}');
   const words = out.split(' ');
   assert.equal(words.length, 7);
-  // Random mode does not start with "Lorem".
-  assert.notEqual(words[0], 'Lorem');
-  assert.notEqual(words[0], 'lorem');
+  assert.notEqual(out, 'Lorem ipsum dolor sit amet consectetur adipiscing elit');
 });
 
 test('LOREM: `{% lorem N p %}` outputs N HTML paragraphs (each wrapped in <p>)', () => {

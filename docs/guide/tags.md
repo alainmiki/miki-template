@@ -6,6 +6,26 @@ Tags control template logic and structure. They use `{% %}` syntax.
 
 
 
+All tag arguments support **filter expressions** and **filter chaining**. For example:
+
+```html
+
+{% set x = "  hello  "|trim|upper %}
+
+{% with greeting="hello"|upper %}
+
+{% for i in "5,1,2"|split:","|sort %}
+
+{% cycle "a"|upper "b"|upper %}
+
+{% firstof "" "world"|upper %}
+
+{% ifchanged "hello"|upper %}
+
+```
+
+
+
 ## Table of Contents
 
 
@@ -159,11 +179,7 @@ Loop over arrays and objects. Injects `forloop` meta tracking.
     </ul>
 
     ```
-
-
-
 === "Loop with filters"
-
 
 
     ```html
@@ -179,6 +195,22 @@ Loop over arrays and objects. Injects `forloop` meta tracking.
     {% endfor %}
 
     ```
+
+
+=== "Filter expressions in iterable"
+
+
+    ```html
+
+    {% for i in "5,1,2,3,4"|split:","|sort|join:"," %}
+
+      {{ i }}
+
+    {% endfor %}
+
+    ```
+
+
 
 
 
@@ -309,11 +341,7 @@ Scope localized variables.
     {% endwith %}
 
     ```
-
-
-
 === "Combined alias"
-
 
 
     ```html
@@ -325,6 +353,24 @@ Scope localized variables.
     {% endwith %}
 
     ```
+
+
+=== "Filter expressions in values"
+
+
+    ```html
+
+    {% with greeting="hello"|upper, who="world"|upper %}
+
+      <p>{{ greeting }} {{ who }}</p>
+
+    {% endwith %}
+
+    ```
+
+
+
+
 
 
 
@@ -363,11 +409,7 @@ Cycle through values sequentially.
     <tr class="{{ row_class }}">
 
     ```
-
-
-
 === "Named cycle for resumable state"
-
 
 
     ```html
@@ -391,6 +433,20 @@ Cycle through values sequentially.
     ```
 
 
+=== "Filter expressions in cycle values"
+
+
+    ```html
+
+    {% cycle "hello"|upper "world"|upper %}
+
+    ```
+
+
+
+
+
+
 
 ### firstof
 
@@ -405,6 +461,17 @@ Return the first truthy value.
 {% firstof user.display_name user.username "Anonymous" %}
 
 ```
+
+
+=== "Filter expressions in firstof values"
+
+
+    ```html
+
+    {% firstof "" "world"|upper %}
+
+    ```
+
 
 
 
@@ -456,10 +523,7 @@ Assign a value to a variable.
 
     ```
 
-
-
 === "Multiple variables"
-
 
 
     ```html
@@ -467,6 +531,25 @@ Assign a value to a variable.
     {% set tax_rate = 0.08, tax = subtotal|mult:tax_rate %}
 
     ```
+
+
+=== "Filter expressions in values"
+
+
+    ```html
+
+    {% set greeting = "hello"|upper %}
+
+    <p>{{ greeting }}</p>
+
+    {% set cleaned = "  hello  "|trim|upper %}
+
+    <p>{{ cleaned }}</p>
+
+    ```
+
+
+
 
 
 
@@ -509,11 +592,7 @@ Render the body only when a value changes.
     {% endfor %}
 
     ```
-
-
-
 === "With else"
-
 
 
     ```html
@@ -535,6 +614,24 @@ Render the body only when a value changes.
     ```
 
 
+=== "Filter expressions in condition"
+
+
+    ```html
+
+    {% ifchanged "hello"|upper %}
+
+      <p>The value changed</p>
+
+    {% endifchanged %}
+
+    ```
+
+
+
+
+
+
 
 ---
 
@@ -550,8 +647,6 @@ Render the body only when a value changes.
 
 Output the current date/time.
 
-
-
 ```html
 
 <p>Current time: {% now "Y-m-d H:i:s" %}</p>
@@ -561,8 +656,22 @@ Output the current date/time.
 ```
 
 
-
 Uses the same format codes as the `date` filter (Django-style tokens like `Y`, `m`, `d`, `H`, `i`, `s`, `F`).
+
+
+=== "Filter expressions on format string"
+
+
+    ```html
+
+    {% now "Y-m-d"|upper %}
+
+    ```
+
+    The filter is applied to the **format string**, not the rendered date. To transform the formatted output, use `{% set x = "now"|date:"Y-m-d"|upper %}{{ x }}` instead.
+
+
+
 
 
 

@@ -2,22 +2,7 @@
  * Utility template tags: static, url, regroup, spaceless.
  */
 
-// Helper to resolve expression values (literals, numbers, booleans, or context lookups)
-function resolveValue(token, context) {
-  if (token === undefined || token === null) return '';
-  if (typeof token !== 'string') return token;
-  if (token === '') return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
-    return token.slice(1, -1);
-  }
-  if (token === 'true' || token === 'True') return true;
-  if (token === 'false' || token === 'False') return false;
-  if (token === 'none' || token === 'None' || token === 'null') return null;
-  // Numeric literal (integer or float)
-  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-  // Otherwise treat as a context variable lookup
-  return context.get(token);
-}
+const { evaluateExpression } = require('../parser');
 
 class StaticNode {
   constructor(pathExpr) {
@@ -25,7 +10,7 @@ class StaticNode {
   }
 
   render(context) {
-    const resolvedPath = resolveValue(this.pathExpr, context);
+    const resolvedPath = evaluateExpression(this.pathExpr, context);
 
     // Resolve static prefix
     let prefix = '/static/';
@@ -55,11 +40,11 @@ class UrlNode {
   }
 
   render(context) {
-    const routeName = resolveValue(this.routeNameExpr, context);
-    const resolvedPositional = this.positionalArgs.map(arg => resolveValue(arg, context));
+    const routeName = evaluateExpression(this.routeNameExpr, context);
+    const resolvedPositional = this.positionalArgs.map(arg => evaluateExpression(arg, context));
     const resolvedKwargs = {};
     for (const kw of this.kwargs) {
-      resolvedKwargs[kw.name] = resolveValue(kw.valueExpr, context);
+      resolvedKwargs[kw.name] = evaluateExpression(kw.valueExpr, context);
     }
     const hasKwargs = Object.keys(resolvedKwargs).length > 0;
 

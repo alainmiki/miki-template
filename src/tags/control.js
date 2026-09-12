@@ -1,7 +1,7 @@
 /**
  * Control flow template tags: if, for, with, cycle, comment, with, firstof.
  */
-const { parseVariableExpression } = require('../parser');
+const { parseVariableExpression, evaluateExpression } = require('../parser');
 const { getFilter } = require('../filters');
 
 /**
@@ -82,23 +82,6 @@ function tokenizeExpr(exprStr) {
 }
 
 /**
- * Helper to resolve a token to its runtime value.
- */
-function resolveValue(token, context) {
-  if (!token) return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
-    return token.slice(1, -1);
-  }
-  if (!isNaN(token) && token !== '') {
-    return Number(token);
-  }
-  if (token === 'true' || token === 'True') return true;
-  if (token === 'false' || token === 'False') return false;
-  if (token === 'none' || token === 'None' || token === 'null') return null;
-  return context.get(token);
-}
-
-/**
  * Shunting-yard style expression evaluator supporting:
  * == != < <= > >= in not in and or not
  */
@@ -161,7 +144,7 @@ function evaluateCondition(exprStr, context) {
       continue;
     }
 
-    vals.push(resolveValue(t, context));
+    vals.push(evaluateExpression(t, context));
   }
 
   while (ops.length > 0) {
@@ -201,12 +184,14 @@ class IfNode {
 }
 
 class ForNode {
-  constructor(loopVars, iterablePath, body, emptyBody, filters = []) {
+  constructor(loopVars, iterablePath, body, emptyBody, filters = [], isLiteral = false, literalValue = null) {
     this.loopVars = loopVars;
     this.iterablePath = iterablePath;
     this.filters = filters;
     this.body = body;
     this.emptyBody = emptyBody;
+    this.isLiteral = isLiteral;
+    this.literalValue = literalValue;
     this._filterFns = filters.map(f => {
       const fn = getFilter(f.name);
       return { fn, arg: f.arg };
@@ -214,7 +199,7 @@ class ForNode {
   }
 
   render(context) {
-    let rawItems = context.get(this.iterablePath);
+    let rawItems = this.isLiteral ? this.literalValue : context.get(this.iterablePath);
 
     for (const { fn, arg } of this._filterFns) {
       if (!fn) {
@@ -293,24 +278,7 @@ class WithNode {
   render(context) {
     const scope = {};
     for (const mapping of this.mappings) {
-      // The valPath may be a literal string (e.g. "Hello" with quotes) or
-      // a variable lookup (e.g. user.name). Parse quotes here.
-      const raw = mapping.valPath;
-      let value;
-      if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith('\'') && raw.endsWith('\''))) {
-        value = raw.slice(1, -1);
-      } else if (raw === 'true' || raw === 'True') {
-        value = true;
-      } else if (raw === 'false' || raw === 'False') {
-        value = false;
-      } else if (raw === 'none' || raw === 'None' || raw === 'null') {
-        value = null;
-      } else if (raw !== '' && !isNaN(Number(raw))) {
-        value = Number(raw);
-      } else {
-        value = context.get(raw);
-      }
-      scope[mapping.name] = value;
+      scope[mapping.name] = evaluateExpression(mapping.valPath, context);
     }
     // If an `as alias` was used after key=value pairs, alias the last
     // key to the alias name. This supports `{% with a=5 as answ %}` →
@@ -336,7 +304,7 @@ class CycleNode {
     const key = this.args.join(',');
     let idx = context.cycleStates.get(key) || 0;
     const token = this.args[idx % this.args.length];
-    const val = resolveValue(token, context);
+    const val = evaluateExpression(token, context);
     context.cycleStates.set(key, idx + 1);
 
     if (this.asName) {
@@ -356,7 +324,7 @@ class FirstofNode {
 
   render(context) {
     for (const arg of this.args) {
-      const val = resolveValue(arg, context);
+      const val = evaluateExpression(arg, context);
       if (val && val !== '' && val !== null && val !== undefined) {
         return String(val);
       }
@@ -576,7 +544,7 @@ function parseFor(tagContent, parser) {
 
   // Parse the iterable expression to support filters: items|regroup:"category"
   const parsedIterable = parseVariableExpression(iterableExpr);
-  return new ForNode(loopVars, parsedIterable.varPath, body, emptyBody, parsedIterable.filters);
+  return new ForNode(loopVars, parsedIterable.varPath, body, emptyBody, parsedIterable.filters, parsedIterable.isLiteral, parsedIterable.literalValue);
 }
 
 function parseWith(tagContent, parser) {
@@ -658,13 +626,36 @@ function parseKeyValuePairs(content) {
         val += content[i++];
       }
       if (content[i] === quote) i++;
-      // Keep the quotes around the literal so WithNode can recognize it
       val = quote + val + quote;
     } else {
       while (i < content.length && content[i] !== ',' && !/\s/.test(content[i])) {
         val += content[i++];
       }
     }
+
+    while (i < content.length && /\s/.test(content[i])) i++;
+    if (i < content.length && content[i] === '|') {
+      val += '|';
+      i++;
+      while (i < content.length) {
+        if (/\s/.test(content[i])) { i++; continue; }
+        if (content[i] === ',') break;
+        if (content[i] === '|') { val += '|'; i++; continue; }
+        if (content[i] === ':') { val += ':'; i++; continue; }
+        if (content[i] === '"' || content[i] === '\'') {
+          const quote = content[i++];
+          val += quote;
+          while (i < content.length && content[i] !== quote) {
+            if (content[i] === '\\' && i + 1 < content.length) { val += content[i]; i++; }
+            val += content[i++];
+          }
+          if (content[i] === quote) { val += quote; i++; }
+        } else {
+          val += content[i++];
+        }
+      }
+    }
+
     tokens.push({ name: key, valPath: val });
     while (i < content.length && /\s/.test(content[i])) i++;
     if (content[i] === ',') i++;
@@ -674,17 +665,16 @@ function parseKeyValuePairs(content) {
 
 function parseCycle(tagContent, _parser) {
   const content = tagContent.slice(5).trim();
-  const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
-  const matches = content.match(argRegex) || [];
+  const parts = content.split(/\s+/).filter(Boolean);
   let asName = null;
   const args = [];
 
-  for (let i = 0; i < matches.length; i++) {
-    if (matches[i] === 'as' && i < matches.length - 1) {
-      asName = matches[i + 1];
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i] === 'as' && i < parts.length - 1) {
+      asName = parts[i + 1];
       break;
     }
-    args.push(matches[i]);
+    args.push(parts[i]);
   }
 
   return new CycleNode(args, asName);
@@ -692,8 +682,79 @@ function parseCycle(tagContent, _parser) {
 
 function parseFirstof(tagContent, _parser) {
   const content = tagContent.slice(8).trim();
-  const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
-  const args = (content.match(argRegex) || []).map(a => a.trim()).filter(Boolean);
+  const args = [];
+  let i = 0;
+  const len = content.length;
+
+  while (i < len) {
+    while (i < len && /\s/.test(content[i])) i++;
+    if (i >= len) break;
+
+    let expr = '';
+    if (content[i] === '"' || content[i] === '\'') {
+      const quote = content[i];
+      expr += content[i];
+      i++;
+      while (i < len && content[i] !== quote) {
+        if (content[i] === '\\' && i + 1 < len) {
+          expr += content[i];
+          i++;
+        }
+        expr += content[i];
+        i++;
+      }
+      if (i < len) {
+        expr += content[i];
+        i++;
+      }
+      while (i < len && !/\s/.test(content[i])) {
+        if (content[i] === '|') {
+          expr += content[i];
+          i++;
+          while (i < len && content[i] !== ':' && content[i] !== '|' && !/\s/.test(content[i])) {
+            expr += content[i];
+            i++;
+          }
+          if (i < len && content[i] === ':') {
+            expr += content[i];
+            i++;
+            if (i < len && (content[i] === '"' || content[i] === '\'')) {
+              const q = content[i];
+              expr += content[i];
+              i++;
+              while (i < len && content[i] !== q) {
+                if (content[i] === '\\' && i + 1 < len) {
+                  expr += content[i];
+                  i++;
+                }
+                expr += content[i];
+                i++;
+              }
+              if (i < len) {
+                expr += content[i];
+                i++;
+              }
+            } else {
+              while (i < len && content[i] !== '|' && !/\s/.test(content[i])) {
+                expr += content[i];
+                i++;
+              }
+            }
+          }
+        } else {
+          break;
+        }
+      }
+    } else {
+      while (i < len && !/\s/.test(content[i])) {
+        expr += content[i];
+        i++;
+      }
+    }
+
+    if (expr) args.push(expr);
+  }
+
   return new FirstofNode(args);
 }
 

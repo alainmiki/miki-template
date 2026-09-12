@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.3.3] - 2026-09-11
+### Added
+- **Filter expressions in tag arguments** — all built-in tags now support filter chains in their arguments, not just variable expressions. This includes `{% for %}`, `{% set %}`, `{% with %}`, `{% cycle %}`, `{% firstof %}`, `{% ifchanged %}`, `{% now %}`, `{% if %}`, `{% include %}`, `{% partial %}`, `{% extends %}`, `{% blocktrans %}`, and `{% trans %}`.
+- **Filter chaining in tags** — multiple filters can be chained in a single tag argument, e.g. `{% set x = "  hello  "|trim|upper %}`.
+
+### Fixed
+- **`{% now %}` filter behavior** — filters applied to the `now` format string are now evaluated consistently with other tag arguments. Note that applying `date`/`time` filters to `now` transforms the format pattern, not the rendered date; to transform the output, use `{% set x = "now"|date:"Y-m-d"|upper %}{{ x }}`.
+- **`{% with %}` parser** — values containing filter expressions like `{% with x="world"|upper %}` now parse correctly instead of being truncated at the `|`.
+- **`{% cycle %}` parser** — filter expressions in cycle arguments are preserved as single tokens so `{% cycle "a"|upper "b"|upper %}` evaluates correctly.
+
+### Changed
+- Unified expression evaluation across all tag render paths. The old `resolveValue()` helper was replaced with `evaluateExpression()` in `src/tags/*.js`, `src/tags/control.js`, `src/tags/extra.js`, `src/tags/util.js`, `src/tags/inheritance.js`, `src/tags/i18n.js`, and the inline `resolveVal()` in `src/codegen.js`. All now support literals, variables, dotted lookups, function auto-call, and filter chains.
+- Codegen path (`src/codegen.js`) `resolveVal()` now inlines filter evaluation so compiled templates also support tag-argument filters without runtime parser overhead.
+
+### Verification
+- `npm test` — 410/410 passing
+- `npm run lint` — 0 errors, 0 warnings
+
+[2.3.3]: https://github.com/your-repo/miki-template/releases/tag/v2.3.3
+
 ## [1.3.4] - 2026-09-05
 ### Fixed
 - **Express views path resolution** — normalize `views` entries and ensure miki treats file paths as directories when resolving templates and `#partial` lookups. This fixes `Failed to lookup view "home" in views directory ".../dir"` when `miki-template` is used from a host project's `node_modules` and `views` is passed as a file path.

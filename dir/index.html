@@ -76,5 +76,26 @@
   {{ "1234567890123456"|filesizeformat }}
   {{ "1234567890123456789"|filesizeformat }}
 
+  <hr>
+  <ul>
+    
+  {% for i in "12"|range:2|sum|add:"10"|range:3 %}
+   <li> {{i|sqrt}}</li>
+  {% endfor %}
+    
+  </ul>
+
+  <hr>
+  {{"12"|range:2|sum|add:"10"|range:3}}
+
+  {% firstof "hello world"|upper %}
+
+  {% set x= "now"  %}
+  {% set names="jackson" %}
+
+  {{x}}
+  {{names}}
+
+  {{"5,1,6,2,8,3,12,7"|split:","|sort}}
 
 {% endblock %}

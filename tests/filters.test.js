@@ -236,7 +236,7 @@ test('Filters - time_diff, ago, until', () => {
   assert.ok(ago(new Date(Date.now() - 86400000)).includes('day ago'));
 
   const until = getFilter('until');
-  assert.ok(until(new Date(Date.now() + 86400000)).includes('day'));
+  assert.ok(until(new Date(Date.now() + 86400000 + 1000)).includes('day'));
 });
 
 test('Filters - credit_card, ssn, ip_address, uuid', () => {

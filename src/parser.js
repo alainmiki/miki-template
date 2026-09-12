@@ -88,6 +88,51 @@ function parseVariableExpression(expr) {
     skipWhitespace();
   }
 
+  // Check for boolean/null literals as base value
+  if (!isLiteral && idx < len) {
+    const remaining = expr.slice(idx);
+    if (remaining.startsWith('true') || remaining.startsWith('True')) {
+      isLiteral = true;
+      literalValue = true;
+      idx += remaining.startsWith('True') ? 4 : 5;
+      skipWhitespace();
+    } else if (remaining.startsWith('false') || remaining.startsWith('False')) {
+      isLiteral = true;
+      literalValue = false;
+      idx += remaining.startsWith('False') ? 5 : 6;
+      skipWhitespace();
+    } else if (remaining.startsWith('null') || remaining.startsWith('None') || remaining.startsWith('none')) {
+      isLiteral = true;
+      literalValue = null;
+      idx += remaining.startsWith('None') ? 4 : (remaining.startsWith('null') ? 4 : 4);
+      skipWhitespace();
+    }
+  }
+
+  // Check for numeric literal as base value
+  if (!isLiteral && idx < len && /[\d.-]/.test(expr[idx])) {
+    let numStr = '';
+    if (expr[idx] === '-') {
+      numStr += '-';
+      idx++;
+    }
+    while (idx < len && /[\d]/.test(expr[idx])) {
+      numStr += expr[idx];
+      idx++;
+    }
+    if (expr[idx] === '.') {
+      numStr += '.';
+      idx++;
+      while (idx < len && /[\d]/.test(expr[idx])) {
+        numStr += expr[idx];
+        idx++;
+      }
+    }
+    isLiteral = true;
+    literalValue = Number(numStr);
+    skipWhitespace();
+  }
+
   // Parse main variable path
   if (!isLiteral) {
     while (idx < len && expr[idx] !== '|') {
@@ -262,9 +307,32 @@ class Parser {
   }
 }
 
+function evaluateExpression(exprStr, context) {
+  if (!exprStr || typeof exprStr !== 'string') return exprStr === undefined || exprStr === null ? '' : exprStr;
+  const parsed = parseVariableExpression(exprStr);
+  let val = parsed.isLiteral ? parsed.literalValue : (parsed.varPath ? context.get(parsed.varPath) : undefined);
+  for (const filterInfo of parsed.filters) {
+    const filterFn = filtersModule.getFilter(filterInfo.name);
+    if (!filterFn) {
+      throw new Error(`Unknown filter: '${filterInfo.name}'`);
+    }
+    let argVal = undefined;
+    if (filterInfo.arg) {
+      if (filterInfo.arg.type === 'literal') {
+        argVal = filterInfo.arg.value;
+      } else if (filterInfo.arg.type === 'variable') {
+        argVal = context.get(filterInfo.arg.value);
+      }
+    }
+    val = filterFn(val, argVal, context);
+  }
+  return val === undefined ? '' : val;
+}
+
 module.exports = {
   Parser,
   TextNode,
   VariableNode,
-  parseVariableExpression
+  parseVariableExpression,
+  evaluateExpression
 };

@@ -2,6 +2,7 @@
  * i18n template tags: trans, blocktrans, language.
  */
 const i18n = require('../i18n');
+const { evaluateExpression } = require('../parser');
 
 /**
  * {% trans "translation key" %}
@@ -18,19 +19,10 @@ class TransNode {
     const params = {};
     if (this.args) {
       for (const [k, v] of Object.entries(this.args)) {
-        params[k] = context.get(v);
+        params[k] = evaluateExpression(v, context);
       }
     }
-    // For unquoted keys: if the key is a variable name, resolve it
-    let key = this.key;
-    if (!key.startsWith('"') && !key.startsWith('\'') && !key.includes(' ')) {
-      const resolved = context.get(key);
-      if (typeof resolved === 'string' && resolved.length > 0) {
-        key = resolved;
-      }
-    } else {
-      key = key.slice(1, -1);
-    }
+    const key = evaluateExpression(this.key, context);
     return i18n.lookup(key, params);
   }
 }
@@ -42,10 +34,7 @@ class LanguageNode {
   }
 
   render(context) {
-    // Strip quotes
-    const lang = this.lang.startsWith('"') || this.lang.startsWith('\'')
-      ? this.lang.slice(1, -1)
-      : (context.get(this.lang) || this.lang);
+    const lang = evaluateExpression(this.lang, context);
     const previous = i18n.getLanguage();
     i18n.setLanguage(lang);
     try {
@@ -75,11 +64,11 @@ class BlockTransNode {
     // 1. Apply {% with %} mappings to a local scope
     const localParams = {};
     for (const m of this.withMappings) {
-      localParams[m.name] = context.get(m.valPath);
+      localParams[m.name] = evaluateExpression(m.valPath, context);
     }
     // 2. Apply {% plural count %} mappings
     for (const m of this.pluralMappings) {
-      localParams[m.name] = context.get(m.valPath);
+      localParams[m.name] = evaluateExpression(m.valPath, context);
     }
 
     // 3. Reassemble the full text

@@ -18,7 +18,7 @@ you can register your own custom filters and filters in miki templates.
 - **Partial-powered templating**: Define reusable chunks with `{% partialdef %}` and render them by name anywhere — `res.render('home#card')`, `renderPartialFromSource(...)`, or `compiled.renderBlock('block')`. Built for HTMX-style partial responses without the hassle.
 - **Smart template discovery**: Stop hardcoding view paths. The engine searches `templates/`, nested app directories, and custom folder names automatically — just like Django. `setupExpress()` expands your views roots so templates live where they make sense.
 - **One-line Express integration**: `miki.setupExpress(app, { extension: 'html', views: dir })` — wires the engine, views directory, and a `res.render` shim that makes `res.render('home#card', ...)` Just Work for HTMX-style partial responses. **No boilerplate, no extra middleware.**
-- **Full Syntax Parity**: Supports variables, dotted lookups, filters (`|`), and block tags (`{% %}`).
+- **Full Syntax Parity**: Supports variables, dotted lookups, filters (`|`), and block tags (`{% %}`). **All tag arguments now support filter chains** — e.g. `{% set x = "  hello  "|trim|upper %}`, `{% for i in "5,1,2"|split:","|sort %}`, `{% with greeting="hello"|upper %}`.
 - **Template Inheritance**: Multi-level inheritance with `extends`, block overrides, and `{{ block.super }}` support.
 - **Built-in libraries**: `humanize`, `cache`, and `lorem` ship pre-activated. `{% lorem 5 p %}` works without `{% load lorem %}`.
 - **ESM & CommonJS**: Works seamlessly with both `import` and `require` syntax.

@@ -1,6 +1,6 @@
 {
   "name": "miki-template",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "description": "Django-Style template engine for Node.js and Express",
   "main": "src/index.js",
   "exports": {
@@ -10,28 +10,6 @@
       "default": "./src/index.js"
     }
   },
-  "files": [
-    "src/index.js",
-    "src/esm.mjs",
-    "src/lexer.js",
-    "src/parser.js",
-    "src/context.js",
-    "src/context_processors.js",
-    "src/filters.js",
-    "src/security.js",
-    "src/cache.js",
-    "src/utils.js",
-    "src/codegen.js",
-    "src/i18n.js",
-    "src/libraries.js",
-    "src/tags/helpers.js",
-    "src/tags/registry.js",
-    "src/tags/control.js",
-    "src/tags/inheritance.js",
-    "src/tags/util.js",
-    "src/tags/i18n.js",
-    "src/tags/extra.js"
-  ],
   "files": [
     "src/index.js",
     "src/esm.mjs",

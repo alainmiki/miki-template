@@ -4,21 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Context } = require('../context');
-
-// Helper to resolve expression values (literals, numbers, booleans, or context lookups)
-function resolveValue(token, context) {
-  if (token === undefined || token === null) return '';
-  if (typeof token !== 'string') return token;
-  if (token === '') return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
-    return token.slice(1, -1);
-  }
-  if (token === 'true' || token === 'True') return true;
-  if (token === 'false' || token === 'False') return false;
-  if (token === 'none' || token === 'None' || token === 'null') return null;
-  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-  return context.get(token);
-}
+const { evaluateExpression } = require('../parser');
 
 class ExtendsNode {
   constructor(parentTemplateExpr) {
@@ -26,7 +12,7 @@ class ExtendsNode {
   }
 
   render(context) {
-    const parentName = resolveValue(this.parentTemplateExpr, context);
+    const parentName = evaluateExpression(this.parentTemplateExpr, context);
     if (!parentName) return '';
     context.parentTemplate = parentName;
     return '';
@@ -98,7 +84,7 @@ class IncludeNode {
   }
 
   render(context) {
-    const rawName = resolveValue(this.templateNameExpr, context);
+    const rawName = evaluateExpression(this.templateNameExpr, context);
     if (!rawName) return '';
 
     // Django-style partial selector: "home.html#card" means render
@@ -183,7 +169,7 @@ class IncludeNode {
       if (this.extraMappings && this.extraMappings.length > 0) {
         const extraScope = {};
         for (const m of this.extraMappings) {
-          extraScope[m.name] = resolveValue(m.valPath, context);
+          extraScope[m.name] = evaluateExpression(m.valPath, context);
         }
         renderCtx.push(extraScope);
         const out = partial.body.map(n => n.render(renderCtx)).join('');
@@ -198,7 +184,7 @@ class IncludeNode {
     if (this.extraMappings && this.extraMappings.length > 0) {
       const extraScope = {};
       for (const mapping of this.extraMappings) {
-        extraScope[mapping.name] = resolveValue(mapping.valPath, context);
+        extraScope[mapping.name] = evaluateExpression(mapping.valPath, context);
       }
       context.push(extraScope);
       const res = nodes.map(n => n.render(context)).join('');
@@ -308,7 +294,7 @@ function parseKeyValuePairs(str) {
         val += str[i++];
       }
       if (str[i] === quote) i++;
-      // Preserve quotes so resolveValue can recognize the literal
+      // Preserve quotes so evaluateExpression can recognize the literal
       val = quote + val + quote;
     } else {
       // Unquoted value: read until comma or whitespace

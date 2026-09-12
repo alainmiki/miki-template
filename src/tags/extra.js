@@ -2,20 +2,7 @@
  * Additional utility template tags: now, set, ifchanged.
  */
 
-// Helper to resolve expression values (literals, numbers, booleans, or context lookups)
-function resolveValue(token, context) {
-  if (token === undefined || token === null) return '';
-  if (typeof token !== 'string') return token;
-  if (token === '') return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
-    return token.slice(1, -1);
-  }
-  if (token === 'true' || token === 'True') return true;
-  if (token === 'false' || token === 'False') return false;
-  if (token === 'none' || token === 'None' || token === 'null') return null;
-  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-  return context.get(token);
-}
+const { evaluateExpression } = require('../parser');
 
 // --- {% now %} tag ---
 
@@ -25,7 +12,7 @@ class NowNode {
   }
 
   render(context) {
-    const fmt = resolveValue(this.formatExpr, context);
+    const fmt = evaluateExpression(this.formatExpr, context);
     const now = new Date();
     if (!fmt) return now.toISOString();
     const dateFilter = require('../filters');
@@ -49,7 +36,7 @@ class SetNode {
 
   render(context) {
     const name = String(this.nameExpr);
-    const value = this.valueExpr !== undefined ? resolveValue(this.valueExpr, context) : '';
+    const value = this.valueExpr !== undefined ? evaluateExpression(this.valueExpr, context) : '';
     if (name) {
       context.scopes[0][name] = value;
     }
@@ -90,7 +77,7 @@ class IfChangedNode {
   }
 
   render(context) {
-    const currentVal = this.conditionStr ? resolveValue(this.conditionStr, context) : undefined;
+    const currentVal = this.conditionStr ? evaluateExpression(this.conditionStr, context) : undefined;
 
     if (!context.ifChangedState) {
       context.ifChangedState = new Map();

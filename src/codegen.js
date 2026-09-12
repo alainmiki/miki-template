@@ -212,7 +212,7 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
   case 'ForNode': {
     const s = '_' + level;
     stmts.push(pad('{', level));
-    const iterExpr = (loopVarMap && loopVarMap[node.iterablePath]) ? loopVarMap[node.iterablePath] : `_get(_ctx, ${js(node.iterablePath)})`;
+    const iterExpr = node.isLiteral ? js(node.literalValue) : ((loopVarMap && loopVarMap[node.iterablePath]) ? loopVarMap[node.iterablePath] : `_get(_ctx, ${js(node.iterablePath)})`);
     stmts.push(pad(`let _raw${s} = ${iterExpr};`, level + 1));
     for (let i = 0; i < node.filters.length; i++) {
       const f = node.filters[i];
@@ -670,14 +670,145 @@ function resolveVal(token, context) {
   if (token === undefined || token === null) return '';
   if (typeof token !== 'string') return token;
   if (token === '') return '';
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
-    return token.slice(1, -1);
+
+  let idx = 0;
+  const len = token.length;
+
+  function skipWs() {
+    while (idx < len && /\s/.test(token[idx])) idx++;
   }
-  if (token === 'true' || token === 'True') return true;
-  if (token === 'false' || token === 'False') return false;
-  if (token === 'none' || token === 'None' || token === 'null') return null;
-  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-  return context.get(token);
+
+  let isLiteral = false;
+  let literalValue = null;
+  let varPath = '';
+
+  if (idx < len && (token[idx] === '"' || token[idx] === '\'')) {
+    const quote = token[idx];
+    idx++;
+    let str = '';
+    while (idx < len && token[idx] !== quote) {
+      if (token[idx] === '\\' && idx + 1 < len) idx++;
+      str += token[idx];
+      idx++;
+    }
+    idx++;
+    isLiteral = true;
+    literalValue = str;
+    skipWs();
+  }
+
+  if (!isLiteral && idx < len) {
+    const remaining = token.slice(idx);
+    if (remaining.startsWith('true') || remaining.startsWith('True')) {
+      isLiteral = true;
+      literalValue = true;
+      idx += remaining.startsWith('True') ? 4 : 5;
+      skipWs();
+    } else if (remaining.startsWith('false') || remaining.startsWith('False')) {
+      isLiteral = true;
+      literalValue = false;
+      idx += remaining.startsWith('False') ? 5 : 6;
+      skipWs();
+    } else if (remaining.startsWith('null') || remaining.startsWith('None') || remaining.startsWith('none')) {
+      isLiteral = true;
+      literalValue = null;
+      idx += 4;
+      skipWs();
+    }
+  }
+
+  if (!isLiteral && idx < len && /[\d.-]/.test(token[idx])) {
+    let numStr = '';
+    if (token[idx] === '-') {
+      numStr += '-';
+      idx++;
+    }
+    while (idx < len && /[\d]/.test(token[idx])) {
+      numStr += token[idx];
+      idx++;
+    }
+    if (token[idx] === '.') {
+      numStr += '.';
+      idx++;
+      while (idx < len && /[\d]/.test(token[idx])) {
+        numStr += token[idx];
+        idx++;
+      }
+    }
+    isLiteral = true;
+    literalValue = Number(numStr);
+    skipWs();
+  }
+
+  if (!isLiteral) {
+    while (idx < len && token[idx] !== '|') {
+      varPath += token[idx];
+      idx++;
+    }
+    varPath = varPath.trim();
+  }
+
+  let val = isLiteral ? literalValue : (varPath ? context.get(varPath) : undefined);
+
+  while (idx < len) {
+    if (token[idx] === '|') {
+      idx++;
+      skipWs();
+      let name = '';
+      while (idx < len && token[idx] !== ':' && token[idx] !== '|' && !/\s/.test(token[idx])) {
+        name += token[idx];
+        idx++;
+      }
+      skipWs();
+      let argVal = undefined;
+      if (idx < len && token[idx] === ':') {
+        idx++;
+        skipWs();
+        if (idx < len && (token[idx] === '"' || token[idx] === '\'')) {
+          const quote = token[idx];
+          idx++;
+          let s = '';
+          while (idx < len && token[idx] !== quote) {
+            if (token[idx] === '\\' && idx + 1 < len) idx++;
+            s += token[idx];
+            idx++;
+          }
+          idx++;
+          argVal = s;
+        } else {
+          let s = '';
+          while (idx < len && token[idx] !== '|' && !/\s/.test(token[idx])) {
+            s += token[idx];
+            idx++;
+          }
+          s = s.trim();
+          if (s !== '' && !isNaN(s)) argVal = Number(s);
+          else if (s === 'true') argVal = true;
+          else if (s === 'false') argVal = false;
+          else if (s === 'null' || s === 'None' || s === 'none') argVal = null;
+          else argVal = s;
+        }
+      }
+      const fn = filtersModule.getFilter(name);
+      if (!fn) throw new Error(`Unknown filter: '${name}'`);
+      val = fn(val, argVal, context);
+      skipWs();
+    } else {
+      idx++;
+    }
+  }
+
+  if (val === undefined) {
+    if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
+      return token.slice(1, -1);
+    }
+    if (token === 'true' || token === 'True') return true;
+    if (token === 'false' || token === 'False') return false;
+    if (token === 'none' || token === 'None' || token === 'null') return null;
+    if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
+    return context.get(token);
+  }
+  return val;
 }
 
 function getVal(ctx, path) {
