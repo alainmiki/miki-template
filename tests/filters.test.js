@@ -444,14 +444,6 @@ test('Filters - new Django contrib filters edge cases', () => {
   assert.strictEqual(wordwrap('a b c', 1), 'a\nb\nc');
 
   const apnumber = getFilter('apnumber');
-  console.log('apnumber source:', apnumber.toString().slice(0, 200));
-  const result20 = apnumber('20');
-  const result21 = apnumber('21');
-  console.log('apnumber(20):', JSON.stringify(result20));
-  console.log('apnumber(21):', JSON.stringify(result21));
-  if (result20 !== 'twenty') {
-    throw new Error('apnumber(20) returned ' + JSON.stringify(result20) + ' instead of "twenty"');
-  }
   assert.strictEqual(apnumber('0'), 'zero');
   assert.strictEqual(apnumber('5'), 'five');
   assert.strictEqual(apnumber('10'), 'ten');

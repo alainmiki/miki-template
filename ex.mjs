@@ -12,10 +12,10 @@ const dir=path.join(process.cwd(),"dir")
 
 
   
-  // registerContextProcessor((cx)=>({
-  //   siteName:"code with miki",
-  //   login:{'name':"miki", 'email':"miki@example.com"}
-  // }))
+  registerContextProcessor((cx)=>({
+    siteName:"code with miki",
+    login:{'name':"miki", 'email':"miki@example.com"}
+  }))
   app.get("/",(req,res)=>{
     const users=[
       {'name':"miki", 'email':"miki@example.com"},
