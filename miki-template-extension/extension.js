@@ -369,11 +369,54 @@ vscode.workspace.registerTextDocumentContentProvider('miki-embedded-content', {
 	}
 });
 
+function getEmbeddedLanguage(document, position) {
+	const text = document.getText();
+	const offset = document.offsetAt(position);
+	const styleRegex = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+	const scriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+
+	let match;
+	while ((match = styleRegex.exec(text)) !== null) {
+		const start = match.index + match[0].indexOf(match[1]);
+		const end = start + match[1].length;
+		if (offset >= start && offset <= end) {
+			return { language: 'css', content: match[1], start, end };
+		}
+	}
+
+	while ((match = scriptRegex.exec(text)) !== null) {
+		const start = match.index + match[0].indexOf(match[1]);
+		const end = start + match[1].length;
+		if (offset >= start && offset <= end) {
+			return { language: 'javascript', content: match[1], start, end };
+		}
+	}
+
+	return null;
+}
+
 function createVirtualDoc(document, languageId = 'html') {
 	const originalUri = document.uri.toString();
+
+	if (languageId === 'html') {
+		const embedded = getEmbeddedLanguage(document, document.positionAt(0));
+		if (embedded) {
+			languageId = embedded.language;
+		}
+	}
+
 	const key = languageId !== 'html' ? `${originalUri}.${languageId}` : originalUri;
 
-	virtualDocumentContents.set(key, document.getText());
+	if (languageId !== 'html' && !virtualDocumentContents.has(key)) {
+		const embedded = getEmbeddedLanguage(document, document.positionAt(0));
+		if (embedded) {
+			virtualDocumentContents.set(key, embedded.content);
+		} else {
+			virtualDocumentContents.set(key, document.getText());
+		}
+	} else if (!virtualDocumentContents.has(key)) {
+		virtualDocumentContents.set(key, document.getText());
+	}
 
 	let path;
 	if (virtualDocumentPaths.has(key)) {
@@ -635,21 +678,22 @@ function activate(context) {
 					return allCompletions;
 				}
 
-				// Delegate to HTML/CSS/JS language server for embedded content
-				try {
-					const vdocUri = createVirtualDoc(document, 'html');
-					const vdocCompletions = await vscode.commands.executeCommand(
-						'vscode.executeCompletionItemProvider',
-						vdocUri,
-						position,
-						context?.triggerCharacter
-					);
-					if (vdocCompletions?.items?.length) {
-						return vdocCompletions.items;
-					}
-				} catch (e) {
-					// Fallback to empty list if virtual doc completion fails
+			// Delegate to HTML/CSS/JS language server for embedded content
+			try {
+				const embedded = getEmbeddedLanguage(document, position);
+				const vdocUri = createVirtualDoc(document, embedded ? embedded.language : 'html');
+				const vdocCompletions = await vscode.commands.executeCommand(
+					'vscode.executeCompletionItemProvider',
+					vdocUri,
+					position,
+					context?.triggerCharacter
+				);
+				if (vdocCompletions?.items?.length) {
+					return vdocCompletions.items;
 				}
+			} catch (e) {
+				// Fallback to empty list if virtual doc completion fails
+			}
 
 				return [];
 			}

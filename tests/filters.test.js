@@ -251,17 +251,18 @@ test('Filters - credit_card, ssn, ip_address, uuid', () => {
 
   const uuid = getFilter('uuid');
   assert.ok(uuid().match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/));
+});
 
-  test('Filters - repeat and range', () => {
-    const repeat = getFilter('repeat');
-    assert.strictEqual(repeat('a', 3), 'aaa');
-    assert.strictEqual(repeat('', 5), '');
-    const range = getFilter('range');
-    assert.deepEqual(range('5'), [0,1,2,3,4]);
-    assert.deepEqual(range('5', '2'), [2,3,4]);
-  });
+test('Filters - repeat and range', () => {
+  const repeat = getFilter('repeat');
+  assert.strictEqual(repeat('a', 3), 'aaa');
+  assert.strictEqual(repeat('', 5), '');
+  const range = getFilter('range');
+  assert.deepEqual(range('5'), [0,1,2,3,4]);
+  assert.deepEqual(range('5', '2'), [2,3,4]);
+});
 
-  test('Filters - new Django contrib filters', () => {
+test('Filters - new Django contrib filters', () => {
     const center = getFilter('center');
     assert.strictEqual(center('hello', 15), '     hello     ');
 
@@ -344,7 +345,6 @@ test('Filters - credit_card, ssn, ip_address, uuid', () => {
     const timeutil = getFilter('timeutil');
     assert.ok(typeof timeutil === 'function');
   });
-});
 
 test('Filters - new Django contrib filters edge cases', () => {
   const center = getFilter('center');
