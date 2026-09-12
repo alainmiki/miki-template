@@ -1661,6 +1661,147 @@ Switch language temporarily for a block.
 
 
 
+## Filter and Utility Tags
+
+
+
+### filter / endfilter
+
+
+
+Apply a filter to a block of content.
+
+
+
+```html
+
+{% filter upper %}
+
+  Hello {{ user.name }}!
+
+{% endfilter %}
+
+```
+
+
+
+=== "With argument"
+
+
+    ```html
+
+    {% filter center:"20" %}
+
+      centered text
+
+    {% endfilter %}
+
+    ```
+
+
+
+### verbatim / endverbatim
+
+
+
+Render the body as raw text, ignoring template syntax inside.
+
+
+
+```html
+
+{% verbatim %}
+
+  {{ this_will_not_be_processed }}
+
+{% endverbatim %}
+
+```
+
+
+
+### resetcycle
+
+
+
+Reset the cycle counter back to the beginning.
+
+
+
+```html
+
+{% cycle "a" "b" "c" as marker silent %}
+
+{{ marker }}
+
+{% resetcycle %}
+
+{% cycle "a" "b" "c" as marker silent %}
+
+{{ marker }}
+
+```
+
+
+
+### endfirstof
+
+
+
+Closes a `{% firstof %}` block explicitly. It is a no-op and emits nothing.
+
+
+
+```html
+
+{% firstof var1 var2 "default" %}
+
+{% endfirstof %}
+
+```
+
+
+
+### translate
+
+
+
+Alias for `{% trans %}`. Works identically.
+
+
+
+```html
+
+{% translate "Hello" %}
+
+```
+
+
+
+### blocktranslate / endblocktranslate
+
+
+
+Alias for `{% blocktrans %}`. Works identically.
+
+
+
+```html
+
+{% blocktranslate %}
+
+  Hello {{ name }}
+
+{% endblocktranslate %}
+
+```
+
+
+
+---
+
+
+
 ## Next Steps
 
 

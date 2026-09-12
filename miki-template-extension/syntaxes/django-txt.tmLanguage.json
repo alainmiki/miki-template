@@ -1,0 +1,261 @@
+{
+  "name": "Django txt",
+  "scopeName": "text.django",
+  "fileTypes": [],
+  "firstLine": "{%",
+  "_comment": "Text-based Django template grammar",
+  "repository": {
+    "django-stuff": {
+      "patterns": [
+        {
+          "begin": "{%\\s*comment ?(\\\"([\\w\\s])*\\\" )?\\s*%}",
+          "end": "{%\\s*endcomment\\s*%}",
+          "name": "comment.block.django"
+        },
+        {
+          "match": "{#.*#}",
+          "name": "comment.line.number-sign.django"
+        },
+        {
+          "begin": "(\\{\\{)",
+          "end": "(\\<\\})",
+          "name": "storage.type.variable.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.tagbraces.django"
+            },
+            "2": {
+              "name": "entity.tag.tagbraces.django"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#django-template-filter"
+            }
+          ]
+        },
+        {
+          "begin": "({%-?)\\s*(load) ",
+          "end": "(%})",
+          "name": "storage.type.templatetag.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.tagbraces.django"
+            },
+            "2": {
+              "name": "keyword.control.tag-name.django"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#django-template-tag-contrib"
+            },
+            {
+              "include": "#django-template-filter"
+            }
+          ]
+        },
+        {
+          "begin": "({%-?)(?:\\s|\\s*)",
+          "end": "(%})",
+          "name": "storage.type.templatetag.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.tagbraces.django"
+            },
+            "2": {
+              "name": "entity.tag.tagbraces.django"
+            }
+          },
+          "patterns": [
+            {
+              "name": "keyword.control.tag-name.django",
+              "match": "(?i)\\b(if|elif|else|endif|for|empty|endfor|with|endwith|cycle|firstof|comment|endcomment|verbatim|endverbatim|include|extends|block|endblock|partialdef|endpartialdef|partial|load|spaceless|endspaceless|autoescape|endautoescape|filter|endfilter|ifchanged|endifchanged|ifequal|endifequal|ifnotequal|endifnotequal|lorem|now|ssi|thumbnail|endthumbnail|get_media_prefix|get_static_prefix|templatetag|trans|translate|blocktrans|endblocktrans|plural|language|endlanguage|regroup|widthratio|debug|csrf_token|csp_nonce_attr|static|url|cache|endcache|addtoblock|endaddtoblock|set|endset|compress|endcompress|placeholder)\\b"
+            },
+            {
+              "include": "#django-template-tag"
+            },
+            {
+              "include": "#string-double-quoted"
+            },
+            {
+              "include": "#string-single-quoted"
+            },
+            {
+              "include": "#django-template-filter"
+            }
+          ]
+        },
+        {
+          "begin": "({%-?)\\s*([a-zA-Z0-9_.]+)",
+          "end": "(%})",
+          "name": "storage.type.customtemplatetag.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.tagbraces.django"
+            },
+            "2": {
+              "name": "constant.other.tag.name.django"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-double-quoted"
+            },
+            {
+              "include": "#string-single-quoted"
+            },
+            {
+              "include": "#django-template-tag"
+            },
+            {
+              "include": "#django-template-filter"
+            }
+          ]
+        }
+      ]
+    },
+    "django-template-filter": {
+      "patterns": [
+        {
+          "match": "(\\|) ?(upper|lower|title|capfirst|slugify|wordcount|striptags|truncatewords|truncatechars|truncatewords_html|truncatechars_html|linebreaks|linebreaksbr|cut|addslashes|removetags|safe|safeseq|escape|escapejs|force_escape|urlencode|escapeuri|escapeurl|urlize|urlizetrunc|iriencode|fix_ampersands|stringformat|center|ljust|rjust|length|length_is|unordered_list|make_list|get_digit|linenumbers|join|slice|first|last|dictsort|dictsortreversed|random|default|default_if_none|firstof|date|time|strftime|timesince|timeuntil|add|sub|mult|mod|divisibleby|floatformat|yesno|pluralize|filesizeformat|trans|regroup|intcomma|intword|apnumber|ordinal|naturalday|naturaldate|naturaltime|lorem|phone2numeric|pprint|json_script|json|square|sqrt|abs|round|floor|ceil|min|max|sum|average|reverse|sort|unique|split|replace|base64_encode|base64_decode|range|currency|phone_number|email|mask|whatsapp_link|time_diff|ago|until)\\b",
+          "name": "entity.name.function.filter.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.filter-pipe.django"
+            },
+            "2": {
+              "name": "keyword.control.filter.django"
+            }
+          }
+        },
+        {
+          "match": "(\\|)([a-zA-Z0-9_]+)\\b",
+          "name": "entity.name.function.filter.django",
+          "captures": {
+            "1": {
+              "name": "entity.tag.filter-pipe.django"
+            },
+            "2": {
+              "name": "constant.other.filter.django"
+            }
+          }
+        },
+        {
+          "match": ":",
+          "name": "keyword.operator.filter-argument.django"
+        },
+        {
+          "match": "=",
+          "name": "keyword.operator.assignment.django"
+        },
+        {
+          "match": ",",
+          "name": "keyword.operator.argument-separator.django"
+        },
+        {
+          "match": "\\.",
+          "name": "keyword.operator.getter.django"
+        },
+        {
+          "match": "[a-zA-Z0-9_]+",
+          "name": "string.unquoted.tag-string.django"
+        },
+        {
+          "match": "(>=|>|==|!=|<|<=|and|or|is|not|in)",
+          "name": "keyword.operator.condition.django"
+        },
+        {
+          "include": "#string-double-quoted"
+        },
+        {
+          "include": "#string-single-quoted"
+        }
+      ]
+    },
+    "django-template-tag": {
+      "patterns": [
+        {
+          "match": "\\b(and|or|not|is|in|by|as|asvar|trimmed|with)\\b",
+          "name": "keyword.operator.django"
+        }
+      ]
+    },
+    "django-template-tag-contrib": {
+      "patterns": [
+        {
+          "match": "\\b(cache|i18n|l10n|static|tz|flatpages|humanize|admin_list|admin_modify|admin_static|admin_urls|base|log)\\b",
+          "name": "constant.other.contrib.django"
+        }
+      ]
+    },
+    "string-double-quoted": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.django",
+      "patterns": [
+        {
+          "include": "#django-stuff"
+        },
+        {
+          "include": "#entities"
+        }
+      ],
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.django"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.django"
+        }
+      }
+    },
+    "string-single-quoted": {
+      "begin": "'",
+      "end": "'",
+      "name": "string.quoted.single.django",
+      "patterns": [
+        {
+          "include": "#entities"
+        }
+      ],
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.django"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.django"
+        }
+      }
+    },
+    "entities": {
+      "patterns": [
+        {
+          "match": "(&)([a-zA-Z0-9]+|#[0-9]+|#x[0-9a-fA-F]+)(;)",
+          "name": "constant.character.entity.django",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.entity.django"
+            },
+            "3": {
+              "name": "punctuation.definition.entity.django"
+            }
+          }
+        },
+        {
+          "match": "&",
+          "name": "invalid.illegal.bad-ampersand.django"
+        }
+      ]
+    }
+  },
+  "patterns": [
+    {
+      "include": "#django-stuff"
+    }
+  ]
+}

@@ -1,6 +1,164 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+const prettier = require('prettier');
+const djangoPlugin = require('prettier-plugin-django');
+
+class MikiTemplateFormatter {
+	constructor(diagnosticCollection) {
+		this.diagnosticCollection = diagnosticCollection;
+		this.defaultOptions = {
+			tabWidth: 2,
+			printWidth: 5000,
+			semi: false,
+			singleQuote: true,
+			trailingComma: 'none',
+			parser: 'melody',
+			plugins: [djangoPlugin],
+			htmlWhitespaceSensitivity: 'ignore',
+			embeddedLanguageFormatting: 'off',
+			templateType: 'django'
+		};
+	}
+
+	async provideDocumentFormattingEdits(document, options, token) {
+		const otext = document.getText();
+		if (!otext.trim()) return [];
+
+		let resolvedOptions = { ...this.defaultOptions };
+		try {
+			const config = await prettier.resolveConfig(document.uri.fsPath);
+			if (config) {
+				Object.assign(resolvedOptions, config);
+			}
+		} catch (e) {
+			console.warn('Could not resolve prettier config:', e.message);
+		}
+
+		resolvedOptions.plugins = [djangoPlugin];
+		resolvedOptions.parser = 'melody';
+		resolvedOptions.htmlWhitespaceSensitivity = 'ignore';
+		resolvedOptions.embeddedLanguageFormatting = 'off';
+		resolvedOptions.templateType = 'django';
+
+		let formattedText;
+		try {
+			formattedText = await prettier.format(otext, {
+				...resolvedOptions,
+				parser: 'melody',
+				plugins: [djangoPlugin]
+			});
+		} catch (error) {
+			this.reportDiagnostic(document, error);
+			return [];
+		}
+
+		if (!formattedText || formattedText === otext) return [];
+
+		formattedText = this.formatEmbeddedLanguages(formattedText, otext, resolvedOptions);
+
+		const range = new vscode.Range(
+			document.positionAt(0),
+			document.positionAt(otext.length)
+		);
+		return [new vscode.TextEdit(range, formattedText)];
+	}
+
+	formatEmbeddedLanguages(formattedText, originalText, options) {
+		try {
+			const htmlPlugin = require('prettier/parser-html');
+			const result = htmlPlugin.parsers.html.parse(formattedText, null, {});
+			if (!result.children) return formattedText;
+
+			let incrChars = 0;
+			let incrLines = 0;
+			const eol = formattedText.includes('\r\n') ? '\r\n' : '\n';
+			const indent = options.useTabs ? '\t' : ' '.repeat(options.tabWidth || 2);
+
+			const processNode = (node) => {
+				if (!node.children) return;
+				for (let i = 0; i < node.children.length; i++) {
+					const child = node.children[i];
+					if (child.type === 'element' && (child.name === 'script' || child.name === 'style')) {
+						if (child.children.length === 0) continue;
+
+						const prev = child.prev;
+						if (prev && prev.value && prev.value.trim().endsWith('{# prettier-ignore #}')) {
+							processNode(child);
+							continue;
+						}
+
+						const textNode = child.children[0];
+						if (!textNode || !textNode.value || !textNode.value.trim()) {
+							processNode(child);
+							continue;
+						}
+
+						const ctext = textNode.value;
+						const parser = child.name === 'script' ? 'babel' : 'css';
+						const tagOffset = textNode.sourceSpan.start.offset;
+						let tagOffset2 = tagOffset;
+						while (tagOffset2 > 0 && formattedText[tagOffset2 + incrChars] !== '\n') {
+							tagOffset2--;
+						}
+						const tagIndent = formattedText
+							.slice(tagOffset2 + 1 + incrChars, tagOffset + incrChars)
+							.replace(/\S/g, ' ');
+
+						const raw = '\n'.repeat(textNode.sourceSpan.start.line + incrLines) +
+							' '.repeat(textNode.sourceSpan.start.col) + ctext;
+
+						let embeddedFormatted;
+						try {
+							embeddedFormatted = prettier.format(raw, {
+								...options,
+								parser,
+								plugins: [parser === 'babel' ? require('prettier/parser-babel') : require('prettier/parser-postcss')]
+							}).trim();
+						} catch (e) {
+							processNode(child);
+							continue;
+						}
+
+						const lines = embeddedFormatted.split(eol);
+						const indented = lines.map(line => tagIndent + indent + line).join(eol);
+						const replacement = eol + indented + eol + tagIndent;
+
+						const start = textNode.sourceSpan.start.offset;
+						formattedText = formattedText.slice(0, start + incrChars) + replacement + formattedText.slice(start + textNode.value.length + incrChars);
+						const delta = replacement.length - textNode.value.length;
+						incrChars += delta;
+						incrLines += replacement.split(eol).length - textNode.value.split(eol).length;
+					} else {
+						processNode(child);
+					}
+				}
+			};
+			processNode(result);
+		} catch (e) {
+			console.warn('Embedded language formatting failed:', e.message);
+		}
+		return formattedText;
+	}
+
+	reportDiagnostic(document, error) {
+		if (!this.diagnosticCollection || !error.loc) return;
+		this.diagnosticCollection.clear();
+		const loc = error.loc;
+		if (!loc.end) {
+			loc.end = { line: loc.start.line, column: loc.start.column + 1 };
+		}
+		const range = new vscode.Range(
+			new vscode.Position(loc.start.line - 1, loc.start.column - 1),
+			new vscode.Position(loc.end.line - 1, loc.end.column - 1)
+		);
+		const message = error.message.split(' \t ')[0].split('\n')[0];
+		const diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
+		setTimeout(() => {
+			this.diagnosticCollection.set(document.uri, [diagnostic]);
+		}, 250);
+	}
+}
 
 const TAGS = {
 	if: { doc: 'Conditionally renders content based on an expression.', syntax: '{% if condition %}' },
@@ -8,11 +166,12 @@ const TAGS = {
 	else: { doc: 'Else block for if conditions.', syntax: '{% else %}' },
 	endif: { doc: 'End of an if block.', syntax: '{% endif %}' },
 	for: { doc: 'Iterates over arrays or objects.', syntax: '{% for item in items %}' },
-	empty: { doc: 'Content shown when loop has no items.', syntax: '{% empty %}' },
 	endfor: { doc: 'End of a for loop.', syntax: '{% endfor %}' },
+	empty: { doc: 'Content shown when loop has no items.', syntax: '{% empty %}' },
 	with: { doc: 'Creates scoped aliases for variables.', syntax: '{% with var as alias %}' },
 	endwith: { doc: 'End of a with block.', syntax: '{% endwith %}' },
 	cycle: { doc: 'Outputs one of its arguments for each iteration.', syntax: "{% cycle 'val1' 'val2' %}" },
+	resetcycle: { doc: 'Resets the cycle counter to its initial value.', syntax: '{% resetcycle %}' },
 	firstof: { doc: 'Outputs the first argument that evaluates to true.', syntax: '{% firstof var1 var2 "fallback" %}' },
 	comment: { doc: 'Block comment that is stripped from output.', syntax: '{% comment %} ... {% endcomment %}' },
 	endcomment: { doc: 'End of comment block.', syntax: '{% endcomment %}' },
@@ -33,11 +192,26 @@ const TAGS = {
 	endautoescape: { doc: 'End of autoescape block.', syntax: '{% endautoescape %}' },
 	filter: { doc: 'Applies a filter to block content.', syntax: '{% filter lower %} ... {% endfilter %}' },
 	endfilter: { doc: 'End of filter block.', syntax: '{% endfilter %}' },
+	ifchanged: { doc: 'Outputs content only if a value has changed since the last iteration.', syntax: '{% ifchanged %} ... {% endifchanged %}' },
+	endifchanged: { doc: 'End of ifchanged block.', syntax: '{% endifchanged %}' },
+	ifequal: { doc: 'Outputs content if two values are equal (planned).', syntax: '{% ifequal a b %} ... {% endifequal %}' },
+	endifequal: { doc: 'End of ifequal block.', syntax: '{% endifequal %}' },
+	ifnotequal: { doc: 'Outputs content if two values are not equal (planned).', syntax: '{% ifnotequal a b %} ... {% endifnotequal %}' },
+	endifnotequal: { doc: 'End of ifnotequal block.', syntax: '{% endifnotequal %}' },
+	lorem: { doc: 'Outputs lorem ipsum text.', syntax: '{% lorem [count] [method] [random] %}' },
+	now: { doc: 'Outputs the current date/time in the given format.', syntax: '{% now "DATE_FORMAT" %}' },
+	ssi: { doc: 'Outputs contents of a file on the server (deprecated, planned).', syntax: '{% ssi "path/to/file" %}' },
+	thumbnail: { doc: 'Starts a thumbnail block (sorl-thumbnail).', syntax: '{% thumbnail %} ... {% endthumbnail %}' },
+	endthumbnail: { doc: 'End of thumbnail block.', syntax: '{% endthumbnail %}' },
+	thumbnail_opts: { doc: 'Thumbnail options for sorl-thumbnail.', syntax: '{% thumbnail source 100x100 crop upscale %}' },
+	get_media_prefix: { doc: 'Returns the MEDIA_PREFIX setting.', syntax: '{% get_media_prefix %}' },
+	get_static_prefix: { doc: 'Returns the STATIC_PREFIX setting.', syntax: '{% get_static_prefix %}' },
 	templatetag: { doc: 'Outputs a template tag symbol.', syntax: '{% templatetag openblock %}' },
 	trans: { doc: 'Outputs a translated string.', syntax: '{% trans "Hello" %}' },
+	translate: { doc: 'Alias of trans - outputs a translated string (planned).', syntax: '{% translate "Hello" %}' },
 	blocktrans: { doc: 'Translates a block of text.', syntax: '{% blocktrans %} ... {% endblocktrans %}' },
 	endblocktrans: { doc: 'End of blocktrans.', syntax: '{% endblocktrans %}' },
-	plural: { doc: 'Plural form in blocktrans.', syntax: '{% plural %}' },
+	plural: { doc: 'Plural form in blocktrans (planned).', syntax: '{% plural count=var %}' },
 	language: { doc: 'Switches active language.', syntax: '{% language "fr" %} ... {% endlanguage %}' },
 	endlanguage: { doc: 'End of language block.', syntax: '{% endlanguage %}' },
 	regroup: { doc: 'Regroups a list by a common attribute.', syntax: '{% regroup items by attr as groups %}' },
@@ -47,10 +221,19 @@ const TAGS = {
 	csp_nonce_attr: { doc: 'Outputs CSP nonce attribute.', syntax: '{% csp_nonce_attr %}' },
 	static: { doc: 'Generates URL for static asset.', syntax: '{% static "css/app.css" %}' },
 	url: { doc: 'Generates URL for named route.', syntax: '{% url "route-name" %}' },
-	cache: { doc: 'Caches block content (miki-template).', syntax: '{% cache timeout key %} ... {% endcache %}' },
-	endcache: { doc: 'End of cache block.', syntax: '{% endcache %}' },
+	compress: { doc: 'Compresses linked CSS/JS (django-compressor, planned).', syntax: '{% compress css %} ... {% endcompress %}' },
+	endcompress: { doc: 'End of compress block.', syntax: '{% endcompress %}' },
+	placeholder: { doc: 'Placeholder for django CMS (planned).', syntax: '{% placeholder content %}' },
 	addtoblock: { doc: 'Appends content to a block (miki-template).', syntax: '{% addtoblock css %} ... {% endaddtoblock %}' },
 	endaddtoblock: { doc: 'End of addtoblock.', syntax: '{% endaddtoblock %}' },
+	cache: { doc: 'Caches block content (miki-template).', syntax: '{% cache timeout key %} ... {% endcache %}' },
+	endcache: { doc: 'End of cache block.', syntax: '{% endcache %}' },
+	set: { doc: 'Sets a variable in the current context (miki-template).', syntax: '{% set var = value %}' },
+	endset: { doc: 'End of set block (miki-template).', syntax: '{% endset %}' },
+	// Additional Django-only tags (planned for miki)
+	ssi_modified: { doc: 'Outputs file contents with optional caching.', syntax: '{% ssi "path/to/file" parsed %}' },
+	staticfiles: { doc: 'Static files tag (planned).', syntax: '{% staticfiles %}' },
+	bootable: { doc: 'Bootable tag (planned).', syntax: '{% bootable %}' },
 };
 
 const FILTERS = {
@@ -60,9 +243,12 @@ const FILTERS = {
 	capfirst: { doc: 'Capitalizes first character.', syntax: '{{ value|capfirst }}', args: [] },
 	slugify: { doc: 'Converts to URL-safe slug.', syntax: '{{ value|slugify }}', args: [] },
 	wordcount: { doc: 'Returns word count.', syntax: '{{ text|wordcount }}', args: [] },
+	wordwrap: { doc: 'Wraps text at word boundaries.', syntax: '{{ text|wordwrap:80 }}', args: ['width?'] },
 	striptags: { doc: 'Removes HTML tags.', syntax: '{{ html|striptags }}', args: [] },
 	truncatewords: { doc: 'Truncates to N words.', syntax: '{{ text|truncatewords:10 }}', args: ['n'] },
 	truncatechars: { doc: 'Truncates to N characters.', syntax: '{{ text|truncatechars:100 }}', args: ['n'] },
+	truncatewords_html: { doc: 'Truncates to N words, preserving HTML.', syntax: '{{ text|truncatewords_html:10 }}', args: ['n'] },
+	truncatechars_html: { doc: 'Truncates to N characters, preserving HTML.', syntax: '{{ html|truncatechars_html:100 }}', args: ['n'] },
 	linebreaks: { doc: 'Converts newlines to HTML paragraphs.', syntax: '{{ text|linebreaks }}', args: [] },
 	linebreaksbr: { doc: 'Converts newlines to <br>.', syntax: '{{ text|linebreaksbr }}', args: [] },
 	cut: { doc: 'Removes occurrences of value.', syntax: '{{ value|cut:" " }}', args: ['value'] },
@@ -70,21 +256,33 @@ const FILTERS = {
 	removetags: { doc: 'Removes specific HTML tags.', syntax: '{{ html|removetags:"p,div" }}', args: ['tags'] },
 	safe: { doc: 'Marks value as HTML-safe.', syntax: '{{ html|safe }}', args: [] },
 	escape: { doc: 'Escapes HTML entities.', syntax: '{{ value|escape }}', args: [] },
-	escapejs: { doc: 'Escapes for JavaScript.', syntax: '{{ value|escapejs }}', args: [] },
 	urlencode: { doc: 'URL encodes the value.', syntax: '{{ value|urlencode }}', args: [] },
+	escapeuri: { doc: 'Full URL encoding.', syntax: '{{ url|escapeuri }}', args: [] },
 	escapeurl: { doc: 'Full URL encoding.', syntax: '{{ url|escapeurl }}', args: [] },
+	urlize: { doc: 'Converts URLs to HTML links.', syntax: '{{ text|urlize }}', args: [] },
+	escapejs: { doc: 'Escapes for JavaScript (planned).', syntax: '{{ value|escapejs }}', args: [] },
+	force_escape: { doc: 'Escapes HTML entities immediately (planned).', syntax: '{{ value|force_escape }}', args: [] },
+	iriencode: { doc: 'Escapes IRI to be URL-safe (planned).', syntax: '{{ url|iriencode }}', args: [] },
+	fix_ampersands: { doc: 'Replaces ampersands with &amp; (planned).', syntax: '{{ value|fix_ampersands }}', args: [] },
+	safeseq: { doc: 'Marks a sequence as HTML-safe (planned).', syntax: '{{ list|safeseq }}', args: [] },
+	urlizetrunc: { doc: 'Converts URLs to links, truncating long URLs (planned).', syntax: '{{ text|urlizetrunc:60 }}', args: ['num'] },
 	stringformat: { doc: 'Python-style format.', syntax: '{{ value|stringformat:"s" }}', args: ['fmt'] },
-	center: { doc: 'Centers text in field.', syntax: '{{ value|center:10 }}', args: ['width'] },
-	ljust: { doc: 'Left justifies text.', syntax: '{{ value|ljust:10 }}', args: ['width'] },
-	rjust: { doc: 'Right justifies text.', syntax: '{{ value|rjust:10 }}', args: ['width'] },
+	center: { doc: 'Centers text in field (planned).', syntax: '{{ value|center:10 }}', args: ['width'] },
+	ljust: { doc: 'Left justifies text (planned).', syntax: '{{ value|ljust:10 }}', args: ['width'] },
+	rjust: { doc: 'Right justifies text (planned).', syntax: '{{ value|rjust:10 }}', args: ['width'] },
 	length: { doc: 'Returns length.', syntax: '{{ value|length }}', args: [] },
 	length_is: { doc: 'Checks if length equals N.', syntax: '{{ value|length_is:5 }}', args: ['n'] },
+	unordered_list: { doc: 'Converts a nested list to an HTML unordered list (planned).', syntax: '{{ list|unordered_list }}', args: [] },
+	make_list: { doc: 'Converts a value to a list (planned).', syntax: '{{ value|make_list }}', args: [] },
+	get_digit: { doc: 'Get digit by position.', syntax: '{{ number|get_digit:1 }}', args: ['position'] },
+	linenumbers: { doc: 'Displays 1-based line numbers (planned).', syntax: '{{ text|linenumbers }}', args: [] },
 	join: { doc: 'Joins array with separator.', syntax: '{{ list|join:", " }}', args: ['separator'] },
 	slice: { doc: 'Slices array/string.', syntax: "{{ value|slice:'0:3' }}", args: ['start:end'] },
 	first: { doc: 'Returns first element.', syntax: '{{ list|first }}', args: [] },
 	last: { doc: 'Returns last element.', syntax: '{{ list|last }}', args: [] },
 	dictsort: { doc: 'Sorts by key (ascending).', syntax: '{{ list|dictsort:"name" }}', args: ['key'] },
 	dictsortreversed: { doc: 'Sorts by key (descending).', syntax: '{{ list|dictsortreversed:"name" }}', args: ['key'] },
+	random: { doc: 'Returns a random element from a list.', syntax: '{{ list|random }}', args: [] },
 	default: { doc: 'Fallback if falsy.', syntax: '{{ value|default:"fallback" }}', args: ['fallback'] },
 	default_if_none: { doc: 'Fallback if None/undefined.', syntax: '{{ value|default_if_none:"fallback" }}', args: ['fallback'] },
 	firstof: { doc: 'First truthy value.', syntax: '{{ val1|firstof:val2:val3 }}', args: ['val2', 'val3'] },
@@ -93,7 +291,13 @@ const FILTERS = {
 	strftime: { doc: 'Format with date-fns.', syntax: '{{ date|strftime:"PPpp" }}', args: ['format'] },
 	timesince: { doc: 'Human-readable time ago.', syntax: '{{ date|timesince }}', args: ['other_date?'] },
 	timeuntil: { doc: 'Human-readable time until.', syntax: '{{ date|timeuntil }}', args: ['other_date?'] },
+	time_diff: { doc: 'Outputs the difference between two dates.', syntax: '{{ date|time_diff:other_date }}', args: ['other_date?'] },
+	ago: { doc: 'Outputs a human-readable "time ago" string.', syntax: '{{ date|ago }}', args: [] },
+	until: { doc: 'Outputs a human-readable "time until" string.', syntax: '{{ date|until }}', args: [] },
 	add: { doc: 'Adds N to value.', syntax: '{{ value|add:5 }}', args: ['n'] },
+	sub: { doc: 'Subtracts N from value.', syntax: '{{ value|sub:5 }}', args: ['n'] },
+	mult: { doc: 'Multiplies value by N.', syntax: '{{ value|mult:5 }}', args: ['n'] },
+	mod: { doc: 'Returns the remainder of division.', syntax: '{{ value|mod:5 }}', args: ['n'] },
 	divisibleby: { doc: 'Checks divisibility.', syntax: '{{ value|divisibleby:2 }}', args: ['n'] },
 	floatformat: { doc: 'Formats decimal places.', syntax: '{{ value|floatformat:2 }}', args: ['decimals?'] },
 	yesno: { doc: 'Maps boolean to strings.', syntax: '{{ value|yesno:"yes,no,maybe" }}', args: ['yes,no,maybe'] },
@@ -101,39 +305,136 @@ const FILTERS = {
 	filesizeformat: { doc: 'Human-readable file size.', syntax: '{{ bytes|filesizeformat }}', args: [] },
 	trans: { doc: 'Translates string.', syntax: '{{ "Hello"|trans }}', args: ['fallback?'] },
 	regroup: { doc: 'Groups list by attribute.', syntax: '{{ list|regroup:"category" }}', args: ['key'] },
+	phone2numeric: { doc: 'Converts letters to phone keypad digits.', syntax: '{{ value|phone2numeric }}', args: [] },
+	pprint: { doc: 'Pretty-prints a variable.', syntax: '{{ value|pprint }}', args: [] },
+	json_script: { doc: 'JSON script tag (planned).', syntax: "{{ data|json_script:'id' }}", args: ['id'] },
+	json: { doc: 'Converts a value to JSON string.', syntax: '{{ data|json }}', args: [] },
+	// miki-template specific math filters
+	square: { doc: 'Returns the square of a number.', syntax: '{{ value|square }}', args: [] },
+	sqrt: { doc: 'Returns the square root of a number.', syntax: '{{ value|sqrt }}', args: [] },
+	abs: { doc: 'Returns the absolute value.', syntax: '{{ value|abs }}', args: [] },
+	round: { doc: 'Rounds to N decimal places.', syntax: '{{ value|round:2 }}', args: ['decimals?'] },
+	floor: { doc: 'Rounds down to nearest integer.', syntax: '{{ value|floor }}', args: [] },
+	ceil: { doc: 'Rounds up to nearest integer.', syntax: '{{ value|ceil }}', args: [] },
+	min: { doc: 'Minimum of value and arg (or array min).', syntax: '{{ value|min:other }}', args: ['other?'] },
+	max: { doc: 'Maximum of value and arg (or array max).', syntax: '{{ value|max:other }}', args: ['other?'] },
+	sum: { doc: 'Sums all elements in a list.', syntax: '{{ list|sum }}', args: [] },
+	average: { doc: 'Returns the average of a list.', syntax: '{{ list|average }}', args: [] },
+	reverse: { doc: 'Reverses a list or string.', syntax: '{{ value|reverse }}', args: [] },
+	sort: { doc: 'Sorts a list.', syntax: '{{ list|sort }}', args: [] },
+	unique: { doc: 'Removes duplicates from a list.', syntax: '{{ list|unique }}', args: [] },
+	split: { doc: 'Splits a string by separator.', syntax: "{{ value|split:',' }}", args: ['separator'] },
+	replace: { doc: 'Replaces occurrences in a string.', syntax: "{{ value|replace:'old,new' }}", args: ['old,new'] },
+	base64_encode: { doc: 'Base64 encodes a string.', syntax: '{{ value|base64_encode }}', args: [] },
+	base64_decode: { doc: 'Base64 decodes a string.', syntax: '{{ value|base64_decode }}', args: [] },
+	range: { doc: 'Generates a range of numbers.', syntax: '{{ end|range:0 }}', args: ['start?'] },
+	currency: { doc: 'Formats a number as currency.', syntax: "{{ value|currency:'$' }}", args: ['symbol?'] },
+	phone_number: { doc: 'Formats a phone number.', syntax: '{{ value|phone_number }}', args: [] },
+	email: { doc: 'Converts email to a mailto link.', syntax: '{{ value|email }}', args: [] },
+	mask: { doc: 'Masks a value showing only last N characters.', syntax: "{{ value|mask:'*' }}", args: ['char?'] },
+	whatsapp_link: { doc: 'Generates a WhatsApp link from a phone number.', syntax: "{{ value|whatsapp_link:'message' }}", args: ['message?'] },
 	intcomma: { doc: 'Adds commas to integer.', syntax: '{{ number|intcomma }}', args: [] },
 	intword: { doc: 'Large number to word.', syntax: '{{ number|intword }}', args: [] },
 	apnumber: { doc: '1→one, 2→two.', syntax: '{{ number|apnumber }}', args: [] },
 	ordinal: { doc: '1→1st, 2→2nd.', syntax: '{{ number|ordinal }}', args: [] },
 	naturalday: { doc: '"yesterday", "today".', syntax: '{{ date|naturalday }}', args: [] },
-	json_script: { doc: 'JSON script tag.', syntax: "{{ data|json_script:'id' }}", args: ['id'] },
-	get_digit: { doc: 'Get digit by position.', syntax: '{{ number|get_digit:1 }}', args: ['position'] },
+	naturaldate: { doc: 'Formats a date without the time.', syntax: '{{ date|naturaldate }}', args: [] },
+	naturaltime: { doc: 'Natural human-readable time.', syntax: '{{ date|naturaltime }}', args: [] },
 };
 
-const FORLOOP_VARS = [
-	{ name: 'forloop.counter', doc: '1-indexed loop counter' },
-	{ name: 'forloop.counter0', doc: '0-indexed loop counter' },
-	{ name: 'forloop.revcounter', doc: 'Remaining iterations (1-indexed)' },
-	{ name: 'forloop.revcounter0', doc: 'Remaining iterations (0-indexed)' },
-	{ name: 'forloop.first', doc: 'True if first iteration' },
-	{ name: 'forloop.last', doc: 'True if last iteration' },
-	{ name: 'forloop.parentloop', doc: 'Reference to parent loop' },
-];
+	const FORLOOP_VARS = [
+		{ name: 'forloop.counter', doc: '1-indexed loop counter' },
+		{ name: 'forloop.counter0', doc: '0-indexed loop counter' },
+		{ name: 'forloop.revcounter', doc: 'Remaining iterations (1-indexed)' },
+		{ name: 'forloop.revcounter0', doc: 'Remaining iterations (0-indexed)' },
+		{ name: 'forloop.first', doc: 'True if first iteration' },
+		{ name: 'forloop.last', doc: 'True if last iteration' },
+		{ name: 'forloop.parentloop', doc: 'Reference to parent loop' },
+	];
 
-const COLOR_REGEX = /(?:#[0-9A-Fa-f]{3,8}|rgba?\s*\([^)]+\)|hsla?\s*\([^)]+\))/g;
+	const COLOR_REGEX = /(?:#[0-9A-Fa-f]{3,8}|rgba?\s*\([^)]+\)|hsla?\s*\([^)]+\))/g;
 
-let customFilters = [];
-let customTags = [];
+const SUPPORTED_LANGUAGES = ['miki-template', 'django-html', 'django-txt', 'html', 'htm', 'tpl', 'j2', 'jinja', 'jinja2'];
+const TEMPLATE_EXTENSIONS = /\.(miki|miki-template|django|dj|html|htm|tpl|j2|jinja|jinja2)$/;
+
+const virtualDocumentContents = new Map();
+const virtualDocumentPaths = new Map();
+
+vscode.workspace.registerTextDocumentContentProvider('miki-embedded-content', {
+	provideTextDocumentContent(uri) {
+		const path = uri.path;
+		const lastSlash = path.lastIndexOf('/');
+		const originalUri = decodeURIComponent(path.slice(1, lastSlash));
+		return virtualDocumentContents.get(originalUri) || '';
+	}
+});
+
+function createVirtualDoc(document, languageId = 'html') {
+	const originalUri = document.uri.toString();
+	const key = languageId !== 'html' ? `${originalUri}.${languageId}` : originalUri;
+
+	virtualDocumentContents.set(key, document.getText());
+
+	let path;
+	if (virtualDocumentPaths.has(key)) {
+		path = virtualDocumentPaths.get(key);
+	} else {
+		path = `/${encodeURIComponent(key)}/${Math.random()}.${languageId}`;
+		virtualDocumentPaths.set(key, path);
+	}
+
+	return vscode.Uri.from({
+		scheme: 'miki-embedded-content',
+		authority: 'miki-template',
+		path
+	});
+}
+
+function clearVirtualDocumentContents() {
+	virtualDocumentContents.clear();
+	virtualDocumentPaths.clear();
+}
+
+function registerVirtualDocumentEvents(context) {
+	const disposables = [
+		vscode.workspace.onDidChangeTextDocument(event => {
+			if (SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
+				const key = event.document.uri.toString();
+				virtualDocumentContents.delete(key);
+				virtualDocumentContents.delete(`${key}.html`);
+				virtualDocumentContents.delete(`${key}.css`);
+				virtualDocumentContents.delete(`${key}.javascript`);
+			}
+		}),
+		vscode.workspace.onDidCloseTextDocument(doc => {
+			if (SUPPORTED_LANGUAGES.includes(doc.languageId)) {
+				const key = doc.uri.toString();
+				virtualDocumentContents.delete(key);
+				virtualDocumentPaths.delete(key);
+			}
+		}),
+		vscode.workspace.onDidRenameFiles(event => {
+			event.files.forEach(f => {
+				virtualDocumentContents.delete(f.oldUri.toString());
+				virtualDocumentPaths.delete(f.oldUri.toString());
+			});
+		})
+	];
+	disposables.forEach(d => context.subscriptions.push(d));
+}
+
+let customFilters =[];
+let customTags =[];
 let diagnosticCollection;
 let colorDecorationType;
 let bracketHighlightDecorations = new Map();
 
-function debounce(fn, delay) {
-	let timer;
-	return (...args) => {
-		clearTimeout(timer);
-		timer = setTimeout(() => fn(...args), delay);
-	};
+	function debounce(fn, delay) {
+		let timer;
+return (...args) => {
+	clearTimeout(timer);
+	timer = setTimeout(() => fn(...args), delay);
+};
 }
 
 function createCompletionItem(name, info, kind) {
@@ -193,7 +494,7 @@ function scanForCustomTagsAndFilters(workspaceFolder) {
 					}
 				}
 			}
-		} catch (e) {}
+		} catch (e) { }
 	}
 }
 
@@ -208,7 +509,7 @@ function getAllReferences(word, workspaceFolder) {
 				const fullPath = path.join(folder, entry.name);
 				if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
 					searchInFolder(fullPath);
-				} else if (entry.isFile() && /\.(miki|miki-template|django|dj|html|tpl)$/.test(entry.name)) {
+				} else if (entry.isFile() && TEMPLATE_EXTENSIONS.test(entry.name)) {
 					try {
 						const content = fs.readFileSync(fullPath, 'utf8');
 						const lines = content.split('\n');
@@ -220,10 +521,10 @@ function getAllReferences(word, workspaceFolder) {
 								));
 							}
 						});
-					} catch (e) {}
+					} catch (e) { }
 				}
 			}
-		} catch (e) {}
+		} catch (e) { }
 	}
 
 	searchInFolder(workspaceFolder.uri.fsPath);
@@ -241,7 +542,7 @@ function findTemplateFiles(workspaceFolder) {
 				const fullPath = path.join(folder, entry.name);
 				if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
 					search(fullPath);
-				} else if (entry.isFile() && /\.(html|miki|miki-template|django|dj|tpl)$/.test(entry.name)) {
+				} else if (entry.isFile() && TEMPLATE_EXTENSIONS.test(entry.name)) {
 					const relativePath = path.relative(workspaceFolder.uri.fsPath, fullPath).replace(/\\/g, '/');
 					results.push({
 						label: entry.name,
@@ -251,7 +552,7 @@ function findTemplateFiles(workspaceFolder) {
 					});
 				}
 			}
-		} catch (e) {}
+		} catch (e) { }
 	}
 
 	search(workspaceFolder.uri.fsPath);
@@ -262,6 +563,8 @@ function activate(context) {
 	const config = vscode.workspace.getConfiguration('miki-template');
 
 	diagnosticCollection = vscode.languages.createDiagnosticCollection('miki-template');
+
+	registerVirtualDocumentEvents(context);
 
 	const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 	scanForCustomTagsAndFilters(workspaceFolder);
@@ -282,9 +585,9 @@ function activate(context) {
 
 	// Completion Provider with Path Completions
 	const completionProvider = vscode.languages.registerCompletionItemProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
-			provideCompletionItems(document, position) {
+			async provideCompletionItems(document, position, token, context) {
 				if (!config.get('enableCompletions', true)) return [];
 
 				const line = document.lineAt(position).text;
@@ -332,6 +635,22 @@ function activate(context) {
 					return allCompletions;
 				}
 
+				// Delegate to HTML/CSS/JS language server for embedded content
+				try {
+					const vdocUri = createVirtualDoc(document, 'html');
+					const vdocCompletions = await vscode.commands.executeCommand(
+						'vscode.executeCompletionItemProvider',
+						vdocUri,
+						position,
+						context?.triggerCharacter
+					);
+					if (vdocCompletions?.items?.length) {
+						return vdocCompletions.items;
+					}
+				} catch (e) {
+					// Fallback to empty list if virtual doc completion fails
+				}
+
 				return [];
 			}
 		},
@@ -340,9 +659,9 @@ function activate(context) {
 
 	// Hover Provider
 	const hoverProvider = vscode.languages.registerHoverProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
-			provideHover(document, position) {
+			async provideHover(document, position, token) {
 				if (!config.get('enableHover', true)) return null;
 
 				const word = document.getText(document.getWordRangeAtPosition(position));
@@ -371,6 +690,21 @@ function activate(context) {
 					}
 				}
 
+				// Delegate to HTML language server for embedded content hover
+				try {
+					const vdocUri = createVirtualDoc(document, 'html');
+					const hovers = await vscode.commands.executeCommand(
+						'vscode.executeHoverProvider',
+						vdocUri,
+						position
+					);
+					if (hovers && hovers.length > 0) {
+						return hovers[0];
+					}
+				} catch (e) {
+					// Fallback to null if virtual doc hover fails
+				}
+
 				return null;
 			}
 		}
@@ -379,7 +713,7 @@ function activate(context) {
 	// Semantic Token Provider
 	const tokenTypesSemantic = ['tag', 'variable', 'filter', 'comment', 'string', 'operator'];
 	const semanticTokensProvider = vscode.languages.registerDocumentSemanticTokensProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideDocumentSemanticTokens(document) {
 				const builder = new vscode.SemanticTokensBuilder();
@@ -414,7 +748,7 @@ function activate(context) {
 
 	// Inlay Hints Provider
 	const inlayHintsProvider = vscode.languages.registerInlayHintsProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideInlayHints(document, range) {
 				if (!config.get('enableInlayHints', true)) return [];
@@ -439,7 +773,7 @@ function activate(context) {
 
 	// Definition Provider
 	const definitionProvider = vscode.languages.registerDefinitionProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideDefinition(document, position) {
 				const word = document.getText(document.getWordRangeAtPosition(position));
@@ -462,7 +796,7 @@ function activate(context) {
 							if (fs.existsSync(fsPath)) {
 								return new vscode.Location(vscode.Uri.file(fsPath), new vscode.Position(0, 0));
 							}
-						} catch (e) {}
+						} catch (e) { }
 					}
 				}
 				return null;
@@ -472,7 +806,7 @@ function activate(context) {
 
 	// Rename Provider
 	const renameProvider = vscode.languages.registerRenameProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideRenameEdits(document, position, newName) {
 				const line = document.lineAt(position).text;
@@ -523,7 +857,7 @@ function activate(context) {
 					const fullPath = path.join(dir, entry.name);
 					if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
 						search(fullPath);
-					} else if (entry.isFile() && /\.(miki|miki-template|django|dj|html|tpl)$/.test(entry.name)) {
+					} else if (entry.isFile() && TEMPLATE_EXTENSIONS.test(entry.name)) {
 						const uri = vscode.Uri.file(fullPath);
 						if (uri.toString() === currentDocUri.toString()) continue;
 
@@ -550,10 +884,10 @@ function activate(context) {
 									fileEditsMap.set(uri, edits);
 								}
 							}
-						} catch (e) {}
+						} catch (e) { }
 					}
 				}
-			} catch (e) {}
+			} catch (e) { }
 		}
 
 		search(folder.uri.fsPath);
@@ -562,7 +896,7 @@ function activate(context) {
 
 	// Document Symbol Provider
 	const symbolProvider = vscode.languages.registerDocumentSymbolProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideDocumentSymbols(document) {
 				const symbols = [];
@@ -591,7 +925,7 @@ function activate(context) {
 
 	// Selection Range Provider
 	const selectionRangeProvider = vscode.languages.registerSelectionRangeProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideSelectionRanges(document, positions) {
 				const results = [];
@@ -622,8 +956,8 @@ function activate(context) {
 	);
 
 	// References Provider
-		const referencesProvider = vscode.languages.registerReferencesProvider(
-		['miki-template', 'django-html'],
+	const referencesProvider = vscode.languages.registerReferencesProvider(
+		SUPPORTED_LANGUAGES,
 		{
 			provideReferences(document, position, context) {
 				const line = document.lineAt(position).text;
@@ -650,7 +984,7 @@ function activate(context) {
 
 	// Code Actions Provider
 	const codeActionsProvider = vscode.languages.registerCodeActionsProvider(
-		['miki-template', 'django-html'],
+		SUPPORTED_LANGUAGES,
 		{
 			provideCodeActions(document, range, context) {
 				if (!config.get('enableCodeActions', true)) return [];
@@ -731,8 +1065,8 @@ function activate(context) {
 				const endIdx = text.indexOf('%}', i);
 				if (endIdx !== -1) {
 					const tagContent = text.substring(i + 2, endIdx).trim();
-					const openMatch = tagContent.match(/^(if|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language)\b/);
-					const closeMatch = tagContent.match(/^end(if|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language)\b/);
+				const openMatch = tagContent.match(/^(if|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language|compress|thumbnail|ifequal|ifnotequal|firstof)\b/);
+				const closeMatch = tagContent.match(/^end(if|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language|compress|thumbnail|equal|notequal|firstof)\b/);
 
 					if (openMatch) {
 						decorations.push({
@@ -781,7 +1115,7 @@ function activate(context) {
 				}
 			}
 
-			const openTagMatch = line.match(/\{%-?\s*(if|elif|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language)\b[^}]*%}/g);
+			const openTagMatch = line.match(/\{%-?\s*(if|elif|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language|compress|thumbnail|ifequal|ifnotequal)\b[^}]*%}/g);
 			if (openTagMatch) {
 				openTagMatch.forEach(tag => {
 					const nameMatch = tag.match(/\{%-?\s*(\w+)/);
@@ -791,7 +1125,7 @@ function activate(context) {
 				});
 			}
 
-			const closeTagMatch = line.match(/\{%-?\s*end(if|elif|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language)\b[^}]*%}/g);
+			const closeTagMatch = line.match(/\{%-?\s*end(if|elif|for|with|block|comment|verbatim|spaceless|autoescape|filter|cache|addtoblock|partialdef|blocktrans|language|compress|thumbnail|equal|notequal)\b[^}]*%}/g);
 			if (closeTagMatch) {
 				closeTagMatch.forEach(tag => {
 					const nameMatch = tag.match(/\{%-?\s*end(\w+)/);
@@ -822,14 +1156,14 @@ function activate(context) {
 
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(event => {
-			if (event.document.languageId === 'miki-template' || event.document.languageId === 'django-html') {
+			if (SUPPORTED_LANGUAGES.includes(event.document.languageId)) {
 				debouncedValidate(event.document);
 				debouncedColorUpdate(event.document);
 				debouncedBracketUpdate(event.document);
 			}
 		}),
 		vscode.workspace.onDidOpenTextDocument(document => {
-			if (document.languageId === 'miki-template' || document.languageId === 'django-html') {
+			if (SUPPORTED_LANGUAGES.includes(document.languageId)) {
 				validateDocument(document);
 				updateColorDecorations(document);
 				updateBracketHighlights(document);
@@ -837,7 +1171,7 @@ function activate(context) {
 		}),
 		vscode.window.onDidChangeVisibleTextEditors(editors => {
 			editors.forEach(editor => {
-				if (editor.document.languageId === 'miki-template' || editor.document.languageId === 'django-html') {
+				if (SUPPORTED_LANGUAGES.includes(editor.document.languageId)) {
 					updateColorDecorations(editor.document);
 					updateBracketHighlights(editor.document);
 				}
@@ -850,7 +1184,7 @@ function activate(context) {
 		vscode.workspace.onWillPaste(async e => {
 			const editor = vscode.window.activeTextEditor;
 			if (!editor) return;
-			if (editor.document.languageId !== 'miki-template' && editor.document.languageId !== 'django-html') return;
+			if (!SUPPORTED_LANGUAGES.includes(editor.document.languageId)) return;
 			if (!config.get('enableSmartPaste', true)) return;
 
 			const pasteText = e.text;
@@ -866,7 +1200,7 @@ function activate(context) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('miki-template.validateAll', () => {
 			vscode.workspace.textDocuments.forEach(doc => {
-				if (doc.languageId === 'miki-template' || doc.languageId === 'django-html') {
+				if (SUPPORTED_LANGUAGES.includes(doc.languageId)) {
 					validateDocument(doc);
 				}
 			});
@@ -989,6 +1323,24 @@ function activate(context) {
 			}
 		})
 	);
+
+	// Register Document Formatting Provider
+	const formattingProvider = vscode.languages.registerDocumentFormattingEditProvider(
+		SUPPORTED_LANGUAGES,
+		{
+			provideDocumentFormattingEdits: async (document, options, token) => {
+				try {
+					const formatter = new MikiTemplateFormatter(diagnosticCollection);
+					return await formatter.provideDocumentFormattingEdits(document, options, token);
+				} catch (error) {
+					console.error('Formatting error:', error);
+					return [];
+				}
+			}
+		}
+	);
+
+	context.subscriptions.push(formattingProvider);
 
 	context.subscriptions.push(
 		completionProvider,

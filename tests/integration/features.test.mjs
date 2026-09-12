@@ -620,6 +620,69 @@ test('TAG filter chaining in expressions: multiple filters in one tag arg', () =
   assert.equal(renderString('{% for i in "5,1,2,3,4"|split:","|sort %}{{ i }}{% endfor %}'), '12345');
 });
 
+test('TAG filter/endfilter: applies filter to block content', () => {
+  assert.equal(renderString('{% filter upper %}hello{% endfilter %}'), 'HELLO');
+  assert.equal(renderString('{% filter center:"15" %}hello{% endfilter %}'), '     hello     ');
+});
+
+test('TAG verbatim/endverbatim: ignores template syntax', () => {
+  assert.equal(renderString('{% verbatim %}{{ not_processed }}{% endverbatim %}'), '{{ not_processed }}');
+});
+
+test('TAG resetcycle: resets cycle counter', () => {
+  assert.equal(renderString('{% cycle "a" "b" "c" as x silent %}{{ x }} {% resetcycle %}{% cycle "a" "b" "c" as x silent %}{{ x }}'), 'a a');
+});
+
+test('TAG endfirstof: explicit closing tag', () => {
+  assert.equal(renderString('{% firstof "" "world" %}{% endfirstof %}'), 'world');
+});
+
+test('TAG querystring: builds query string from literal pairs', () => {
+  assert.equal(renderString('{% querystring "page=1" "sort=name" %}'), '?page=1&sort=name');
+});
+
+test('TAG querystring: builds query string from kwargs', () => {
+  assert.equal(renderString('{% querystring page=1 sort="name" %}'), '?page=1&sort=name');
+});
+
+test('TAG querystring: resolves context variables and skips empty values', () => {
+  const out = renderString('{% querystring q=term page=1 %}', { term: 'hello' });
+  assert.equal(out, '?q=hello&page=1');
+});
+
+test('TAG querystring: returns empty string when no args provided', () => {
+  assert.equal(renderString('{% querystring %}'), '');
+});
+
+test('TAG querystring: handles filters on values', () => {
+  const out = renderString('{% querystring q=term|upper %}', { term: 'hello' });
+  assert.equal(out, '?q=HELLO');
+});
+
+test('TAG querystring: skips null and undefined values', () => {
+  const out = renderString('{% querystring a=null b="" c="x" %}', { a: null, b: '', c: 'x' });
+  assert.equal(out, '?c=x');
+});
+
+test('TAG translate: alias for trans', () => {
+  setLanguage('en');
+  setFallbackLanguage('en');
+  registerTranslation('en', { 'hi': 'Hello' });
+  assert.equal(renderString('{% translate "hi" %}'), 'Hello');
+  unregisterTranslation('en');
+});
+
+test('TAG blocktranslate: alias for blocktrans', () => {
+  setLanguage('en');
+  setFallbackLanguage('en');
+  registerTranslation('en', { 'Hello, :name!': 'Hello, :name!' });
+  assert.equal(
+    renderString('{% blocktranslate %}Hello, {{ name }}!{% endblocktranslate %}', { name: 'World' }),
+    'Hello, World!'
+  );
+  unregisterTranslation('en');
+});
+
 // ============================================================================
 // 8. I18N TAGS
 // ============================================================================

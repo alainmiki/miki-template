@@ -333,6 +333,12 @@ class FirstofNode {
   }
 }
 
+class EndFirstofNode {
+  render(_context) {
+    return '';
+  }
+}
+
 class CommentNode {
   constructor(body) {
     this.body = body;
@@ -758,12 +764,39 @@ function parseFirstof(tagContent, _parser) {
   return new FirstofNode(args);
 }
 
+class ResetCycleNode {
+  constructor(key) {
+    this.key = key ? key.trim() : null;
+  }
+
+  render(context) {
+    if (!context.cycleStates) context.cycleStates = new Map();
+    if (this.key) {
+      context.cycleStates.set(this.key, 0);
+    } else {
+      context.cycleStates.clear();
+    }
+    return '';
+  }
+}
+
+function parseResetCycle(tagContent, _parser) {
+  const key = tagContent.slice(11).trim() || null;
+  return new ResetCycleNode(key);
+}
+
+function parseEndFirstof(_tagContent, _parser) {
+  return new EndFirstofNode();
+}
+
 module.exports = {
   IfNode,
   ForNode,
   WithNode,
   CycleNode,
   FirstofNode,
+  EndFirstofNode,
+  ResetCycleNode,
   CommentNode,
   AutoescapeNode,
   PartialDefNode,
@@ -779,6 +812,8 @@ module.exports = {
     comment: parseComment,
     partialdef: parsePartialDef,
     partial: parsePartial,
-    firstof: parseFirstof
+    firstof: parseFirstof,
+    endfirstof: parseEndFirstof,
+    resetcycle: parseResetCycle
   }
 };

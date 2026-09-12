@@ -362,6 +362,35 @@ function genNode(node, stmts, level, buf = 'out', loopVarMap = {}) {
     stmts.push(pad(`${buf} += _firstof(_ctx, ${js(node.args)});`, level));
     return;
 
+  case 'EndFirstofNode':
+    return;
+
+  case 'FilterNode': {
+    stmts.push(pad('{', level));
+    stmts.push(pad('let _filterBuf = \'\';', level + 1));
+    genNodes(node.body, stmts, level + 1, '_filterBuf', loopVarMap);
+    stmts.push(pad(`${buf} += _applyFilter(_ctx, ${js(node.filterName)}, _filterBuf, ${js(node.filterArg)});`, level));
+    stmts.push(pad('}', level));
+    return;
+  }
+
+  case 'VerbatimNode': {
+    stmts.push(pad('{', level));
+    stmts.push(pad('let _verbatimBuf = \'\';', level + 1));
+    for (const n of node.body) {
+      if (n.constructor.name === 'TextNode' && n.content) {
+        stmts.push(pad(`_verbatimBuf += ${js(n.content)};`, level + 1));
+      }
+    }
+    stmts.push(pad(`${buf} += _verbatimBuf;`, level));
+    stmts.push(pad('}', level));
+    return;
+  }
+
+  case 'ResetCycleNode':
+    stmts.push(pad(`_resetCycle(_ctx, ${js(node.key)});`, level));
+    return;
+
   case 'PartialDefNode': {
     stmts.push(pad(`_registerPartial(_ctx, ${js(node.name)}, _partials[${node._partialId}]);`, level));
     if (node.inline) {
@@ -635,7 +664,8 @@ function buildCode(nodes) {
     '_csp_nonce', '_loadLibs', '_debug', '_now', '_set', '_ifchanged',
     '_resolveVal', '_helperCall', '_missingFilter', '_normalizeFor',
     '_trans', '_blocktrans', '_registerPartial', '_extends', '_block',
-    '_language', '_fallback', '_SafeString', '_astNodes', '_partials', '_languages', '_in'
+    '_language', '_fallback', '_SafeString', '_astNodes', '_partials', '_languages', '_in',
+    '_applyFilter', '_resetCycle'
   ];
 
   const src = `"use strict"; return function(${args.join(',')}) { ${body} }`;
@@ -852,6 +882,22 @@ function firstofHelper(ctx, args) {
   return '';
 }
 
+function applyFilterHelper(ctx, filterName, raw, filterArg) {
+  const { getFilter } = require('./filters');
+  const fn = getFilter(filterName);
+  if (!fn) throw new Error(`Unknown filter: '${filterName}'`);
+  return fn(raw, filterArg, ctx);
+}
+
+function resetCycleHelper(ctx, key) {
+  if (!ctx.cycleStates) ctx.cycleStates = new Map();
+  if (key) {
+    ctx.cycleStates.set(key, 0);
+  } else {
+    ctx.cycleStates.clear();
+  }
+}
+
 function partialHelper(ctx, name, extra) {
   const partial = ctx.getPartial(name);
   if (!partial) throw new Error(`Partial '${name}' not found`);
@@ -1019,7 +1065,9 @@ function generateCode(nodes) {
       flat,
       partialsList,
       languagesList,
-      inHelper
+      inHelper,
+      applyFilterHelper,
+      resetCycleHelper
     );
   };
 }

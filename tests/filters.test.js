@@ -260,4 +260,205 @@ test('Filters - credit_card, ssn, ip_address, uuid', () => {
     assert.deepEqual(range('5'), [0,1,2,3,4]);
     assert.deepEqual(range('5', '2'), [2,3,4]);
   });
+
+  test('Filters - new Django contrib filters', () => {
+    const center = getFilter('center');
+    assert.strictEqual(center('hello', 15), '     hello     ');
+
+    const escapejs = getFilter('escapejs');
+    assert.strictEqual(escapejs('<script>'), '\\x3Cscript\\x3E');
+
+    const first = getFilter('first');
+    assert.strictEqual(first('abc'), 'a');
+    assert.strictEqual(first([1, 2, 3]), 1);
+
+    const fix_ampersands = getFilter('fix_ampersands');
+    assert.strictEqual(fix_ampersands('A & B'), 'A &amp; B');
+
+    const force_escape = getFilter('force_escape');
+    assert.strictEqual(force_escape('<b>'), '&lt;b&gt;');
+
+    const get_digit = getFilter('get_digit');
+    assert.strictEqual(get_digit('12345', 2), '3');
+
+    const intcomma = getFilter('intcomma');
+    assert.strictEqual(intcomma('1000'), '1,000');
+
+    const intword = getFilter('intword');
+    assert.strictEqual(intword('1500000'), '1.5 million');
+
+    const iriencode = getFilter('iriencode');
+    assert.strictEqual(iriencode('hello world'), 'hello%20world');
+
+    const last = getFilter('last');
+    assert.strictEqual(last('abc'), 'c');
+    assert.strictEqual(last([1, 2, 3]), 3);
+
+    const linenumbers = getFilter('linenumbers');
+    assert.strictEqual(linenumbers('a\nb'), '1. a\n2. b');
+
+    const ljust = getFilter('ljust');
+    assert.strictEqual(ljust('hi', 10), 'hi        ');
+
+    const make_list = getFilter('make_list');
+    assert.deepEqual(make_list('hello'), ['h','e','l','l','o']);
+
+    const naturalday = getFilter('naturalday');
+    assert.strictEqual(naturalday(new Date()), 'today');
+
+    const ordinal = getFilter('ordinal');
+    assert.strictEqual(ordinal('1'), '1st');
+    assert.strictEqual(ordinal('11'), '11th');
+
+    const phone2numeric = getFilter('phone2numeric');
+    assert.strictEqual(phone2numeric('1-800-CALL'), '1-800-2255');
+
+    const pprint = getFilter('pprint');
+    assert.ok(pprint({a: 1}).includes('"a"'));
+
+    const rjust = getFilter('rjust');
+    assert.strictEqual(rjust('hi', 10), '        hi');
+
+    const safeseq = getFilter('safeseq');
+    const result = safeseq(['<b>', '<i>']);
+    assert.ok(result.length === 2);
+
+    const STATIC_PREFIX = getFilter('STATIC_PREFIX');
+    assert.strictEqual(STATIC_PREFIX('css/app.css'), '/static/css/app.css');
+
+    const truncatewords_html = getFilter('truncatewords_html');
+    assert.ok(truncatewords_html('<p>Hello world foo</p>', 2).includes('Hello world...'));
+
+    const unordered_list = getFilter('unordered_list');
+    assert.strictEqual(unordered_list(['a', 'b']), '<ul><li>a</li><li>b</li></ul>');
+
+    const urlizetrunc = getFilter('urlizetrunc');
+    assert.ok(urlizetrunc('https://example.com/very/long/path', 10).includes('<a href="https://example.com/very/long/path"'));
+
+    const wordwrap = getFilter('wordwrap');
+    assert.ok(wordwrap('hello world foo bar', 5).includes('hello\nworld'));
+
+    const apnumber = getFilter('apnumber');
+    assert.strictEqual(apnumber('5'), 'five');
+
+    const timeutil = getFilter('timeutil');
+    assert.ok(typeof timeutil === 'function');
+  });
+});
+
+test('Filters - new Django contrib filters edge cases', () => {
+  const center = getFilter('center');
+  assert.strictEqual(center('', 5), '     ');
+  assert.strictEqual(center('hi', 1), 'hi');
+  assert.strictEqual(center('hello', 10), '  hello   ');
+
+  const escapejs = getFilter('escapejs');
+  assert.strictEqual(escapejs("it's"), "it\\'s");
+  assert.strictEqual(escapejs('"quoted"'), '\\"quoted\\"');
+  assert.strictEqual(escapejs("line1\nline2"), 'line1\\nline2');
+  assert.strictEqual(escapejs('<script>alert("xss")</script>'), '\\x3Cscript\\x3Ealert(\\"xss\\")\\x3C/script\\x3E');
+
+  const first = getFilter('first');
+  assert.strictEqual(first(''), '');
+  assert.strictEqual(first([1]), 1);
+
+  const last = getFilter('last');
+  assert.strictEqual(last(''), '');
+  assert.strictEqual(last([1]), 1);
+
+  const intcomma = getFilter('intcomma');
+  assert.strictEqual(intcomma('0'), '0');
+  assert.strictEqual(intcomma('-1000'), '-1,000');
+  assert.strictEqual(intcomma('1234567.89'), '1,234,567.89');
+
+  const intword = getFilter('intword');
+  assert.strictEqual(intword('1500000'), '1.5 million');
+  assert.strictEqual(intword('1000000000'), '1 billion');
+
+  const iriencode = getFilter('iriencode');
+  assert.strictEqual(iriencode('hello&world'), 'hello%26world');
+  assert.strictEqual(iriencode('a=b'), 'a%3Db');
+
+  const linenumbers = getFilter('linenumbers');
+  assert.strictEqual(linenumbers(''), '1. ');
+  assert.strictEqual(linenumbers('single line'), '1. single line');
+
+  const ljust = getFilter('ljust');
+  assert.strictEqual(ljust('', 3), '   ');
+  assert.strictEqual(ljust('hello', 3), 'hello');
+
+  const rjust = getFilter('rjust');
+  assert.strictEqual(rjust('', 3), '   ');
+  assert.strictEqual(rjust('hello', 3), 'hello');
+
+  const make_list = getFilter('make_list');
+  assert.deepEqual(make_list(''), []);
+
+  const naturalday = getFilter('naturalday');
+  const yesterday = new Date(Date.now() - 86400000);
+  assert.strictEqual(naturalday(yesterday), 'yesterday');
+  const tomorrow = new Date(Date.now() + 86400000);
+  assert.strictEqual(naturalday(tomorrow), 'tomorrow');
+
+  const ordinal = getFilter('ordinal');
+  assert.strictEqual(ordinal('0'), '0th');
+  assert.strictEqual(ordinal('2'), '2nd');
+  assert.strictEqual(ordinal('3'), '3rd');
+  assert.strictEqual(ordinal('4'), '4th');
+  assert.strictEqual(ordinal('11'), '11th');
+  assert.strictEqual(ordinal('12'), '12th');
+  assert.strictEqual(ordinal('21'), '21st');
+  assert.strictEqual(ordinal('112'), '112th');
+  assert.strictEqual(ordinal('113'), '113th');
+
+  const phone2numeric = getFilter('phone2numeric');
+  assert.strictEqual(phone2numeric(''), '');
+  assert.strictEqual(phone2numeric('1-800-FLOWERS'), '1-800-3569377');
+
+  const pprint = getFilter('pprint');
+  assert.ok(pprint([]).includes('[]'));
+  assert.ok(pprint(null).includes('null'));
+
+  const safeseq = getFilter('safeseq');
+  const safeResult = safeseq(['<b>', '<i>']);
+  assert.ok(String(safeResult).includes('<b>'));
+
+  const STATIC_PREFIX = getFilter('STATIC_PREFIX');
+  assert.strictEqual(STATIC_PREFIX(''), '/static/');
+  assert.strictEqual(STATIC_PREFIX('/leading/slash'), '/static/leading/slash');
+
+  const truncatewords_html = getFilter('truncatewords_html');
+  assert.strictEqual(truncatewords_html('', 3), '');
+  assert.strictEqual(truncatewords_html('one two', 1), 'one...');
+
+  const unordered_list = getFilter('unordered_list');
+  assert.strictEqual(unordered_list([]), '<ul></ul>');
+  assert.strictEqual(unordered_list(['x']), '<ul><li>x</li></ul>');
+
+  const urlizetrunc = getFilter('urlizetrunc');
+  assert.strictEqual(urlizetrunc('', 10), '');
+  assert.ok(urlizetrunc('http://example.com', 100).includes('>http://example.com</a>'));
+
+  const wordwrap = getFilter('wordwrap');
+  assert.strictEqual(wordwrap('', 5), '');
+  assert.strictEqual(wordwrap('a b c', 1), 'a\nb\nc');
+
+  const apnumber = getFilter('apnumber');
+  console.log('apnumber source:', apnumber.toString().slice(0, 200));
+  const result20 = apnumber('20');
+  const result21 = apnumber('21');
+  console.log('apnumber(20):', JSON.stringify(result20));
+  console.log('apnumber(21):', JSON.stringify(result21));
+  if (result20 !== 'twenty') {
+    throw new Error('apnumber(20) returned ' + JSON.stringify(result20) + ' instead of "twenty"');
+  }
+  assert.strictEqual(apnumber('0'), 'zero');
+  assert.strictEqual(apnumber('5'), 'five');
+  assert.strictEqual(apnumber('10'), 'ten');
+  assert.strictEqual(apnumber('11'), 'eleven');
+  assert.strictEqual(apnumber('20'), 'twenty');
+  assert.strictEqual(apnumber('21'), '21');
+
+  const timeutil = getFilter('timeutil');
+  assert.ok(typeof timeutil === 'function');
 });

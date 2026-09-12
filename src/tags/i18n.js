@@ -119,6 +119,76 @@ function parseTrans(tagContent, _parser) {
   return new TransNode(key, Object.keys(args).length ? args : null);
 }
 
+function parseTranslate(tagContent, _parser) {
+  const trimmed = tagContent.slice(9).trim(); // strip "translate"
+  const tokens = trimmed.match(/(?:"[^"]*"|'[^']*'|\S+)/g) || [];
+
+  let keyIdx = 0;
+  if (tokens[0] && tokens[0] === 'context') {
+    keyIdx = 2;
+  }
+  const key = tokens[keyIdx] || '';
+  const args = {};
+  for (let i = keyIdx + 1; i < tokens.length; i++) {
+    const eq = tokens[i].indexOf('=');
+    if (eq > 0) {
+      const name = tokens[i].slice(0, eq);
+      let val = tokens[i].slice(eq + 1);
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
+        val = val.slice(1, -1);
+      }
+      args[name] = val;
+    }
+  }
+  return new TransNode(key, Object.keys(args).length ? args : null);
+}
+
+function parseBlockTranslate(tagContent, parser) {
+  const body = parser.parse(['endblocktranslate']);
+  const next = parser.peek();
+  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endblocktranslate') {
+    parser.advance();
+  }
+
+  const withMappings = [];
+  const pluralMappings = [];
+  const afterTrans = tagContent.replace(/^blocktranslate\s*/, '').trim();
+  const tokens = afterTrans.match(/(?:"[^"]*"|'[^']*'|\S+)/g) || [];
+  let i = 0;
+  if (tokens[i] === 'context') i += 2;
+  while (i < tokens.length) {
+    const tok = tokens[i];
+    if (tok === 'with') {
+      i++;
+      while (i < tokens.length && tokens[i].indexOf('=') > 0) {
+        const pair = tokens[i];
+        const eq = pair.indexOf('=');
+        const name = pair.slice(0, eq);
+        let val = pair.slice(eq + 1);
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith('\'') && val.endsWith('\''))) {
+          val = val.slice(1, -1);
+        }
+        withMappings.push({ name, valPath: val });
+        i++;
+      }
+    } else if (tok === 'count') {
+      i++;
+      const countVal = tokens[i] || '1';
+      pluralMappings.push({ name: 'count', valPath: countVal });
+      i++;
+    } else {
+      i++;
+    }
+  }
+
+  return new BlockTransNode(
+    extractTextAndVars(body),
+    withMappings.length ? withMappings : extractWithMappings(body),
+    pluralMappings,
+    body
+  );
+}
+
 function parseLanguage(tagContent, parser) {
   const lang = tagContent.slice(9).trim(); // strip "language"
   const body = parser.parse(['endlanguage']);
@@ -238,8 +308,10 @@ module.exports = {
   PluralMappingNode,
   parsers: {
     trans: parseTrans,
+    translate: parseTranslate,
     language: parseLanguage,
     blocktrans: parseBlockTrans,
+    blocktranslate: parseBlockTranslate,
     plural: parsePlural
   }
 };

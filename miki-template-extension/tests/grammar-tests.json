@@ -8,7 +8,7 @@
         { "line": 0, "scope": "entity.name.tag.django" },
         { "line": 1, "scope": "meta.tag.django" },
         { "line": 2, "scope": "meta.variable.django" },
-        { "line": 2, "scope": "support.function.django" }
+        { "line": 2, "scope": "variable.other.django" }
       ]
     },
     {
@@ -135,6 +135,146 @@
       "name": "Addtoblock",
       "input": "{% addtoblock css %}\n.selector { color: red; }\n{% endaddtoblock %}",
       "expectedTags": ["addtoblock", "endaddtoblock"]
+    },
+    {
+      "name": "Set block",
+      "input": "{% set var = value %}\n{% endset %}",
+      "expectedTags": ["set", "endset"]
+    },
+    {
+      "name": "Now tag",
+      "input": "{% now \"DATE_FORMAT\" %}",
+      "expectedTags": ["now"]
+    },
+    {
+      "name": "Ifchanged block",
+      "input": "{% ifchanged %}\n  {{ date }}\n{% endifchanged %}",
+      "expectedTags": ["ifchanged", "endifchanged"]
+    },
+    {
+      "name": "Resetcycle",
+      "input": "{% resetcycle %}",
+      "expectedTags": ["resetcycle"]
+    },
+    {
+      "name": "Get static prefix",
+      "input": "{% get_static_prefix %}",
+      "expectedTags": ["get_static_prefix"]
+    },
+    {
+      "name": "Get media prefix",
+      "input": "{% get_media_prefix %}",
+      "expectedTags": ["get_media_prefix"]
+    },
+    {
+      "name": "CSP nonce",
+      "input": "<script {% csp_nonce_attr %}>console.log('test')</script>",
+      "expectedTags": ["csp_nonce_attr"]
+    },
+    {
+      "name": "Ifequal block",
+      "input": "{% ifequal var1 var2 %}\n  Equal\n{% endifequal %}",
+      "expectedTags": ["ifequal", "endifequal"]
+    },
+    {
+      "name": "Ifnotequal block",
+      "input": "{% ifnotequal var1 var2 %}\n  Not equal\n{% endifnotequal %}",
+      "expectedTags": ["ifnotequal", "endifnotequal"]
+    },
+    {
+      "name": "SSI tag",
+      "input": "{% ssi \"path/to/file\" %}",
+      "expectedTags": ["ssi"]
+    },
+    {
+      "name": "Thumbnail block",
+      "input": "{% thumbnail source 100x100 %}\n  img\n{% endthumbnail %}",
+      "expectedTags": ["thumbnail", "endthumbnail"]
+    },
+    {
+      "name": "Compress block",
+      "input": "{% compress css %}\n  .class { color: red; }\n{% endcompress %}",
+      "expectedTags": ["compress", "endcompress"]
+    },
+    {
+      "name": "Placeholder tag",
+      "input": "{% placeholder content %}",
+      "expectedTags": ["placeholder"]
+    },
+    {
+      "name": "Translate tag",
+      "input": "{% translate \"Hello\" %}",
+      "expectedTags": ["translate"]
+    },
+    {
+      "name": "Math filters",
+      "input": "{{ value|square }}{{ value|sqrt }}{{ value|abs }}{{ list|sum }}{{ list|average }}{{ list|sort }}{{ list|unique }}{{ value|reverse }}",
+      "expectedFilters": ["square", "sqrt", "abs", "sum", "average", "sort", "unique", "reverse"]
+    },
+    {
+      "name": "Utility filters",
+      "input": "{{ data|json }}{{ value|base64_encode }}{{ value|base64_decode }}{{ list|split:',' }}{{ value|replace:'a,b' }}",
+      "expectedFilters": ["json", "base64_encode", "base64_decode", "split", "replace"]
+    },
+    {
+      "name": "Currency and phone filters",
+      "input": "{{ value|currency:'$' }}{{ value|phone_number }}{{ value|email }}{{ value|whatsapp_link }}",
+      "expectedFilters": ["currency", "phone_number", "email", "whatsapp_link"]
+    },
+    {
+      "name": "Date filters",
+      "input": "{{ date|strftime:\"PPpp\" }}{{ date|timesince }}{{ date|timeuntil }}{{ date|time_diff:other }}",
+      "expectedFilters": ["strftime", "timesince", "timeuntil", "time_diff"]
+    },
+    {
+      "name": "Natural time filters",
+      "input": "{{ date|naturalday }}{{ date|naturaldate }}{{ date|naturaltime }}{{ date|ago }}{{ date|until }}",
+      "expectedFilters": ["naturalday", "naturaldate", "naturaltime", "ago", "until"]
+    },
+    {
+      "name": "Humanize filters (planned)",
+      "input": "{{ number|intcomma }}{{ number|intword }}{{ number|apnumber }}{{ number|ordinal }}",
+      "expectedFilters": ["intcomma", "intword", "apnumber", "ordinal"]
+    },
+    {
+      "name": "Mask and base64 filters",
+      "input": "{{ value|mask:'*' }}{{ value|base64_encode }}{{ value|base64_decode }}",
+      "expectedFilters": ["mask", "base64_encode", "base64_decode"]
+    },
+    {
+      "name": "Min max filters",
+      "input": "{{ value|min:other }}{{ value|max:other }}",
+      "expectedFilters": ["min", "max"]
+    },
+    {
+      "name": "Django filter block",
+      "input": "{% filter lower %}\n  {{ name }}\n{% endfilter %}",
+      "expectedTags": ["filter", "endfilter"]
+    },
+    {
+      "name": "Verbatim with comment content",
+      "input": "{% verbatim %}\n  {{ not_a_variable }} {% not_a_tag %}\n{% endverbatim %}",
+      "expectedTags": ["verbatim", "endverbatim"]
+    },
+    {
+      "name": "Nested blocks",
+      "input": "{% block outer %}{% block inner %}content{% endblock %}{% endblock %}",
+      "expectedTags": ["block", "endblock", "endblock"]
+    },
+    {
+      "name": "Multi-line for with if",
+      "input": "{% for item in items %}\n{% if item.active %}\n  {{ item.name }}\n{% endif %}\n{% empty %}\nNo items\n{% endfor %}",
+      "expectedTags": ["for", "if", "endif", "empty", "endfor"]
+    },
+    {
+      "name": "With multiple variables",
+      "input": "{% with a=1 b=2 %}{{ a }} {{ b }}{% endwith %}",
+      "expectedTags": ["with", "endwith"]
+    },
+    {
+      "name": "Partial with context",
+      "input": "{% partial card with title=\"Hello\" %}",
+      "expectedTags": ["partial"]
     }
   ],
   "validationTests": [

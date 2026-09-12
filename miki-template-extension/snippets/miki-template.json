@@ -712,6 +712,146 @@
       "prefix": "filter-wrap",
       "body": "${TM_SELECTED_TEXT}|${1:filter}",
       "description": "Wrap selection with filter"
+    },
+    "ifchanged": {
+      "prefix": "ifchanged",
+      "body": [
+        "{% ifchanged %}",
+        "  $1",
+        "{% endifchanged %}"
+      ],
+      "description": "If changed block (Django)"
+    },
+    "ifequal": {
+      "prefix": "ifequal",
+      "body": [
+        "{% ifequal ${1:var1} ${2:var2} %}",
+        "  $3",
+        "{% endifequal %}"
+      ],
+      "description": "If equal block (Django, planned)"
+    },
+    "ifnotequal": {
+      "prefix": "ifnotequal",
+      "body": [
+        "{% ifnotequal ${1:var1} ${2:var2} %}",
+        "  $3",
+        "{% endifnotequal %}"
+      ],
+      "description": "If not equal block (Django, planned)"
+    },
+    "resetcycle": {
+      "prefix": "resetcycle",
+      "body": "{% resetcycle %}",
+      "description": "Reset cycle counter (Django)"
+    },
+    "thumbnail": {
+      "prefix": "thumbnail",
+      "body": [
+        "{% thumbnail ${1:source} ${2:100x100} crop %}",
+        "  $3",
+        "{% endthumbnail %}"
+      ],
+      "description": "Thumbnail block (sorl-thumbnail, planned)"
+    },
+    "ssi": {
+      "prefix": "ssi",
+      "body": "{% ssi \"${1:path/to/file}\" %}",
+      "description": "Server-side include (Django, planned)"
+    },
+    "compress": {
+      "prefix": "compress",
+      "body": [
+        "{% compress ${1|css,js} %}",
+        "  $2",
+        "{% endcompress %}"
+      ],
+      "description": "Compress CSS/JS (django-compressor, planned)"
+    },
+    "placeholder": {
+      "prefix": "placeholder",
+      "body": "{% placeholder ${1:content} %}",
+      "description": "Placeholder (django CMS, planned)"
+    },
+    "get-media-prefix": {
+      "prefix": "get_media_prefix",
+      "body": "{% get_media_prefix %}",
+      "description": "Media prefix (Django)"
+    },
+    "get-static-prefix": {
+      "prefix": "get_static_prefix",
+      "body": "{% get_static_prefix %}",
+      "description": "Static prefix (Django)"
+    },
+    "translate": {
+      "prefix": "translate",
+      "body": "{% translate \"${1:Hello}\" %}",
+      "description": "Translate string (Django, planned)"
+    },
+    "filter-escapejs": {
+      "prefix": "escapejs",
+      "body": "{{ ${1:value}|escapejs }}",
+      "description": "Escape for JavaScript (Django, planned)"
+    },
+    "filter-force-escape": {
+      "prefix": "force_escape",
+      "body": "{{ ${1:value}|force_escape }}",
+      "description": "Force escape HTML (Django, planned)"
+    },
+    "filter-iriencode": {
+      "prefix": "iriencode",
+      "body": "{{ ${1:url}|iriencode }}",
+      "description": "IRI encode URL (Django, planned)"
+    },
+    "filter-safeseq": {
+      "prefix": "safeseq",
+      "body": "{{ ${1:list}|safeseq }}",
+      "description": "Mark sequence as safe (Django, planned)"
+    },
+    "filter-urlizetrunc": {
+      "prefix": "urlizetrunc",
+      "body": "{{ ${1:text}|urlizetrunc:${2:60} }}",
+      "description": "URLize and truncate (Django, planned)"
+    },
+    "filter-make-list": {
+      "prefix": "make_list",
+      "body": "{{ ${1:value}|make_list }}",
+      "description": "Convert to list (Django, planned)"
+    },
+    "filter-unordered-list": {
+      "prefix": "unordered_list",
+      "body": "{{ ${1:list}|unordered_list }}",
+      "description": "Nested list to HTML ul (Django, planned)"
+    },
+    "filter-linenumbers": {
+      "prefix": "linenumbers",
+      "body": "{{ ${1:text}|linenumbers }}",
+      "description": "Add line numbers (Django, planned)"
+    },
+    "filter-pprint": {
+      "prefix": "pprint",
+      "body": "{{ ${1:value}|pprint }}",
+      "description": "Pretty-print (planned)"
+    },
+    "filter-naturaltime": {
+      "prefix": "naturaltime",
+      "body": "{{ ${1:date}|naturaltime }}",
+      "description": "Natural time format"
+    },
+    "endverbatim": {
+      "prefix": "endverbatim",
+      "body": "{% endverbatim %}",
+      "description": "End of verbatim block"
+    },
+    "endblocktrans": {
+      "prefix": "endblocktrans",
+      "body": "{% endblocktrans %}",
+      "description": "End of blocktrans"
+    },
+    "wordwrap": {
+      "prefix": "wordwrap",
+      "body": "{{ ${1:text}|wordwrap:${2:80} }}",
+      "description": "Wrap text at word boundaries"
     }
   }
 }

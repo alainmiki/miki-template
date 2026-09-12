@@ -1297,6 +1297,75 @@ You can register your own filters. See the [Custom Filters guide](custom-filters
 - **Implementation:** Simple for‑loop building a JavaScript array.
 - **Example:** `{% for i in 5|range %}{{ i }}{% endfor %}` outputs `0 1 2 3 4`.
 
+## Additional Django Filters
+
+The following filters complete parity with the vscode-django-support extension:
+
+### String formatting
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `center` | `center(width)` | `"hello"|center:"15"` | `"     hello     "` |
+| `ljust` | `ljust(width)` | `"hi"|ljust:"10"` | `"hi        "` |
+| `rjust` | `rjust(width)` | `"hi"|rjust:"10"` | `"        hi"` |
+| `wordwrap` | `wordwrap(width)` | `"hello world"|wordwrap:"5"` | wrapped lines |
+| `linenumbers` | `linenumbers` | `"a\nb"|linenumbers` | `"1. a\n2. b"` |
+| `make_list` | `make_list` | `"hello"|make_list` | `["h","e","l","l","o"]` |
+| `slugify` | already supported | — | — |
+
+### HTML / escaping
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `escapejs` | `escapejs` | `"<b>"|escapejs` | `\x3Cb\x3E` |
+| `force_escape` | `force_escape` | `"<b>"|force_escape` | `&lt;b&gt;` |
+| `fix_ampersands` | `fix_ampersands` | `"A & B"|fix_ampersands` | `A &amp; B` |
+| `safeseq` | `safeseq` | `list|safeseq` | marks all items safe |
+
+### Sequence / object
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `first` | `first` | `"abc"|first` | `"a"` |
+| `last` | `last` | `"abc"|last` | `"c"` |
+| `length_is` | already supported | — | — |
+| `random` | already supported | — | — |
+| `slice` | already supported | — | — |
+
+### Numbers / dates
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `apnumber` | `apnumber` | `"5"|apnumber` | `"five"` |
+| `intcomma` | `intcomma` | `"1000"|intcomma` | `"1,000"` |
+| `intword` | `intword` | `"1500000"|intword` | `"1.5 million"` |
+| `ordinal` | `ordinal` | `"1"|ordinal` | `"1st"` |
+| `naturalday` | `naturalday` | `"2026-01-01"|naturalday` | `"today"` / `"yesterday"` / date |
+| `get_digit` | `get_digit(index)` | `"12345"|get_digit:"2"` | `"3"` |
+| `timeutil` | `timeutil(date?)` | alias for `timeuntil` | — |
+
+### Lists / grouping
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `unordered_list` | `unordered_list` | `items|unordered_list` | `<ul>...</ul>` |
+| `truncatewords_html` | `truncatewords_html(count)` | HTML string | truncated HTML |
+
+### URLs / encoding
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `urlizetrunc` | `urlizetrunc(len)` | URL string | `<a href="...">...</a>` |
+| `iriencode` | `iriencode` | `"hello world"|iriencode` | `"hello%20world"` |
+
+### Misc
+
+| Filter | Signature | Example | Output |
+|--------|-----------|---------|--------|
+| `pprint` | `pprint` | `obj|pprint` | pretty-printed JSON |
+| `phone2numeric` | `phone2numeric` | `"1-800-CALL"|phone2numeric` | `"1-800-2255"` |
+| `STATIC_PREFIX` | `STATIC_PREFIX` | `"css/app.css"|STATIC_PREFIX` | `"/static/css/app.css"` |
+
 These filters are covered by unit tests in `tests/filters.test.js` and are documented here for developers and template authors.
 
 

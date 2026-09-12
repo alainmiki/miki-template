@@ -33,17 +33,12 @@
     {
       "open": "\"",
       "close": "\"",
-      "notIn": [
-        "string"
-      ]
+      "notIn": ["string", "comment"]
     },
     {
       "open": "'",
       "close": "'",
-      "notIn": [
-        "string",
-        "comment"
-      ]
+      "notIn": ["string", "comment"]
     },
     {
       "open": "(",
@@ -98,15 +93,31 @@
   ],
   "folding": {
     "markers": {
-      "start": "{%\\s*(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|regroup|language|addtoblock|style|script)\\b",
-      "end": "{%\\s*end(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|endcache|endfilter|blocktrans|endblocktrans|endlanguage|endaddtoblock)|</(style|script)>"
+      "start": "{%\\s*(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|regroup|language|addtoblock|ifchanged|ifequal|ifnotequal|compress|thumbnail|set|style|script)\\b",
+      "end": "{%\\s*end(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|endlanguage|endaddtoblock|endifchanged|endifequal|endifnotequal|endcompress|endthumbnail|endset)|</(style|script)>"
     }
   },
   "wordPattern": "[a-zA-Z_][a-zA-Z0-9_.]*",
   "indentationRules": {
-    "increaseIndentPattern": "{%\\s*(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|regroup|language|addtoblock)\\b[^}]*%}|(<(?!(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)[^>]*>)[^>]*>)\\s*$",
-    "decreaseIndentPattern": "{%\\s*end(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|endcache|endfilter|blocktrans|endblocktrans|endlanguage|endaddtoblock)\\b|</(html|head|body|div|section|article|aside|header|footer|nav|main|form|table|tr|td|th|tbody|thead|style|script)>"
+    "increaseIndentPattern": "{%\\s*(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|regroup|language|addtoblock|ifchanged|ifequal|ifnotequal|compress|thumbnail|set)\\b([^}]*%}|>)",
+    "decreaseIndentPattern": "{%\\s*end(block|for|if|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|endlanguage|endaddtoblock|endifchanged|endifequal|endifnotequal|endcompress|endthumbnail|endset)\\b|</(html|head|body|div|section|article|aside|header|footer|nav|main|form|table|tr|td|th|tbody|thead|style|script)>"
   },
+  "onEnterRules": [
+    {
+      "before": "^\\s*({%|{{)\\s*(if|for|block|with|autoescape|spaceless|verbatim|comment|partialdef|cache|filter|blocktrans|regroup|language|addtoblock|ifchanged|ifequal|ifnotequal|compress|thumbnail|set)\\b.*$",
+      "action": {
+        "indent": "indent",
+        "appendText": ""
+      }
+    },
+    {
+      "before": "^\\s*{{.*\\|.*$",
+      "after": "}}$",
+      "action": {
+        "indent": "indent"
+      }
+    }
+  ],
   "formatTabSize": 2,
   "formatIndentSize": 2,
   "formatOnSave": false,

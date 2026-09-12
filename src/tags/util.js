@@ -2,7 +2,7 @@
  * Utility template tags: static, url, regroup, spaceless.
  */
 
-const { evaluateExpression } = require('../parser');
+const { evaluateExpression, parseVariableExpression, VariableNode } = require('../parser');
 
 class StaticNode {
   constructor(pathExpr) {
@@ -315,6 +315,147 @@ class LoadNode {
   }
 }
 
+class FilterNode {
+  constructor(filterName, filterArg, body) {
+    this.filterName = filterName;
+    this.filterArg = filterArg;
+    this.body = body || [];
+  }
+
+  render(context) {
+    const raw = this.body.map(n => n.render(context)).join('');
+    const { getFilter } = require('../filters');
+    const fn = getFilter(this.filterName);
+    if (!fn) throw new Error(`Unknown filter: '${this.filterName}'`);
+    return fn(raw, this.filterArg, context);
+  }
+}
+
+function parseFilter(tagContent, parser) {
+  const expr = tagContent.slice(6).trim();
+  const nameMatch = expr.match(/^([a-zA-Z_][a-zA-Z0-9_]*)/);
+  const filterName = nameMatch ? nameMatch[1] : expr;
+  const rest = expr.slice(filterName.length).trim();
+  let filterArg = undefined;
+  if (rest.startsWith(':')) {
+    const argStr = rest.slice(1).trim();
+    if ((argStr.startsWith('"') && argStr.endsWith('"')) || (argStr.startsWith('\'') && argStr.endsWith('\''))) {
+      filterArg = argStr.slice(1, -1);
+    } else if (argStr) {
+      const num = Number(argStr);
+      filterArg = Number.isNaN(num) ? argStr : num;
+    }
+  }
+  const body = parser.parse(['endfilter']);
+  const next = parser.peek();
+  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endfilter') {
+    parser.advance();
+  }
+  return new FilterNode(filterName, filterArg, body);
+}
+
+class VerbatimNode {
+  constructor(body) {
+    this.body = body || [];
+  }
+
+  render(_context) {
+    return this.body.map(n => {
+      if (n.constructor.name === 'TextNode') return n.content;
+      return '';
+    }).join('');
+  }
+}
+
+function parseVerbatim(tagContent, _parser) {
+  const body = _parser.parse(['endverbatim']);
+  const next = _parser.peek();
+  if (next && next.type === 'block' && next.content.split(/\s+/)[0] === 'endverbatim') {
+    _parser.advance();
+  }
+  return new VerbatimNode(body);
+}
+
+class QueryStringNode {
+  constructor(args) {
+    this.args = args || [];
+  }
+
+  render(context) {
+    const params = new URLSearchParams();
+
+    for (const arg of this.args) {
+      const parsed = parseVariableExpression(arg.valueExpr);
+      const node = new VariableNode(parsed.varPath, parsed.filters, parsed.isLiteral, parsed.literalValue);
+      const value = node.render(context);
+
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
+      params.append(arg.name, String(value));
+    }
+
+    const qs = params.toString();
+    return qs ? '?' + qs : '';
+  }
+}
+
+function parseQuerystring(tagContent, _parser) {
+  const trimmed = tagContent.replace(/^querystring\s+/, '').trim();
+  const args = [];
+
+  const isQuotedString = (str) => {
+    if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith('\'') && str.endsWith('\''))) {
+      const quote = str[0];
+      const inner = str.slice(1, -1);
+      return !inner.includes(quote);
+    }
+    return false;
+  };
+
+  if (isQuotedString(trimmed)) {
+    const raw = trimmed.slice(1, -1);
+    const pairs = raw.split('&');
+    for (const pair of pairs) {
+      const [name, value] = pair.split('=');
+      if (name) {
+        args.push({ name, valueExpr: value ? `'${value}'` : '\'\'' });
+      }
+    }
+    return new QueryStringNode(args);
+  }
+
+  const argRegex = /(".*?"|'.*?'|[^\s]+)/g;
+  const matches = trimmed.match(argRegex) || [];
+
+  for (let i = 0; i < matches.length; i++) {
+    const tok = matches[i];
+    const isQuoted = (tok.startsWith('"') && tok.endsWith('"')) ||
+                     (tok.startsWith('\'') && tok.endsWith('\''));
+    if (isQuoted) {
+      const name = tok.slice(1, -1);
+      if (name.includes('=')) {
+        const [n, v] = name.split('=');
+        args.push({ name: n, valueExpr: v ? `"${v}"` : '""' });
+      } else if (i + 1 < matches.length) {
+        const valueExpr = matches[i + 1];
+        i++;
+        args.push({ name, valueExpr });
+      }
+      continue;
+    }
+
+    const eq = tok.indexOf('=');
+    if (eq > 0) {
+      const name = tok.slice(0, eq);
+      const valueExpr = tok.slice(eq + 1);
+      args.push({ name, valueExpr });
+    }
+  }
+
+  return new QueryStringNode(args);
+}
+
 class TemplatetagNode {
   constructor(token) {
     this.token = token;
@@ -370,9 +511,14 @@ module.exports = {
   TemplatetagNode,
   WidthRatioNode,
   DebugNode,
+  FilterNode,
+  VerbatimNode,
+  QueryStringNode,
   parsers: {
     static: parseStatic,
     url: parseUrl,
+    urlpk: parseUrl,
+    urlslug: parseUrl,
     regroup: parseRegroup,
     spaceless: parseSpaceless,
     csrf_token: parseCsrfToken,
@@ -380,6 +526,9 @@ module.exports = {
     load: parseLoad,
     templatetag: parseTemplatetag,
     widthratio: parseWidthRatio,
-    debug: parseDebug
+    debug: parseDebug,
+    filter: parseFilter,
+    verbatim: parseVerbatim,
+    querystring: parseQuerystring
   }
 };

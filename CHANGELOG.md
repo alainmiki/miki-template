@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.3.4] - 2026-09-12
+### Added
+- **New tags**: `{% filter %}`, `{% endfilter %}`, `{% verbatim %}`, `{% endverbatim %}`, `{% resetcycle %}`, `{% endfirstof %}`, `{% translate %}`, `{% blocktranslate %}` — completing parity with the vscode-django-support tag set.
+- **New filters**: 25 Django contrib filters: `center`, `escapejs`, `first`, `fix_ampersands`, `force_escape`, `get_digit`, `intcomma`, `intword`, `iriencode`, `last`, `linenumbers`, `ljust`, `make_list`, `naturalday`, `ordinal`, `phone2numeric`, `pprint`, `rjust`, `safeseq`, `STATIC_PREFIX`, `truncatewords_html`, `unordered_list`, `urlizetrunc`, `wordwrap`, `apnumber`, and `timeutil` alias.
+- **New `{% querystring %}` tag** — builds query strings from literal pairs, kwargs, or context variables, with optional filter expressions and empty-value skipping.
+- **Docs updated** for all new tags and filters.
+
+### Verification
+- `npm test` — 436/436 passing
+- `npm run lint` — 0 errors, 0 warnings
+
 ## [2.3.3] - 2026-09-11
 ### Added
 - **Filter expressions in tag arguments** — all built-in tags now support filter chains in their arguments, not just variable expressions. This includes `{% for %}`, `{% set %}`, `{% with %}`, `{% cycle %}`, `{% firstof %}`, `{% ifchanged %}`, `{% now %}`, `{% if %}`, `{% include %}`, `{% partial %}`, `{% extends %}`, `{% blocktrans %}`, and `{% trans %}`.
@@ -18,6 +29,7 @@
 - `npm test` — 410/410 passing
 - `npm run lint` — 0 errors, 0 warnings
 
+[2.3.4]: https://github.com/your-repo/miki-template/releases/tag/v2.3.4
 [2.3.3]: https://github.com/your-repo/miki-template/releases/tag/v2.3.3
 
 ## [1.3.4] - 2026-09-05

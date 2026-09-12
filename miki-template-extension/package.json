@@ -44,23 +44,73 @@
   "activationEvents": [
     "onLanguage:miki-template",
     "onLanguage:django-html",
+    "onLanguage:django-txt",
     "workspaceContains:**/*.miki",
-    "workspaceContains:**/*.django"
+    "workspaceContains:**/*.miki-template",
+    "workspaceContains:**/*.django",
+    "workspaceContains:**/*.dj",
+    "workspaceContains:**/*.html",
+    "workspaceContains:**/*.htm",
+    "workspaceContains:**/*.tpl",
+    "workspaceContains:**/*.j2",
+    "workspaceContains:**/*.jinja",
+    "workspaceContains:**/*.jinja2"
   ],
   "contributes": {
     "languages": [
       {
         "id": "miki-template",
-        "aliases": ["miki-template", "miki", "miki template", "django-template"],
-        "extensions": [".miki", ".miki-template"],
+        "aliases": [
+          "miki-template",
+          "miki",
+          "miki template",
+          "django-template"
+        ],
+        "extensions": [
+          ".miki",
+          ".miki-template",
+          ".html",
+          ".htm",
+          ".tpl",
+          ".j2",
+          ".jinja",
+          ".jinja2"
+        ],
         "firstLine": "^#\\?\\s*.*django",
-        "configuration": "./language-configuration.json"
+        "configuration": "./syntaxes/language-configuration.json"
       },
       {
         "id": "django-html",
-        "aliases": ["Django HTML", "django-html", "django template"],
-        "extensions": [".django", ".dj"],
-        "configuration": "./language-configuration.json"
+        "aliases": [
+          "Django HTML",
+          "django-html",
+          "django template"
+        ],
+        "extensions": [
+          ".django",
+          ".dj",
+          ".html",
+          ".htm",
+          ".tpl",
+          ".j2",
+          ".jinja",
+          ".jinja2"
+        ],
+        "firstLine": "{%",
+        "configuration": "./syntaxes/language-configuration.json"
+      },
+      {
+        "id": "django-txt",
+        "aliases": [
+          "Django Text",
+          "django-txt"
+        ],
+        "extensions": [
+          ".txt"
+        ],
+        "firstLine": "{%",
+        "filenames": [],
+        "configuration": "./syntaxes/language-configuration.json"
       }
     ],
     "grammars": [
@@ -89,6 +139,11 @@
           "source.css": "css",
           "source.js": "javascript"
         }
+      },
+      {
+        "language": "django-txt",
+        "scopeName": "text.django",
+        "path": "./syntaxes/django-txt.tmLanguage.json"
       }
     ],
     "snippets": [
@@ -98,6 +153,10 @@
       },
       {
         "language": "django-html",
+        "path": "./snippets/miki-template.json"
+      },
+      {
+        "language": "django-txt",
         "path": "./snippets/miki-template.json"
       }
     ],
@@ -230,10 +289,42 @@
         "miki-template.formatter": {
           "type": "string",
           "default": "prettier",
-          "enum": ["prettier", "none"],
+          "enum": [
+            "prettier",
+            "none"
+          ],
           "description": "Formatter to use for miki-template files."
         }
       }
+    }
+  },
+  "configurationDefaults": {
+    "[miki-template]": {
+      "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+      },
+      "editor.suggest.showWords": true,
+      "editor.wordBasedSuggestions": true
+    },
+    "[django-html]": {
+      "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+      },
+      "editor.suggest.showWords": true,
+      "editor.wordBasedSuggestions": true
+    },
+    "[django-txt]": {
+      "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+      },
+      "editor.suggest.showWords": true,
+      "editor.wordBasedSuggestions": true
     }
   },
   "emmet": {
@@ -252,7 +343,16 @@
       }
     }
   },
-  "extensionDependencies": ["esbenp.prettier-vscode"],
+  "dependencies": {
+    "prettier": "^2.8.8",
+    "prettier-plugin-django": "^0.5.18"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  },
+  "extensionDependencies": [
+    "esbenp.prettier-vscode"
+  ],
   "publisher": "alainmiki",
   "repository": {
     "type": "git",

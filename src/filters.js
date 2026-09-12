@@ -301,6 +301,11 @@ registerFilter('timeuntil', (val, arg) => {
   return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
 });
 
+registerFilter('timeutil', (val, arg) => {
+  const fn = getFilter('timeuntil');
+  return fn(val, arg);
+});
+
 // --- Numeric Filters ---
 registerFilter('add', (val, arg) => {
   const numVal = Number(val);
@@ -786,14 +791,41 @@ registerFilter('reverse', (val) => {
 
 registerFilter('sort', (val) => {
   if (!Array.isArray(val)) return val;
+
   return [...val].sort((a, b) => {
+    // Handle equality
     if (a === b) return 0;
-    if (a === null || a === undefined) return 1;
-    if (b === null || b === undefined) return -1;
-    if (typeof a === 'string' && typeof b === 'string') return a.localeCompare(b);
-    return a < b ? -1 : 1;
+
+    // Handle null/undefined consistently
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+
+    // Try numeric comparison
+    const numA = parseFloat(a);
+    const numB = parseFloat(b);
+    const isNumA = !Number.isNaN(numA);
+    const isNumB = !Number.isNaN(numB);
+
+    if (isNumA && isNumB) {
+      return numA - numB;
+    }
+
+    // Handle booleans explicitly
+    if (typeof a === 'boolean' && typeof b === 'boolean') {
+      return (a === b) ? 0 : (a ? 1 : -1);
+    }
+
+    // Handle strings with locale-aware comparison
+    if (typeof a === 'string' && typeof b === 'string') {
+      return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    // Fallback: convert to string and compare
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
   });
 });
+
 
 registerFilter('unique', (val) => {
   if (!Array.isArray(val)) return val;
@@ -985,6 +1017,213 @@ registerFilter('range', (val, arg) => {
   const out = [];
   for (let i = start; i < end; i += step) out.push(i);
   return out;
+});
+
+// --- Django contrib filters ---
+
+registerFilter('center', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const width = parseInt(arg, 10);
+  if (Number.isNaN(width) || width <= 0) return str;
+  const len = str.length;
+  if (len >= width) return str;
+  const pad = width - len;
+  const left = Math.floor(pad / 2);
+  const right = pad - left;
+  return ' '.repeat(left) + str + ' '.repeat(right);
+});
+
+registerFilter('escapejs', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return str.replace(/\\/g, '\\\\')
+    .replace(/'/g, '\\\'')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
+    .replace(/</g, '\\x3C')
+    .replace(/>/g, '\\x3E')
+    .replace(/&/g, '\\x26');
+});
+
+registerFilter('first', (val) => {
+  if (Array.isArray(val) && val.length > 0) return val[0];
+  if (typeof val === 'string' && val.length > 0) return val[0];
+  return '';
+});
+
+registerFilter('fix_ampersands', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return str.replace(/&/g, '&amp;').replace(/&amp;#/g, '&#');
+});
+
+registerFilter('force_escape', (val) => {
+  const { escapeHtml } = require('./security');
+  return escapeHtml(String(val === null || val === undefined ? '' : val), true);
+});
+
+registerFilter('get_digit', (val, arg) => {
+  const str = String(Math.abs(Number(val)));
+  const idx = parseInt(arg, 10);
+  if (Number.isNaN(idx) || idx < 0 || idx >= str.length) return '';
+  return str[str.length - 1 - idx];
+});
+
+registerFilter('intcomma', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const num = parseInt(str, 10);
+  if (Number.isNaN(num)) return str;
+  return num.toLocaleString('en-US');
+});
+
+registerFilter('intword', (val) => {
+  const num = parseInt(val, 10);
+  if (Number.isNaN(num)) return '';
+  if (num >= 1000000) {
+    const w = (num / 1000000).toFixed(1).replace(/\.0$/, '');
+    return w + ' million';
+  }
+  if (num >= 1000) {
+    const w = (num / 1000).toFixed(1).replace(/\.0$/, '');
+    return w + ' thousand';
+  }
+
+  return String(num);
+});
+
+registerFilter('iriencode', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return encodeURIComponent(str);
+});
+
+registerFilter('last', (val) => {
+  if (Array.isArray(val) && val.length > 0) return val[val.length - 1];
+  if (typeof val === 'string' && val.length > 0) return val[val.length - 1];
+  return '';
+});
+
+registerFilter('linenumbers', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const lines = str.split('\n');
+  return lines.map((line, i) => `${i + 1}. ${line}`).join('\n');
+});
+
+registerFilter('ljust', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const width = parseInt(arg, 10);
+  if (Number.isNaN(width) || width <= 0) return str;
+  return str.padEnd(width, ' ');
+});
+
+registerFilter('make_list', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return str.split('');
+});
+
+registerFilter('naturalday', (val) => {
+  const date = new Date(val);
+  if (Number.isNaN(date.getTime())) return String(val);
+  const now = new Date();
+  const diff = Math.floor((now.setHours(0, 0, 0, 0) - date.setHours(0, 0, 0, 0)) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'yesterday';
+  if (diff === -1) return 'tomorrow';
+  return date.toLocaleDateString();
+});
+
+registerFilter('ordinal', (val) => {
+  const num = parseInt(val, 10);
+  if (Number.isNaN(num)) return String(val);
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = num % 100;
+  return num + (s[(v - 20) % 10] || s[v] || s[0]);
+});
+
+registerFilter('phone2numeric', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const map = { a: '2', b: '2', c: '2', d: '3', e: '3', f: '3', g: '4', h: '4', i: '4', j: '5', k: '5', l: '5', m: '6', n: '6', o: '6', p: '7', q: '7', r: '7', s: '7', t: '8', u: '8', v: '8', w: '9', x: '9', y: '9', z: '9' };
+  return str.toLowerCase().replace(/[a-z]/g, (c) => map[c] || c);
+});
+
+registerFilter('pprint', (val) => {
+  return JSON.stringify(val, null, 2);
+});
+
+registerFilter('rjust', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const width = parseInt(arg, 10);
+  if (Number.isNaN(width) || width <= 0) return str;
+  return str.padStart(width, ' ');
+});
+
+registerFilter('safeseq', (val) => {
+  const { markSafe } = require('./security');
+  if (Array.isArray(val)) return val.map(markSafe);
+  return val;
+});
+
+registerFilter('STATIC_PREFIX', (val) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  return '/static/' + str.replace(/^\/+/, '');
+});
+
+registerFilter('truncatewords_html', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const count = parseInt(arg, 10);
+  if (Number.isNaN(count) || count <= 0) return '';
+  const words = str.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean);
+  if (words.length <= count) return str;
+  const plain = words.slice(0, count).join(' ');
+  return plain + '...';
+});
+
+registerFilter('unordered_list', (val) => {
+  if (!Array.isArray(val)) return String(val);
+  const items = val.map(item => {
+    if (Array.isArray(item)) {
+      const nested = item.map(sub => `<li>${String(sub)}</li>`).join('');
+      return `<ul>${nested}</ul>`;
+    }
+    return `<li>${String(item)}</li>`;
+  }).join('');
+  return `<ul>${items}</ul>`;
+});
+
+registerFilter('urlizetrunc', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const maxlen = arg !== undefined && arg !== null ? parseInt(arg, 10) : 30;
+  const urlRe = /(https?:\/\/[^\s]+)/g;
+  return str.replace(urlRe, (url) => {
+    const display = url.length > maxlen ? url.slice(0, maxlen) + '...' : url;
+    return `<a href="${url}" rel="nofollow">${display}</a>`;
+  });
+});
+
+registerFilter('wordwrap', (val, arg) => {
+  const str = String(val === null || val === undefined ? '' : val);
+  const width = parseInt(arg, 10);
+  if (Number.isNaN(width) || width <= 0) return str;
+  const words = str.split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    if ((line + ' ' + word).trim().length > width) {
+      if (line) lines.push(line);
+      line = word;
+    } else {
+      line = (line + ' ' + word).trim();
+    }
+  }
+  if (line) lines.push(line);
+  return lines.join('\n');
+});
+
+registerFilter('apnumber', (val) => {
+  const num = parseInt(val, 10);
+  if (Number.isNaN(num)) return String(val);
+  const map = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  if (num <= 20) return map[num] || String(num);
+  return String(num);
 });
 
 module.exports = { registerFilter, getFilter };

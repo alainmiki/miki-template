@@ -142,7 +142,7 @@ registerLibrary('humanize', {
     apnumber: (val) => {
       const n = parseInt(val, 10);
       const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-        'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+        'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
       if (!isNaN(n) && n >= 0 && n < words.length) return words[n];
       return String(val);
     },
